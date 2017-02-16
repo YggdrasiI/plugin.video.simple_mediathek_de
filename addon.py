@@ -859,8 +859,8 @@ def list_urls(state, urls, search_result):
 
 
 def play_url(addon_handle, state, url, b_add_to_history=False):
-    xbmc.executebuiltin('PlayMedia("%s")' % (url,))
-    # xbmc.Player().play(item=("%s" % (url,)))  # , listitem=listItem)
+    # xbmc.executebuiltin('PlayMedia("%s")' % (url,))
+    xbmc.Player().play(item=("%s" % (url,)))  # , listitem=listItem)
     """
     item = xbmcgui.ListItem(path=url)
     xbmcplugin.setResolvedUrl(handle=addon_handle,

@@ -2,7 +2,7 @@
 <settings>
   <category label="32101">
 		<setting id="video_quality" type="enum" label="32040"
-			lvalues="32102|32103|32104|32105|32106|32107" default="0"/>
+			lvalues="32102|32104|32103|32105|32106|32107" default="0"/>
 		<setting label="32210" type="action" action="RunScript(plugin.video.simple_mediathek_de, update_db)"/>
 		<!--<setting label="32210" type="action" action="plugin://plugin.video.simple_mediathek_de?mode=update_db)"/>-->
 		<!--<setting id="automatic_update" type="bool" label="32208" default="false"/>-->

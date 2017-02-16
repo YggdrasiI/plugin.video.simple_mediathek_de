@@ -3,6 +3,10 @@
 # Wrapper for binary, i.e. to
 # combine it with wget/curl
 #
+# Note: Default working directory /dev/shm, but the Kodi addon uses
+# an subfolder in .kodi/userdata, i.e ( on LibreELEC)
+# /storage/.kodi/userdata/addon_data/plugin.video.simple_mediathek_de
+#
 
 BIN_NAME="${0##*/}.bin"
 BIN_PATH="./${0%/*}"
