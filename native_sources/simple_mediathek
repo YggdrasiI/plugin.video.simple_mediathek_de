@@ -22,7 +22,7 @@ XML_SOURCE="http://zdfmediathk.sourceforge.net/akt.xml"
 XML_DIFF_SOURCE="http://zdfmediathk.sourceforge.net/diff.xml"
 
 VERBOSE=1
-DEBUG=1
+DEBUG=0
 
 # Local copies(used if DEBUG=1)
 LOCAL_URL="http://yggdrasil/mediathek"
