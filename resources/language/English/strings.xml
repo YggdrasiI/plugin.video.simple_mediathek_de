@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+  <!-- Plugin name -->
+  <string id="32000">Deutsche Mediatheken</string>
+  <string id="32101">General</string>
+
+  <!-- Settings -->
+  <string id="32040">Video quality</string>
+	<string id="32102">Ask</string>
+	<string id="32103">Highest available</string>
+	<string id="32104">Lowest available</string>
+	<string id="32105">Low</string>
+	<string id="32106">Middle</string>
+	<string id="32107">High</string>
+	<string id="32208">Automatic update</string>
+	<string id="32209">Length of history</string>
+	<string id="32210">Update list of files</string>
+	<string id="32211">Delete local user data of addon</string>
+</strings>

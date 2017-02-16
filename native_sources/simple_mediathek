@@ -1,0 +1,201 @@
+#!/bin/bash
+#
+# Wrapper for binary, i.e. to
+# combine it with wget/curl
+#
+
+BIN_NAME="${0##*/}.bin"
+BIN_PATH="./${0%/*}"
+MACH=$(uname -m)
+
+if [ ! -f "${BIN_PATH}/${BIN_NAME}" ] ; then
+  # Try path with architecture prefix, like x86_64.
+  BIN_PATH="${0%/*}/../${MACH}/bin"
+fi
+
+# For broli libs. (Second added path for script call in 'native_sources')
+LD_LIBRARY_PATH=${BIN_PATH}/../lib:../root/${MACH}/lib:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
+
+INDEX_FILE_FOLDER="/dev/shm/"  # Overwritten by --folder arg
+XML_SOURCE="http://zdfmediathk.sourceforge.net/akt.xml"
+XML_DIFF_SOURCE="http://zdfmediathk.sourceforge.net/diff.xml"
+
+VERBOSE=1
+DEBUG=1
+
+# Local copies(used if DEBUG=1)
+LOCAL_URL="http://yggdrasil/mediathek"
+DEBUG_AKT_XML="${LOCAL_URL}/Filmliste-akt.xml"
+DEBUG_DIFF_XML="${LOCAL_URL}/Filmliste-diff.xml"
+DEBUG_AKT_XZ="${LOCAL_URL}/Filmliste-akt.xz"
+DEBUG_DIFF_XZ="${LOCAL_URL}/Filmliste-diff.xz"
+
+# Fetch command had to write on stdout
+FETCH_WGET="wget -qO- "
+FETCH_WGET="wget -O- "
+FETCH_CURL="curl -L "
+FETCH="${FETCH_WGET}"
+JUST_PRINT_LINK=0
+
+echo_verbose()
+{
+  test "${VERBOSE}" != "0" && echoerr $@
+}
+
+echoerr() { printf "%s\n" "$*" >&2; }
+
+check_if_folder_arg_given()
+{
+  while [ "$#" -gt "0" ]
+  do
+    case "$1" in
+      --folder)
+        INDEX_FILE_FOLDER="$2"
+        shift; shift
+        ;;
+      -f)
+        INDEX_FILE_FOLDER="$2"
+        shift; shift
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
+}
+
+# PIPESTATUS array not available in busybox
+check_shell()
+{
+  # EXE=`exec 2>/dev/null; readlink "/proc/$$/exe"`
+  EXE=$(readlink "/proc/$$/exe")
+  case "$EXE" in
+    */busybox)
+      echo "busybox"
+      ;;
+    */bash)
+      echo "bash"
+      ;;
+    */sh)
+      echo "sh"
+      ;;
+  esac
+}
+
+just_print_link()
+{
+  # Print link for manually download..
+  JUST_PRINT_LINK=1
+  DEBUG=0
+  update "$1"
+}
+
+update()
+{
+  # Set diff flag
+  if [ "$1" = "1" -o "$1" = "diff" ] ; then
+    DIFF=1
+    DIFF_FLAGS="--diff"
+  else
+    DIFF=0
+    DIFF_FLAGS=""
+  fi
+
+  if [ "$DIFF" = "1" ] ; then
+    XML_SOURCE="${XML_DIFF_SOURCE}"
+  fi
+
+  if [ "$DEBUG" = "1" ] ; then
+    if [ "$DIFF" = "1" ] ; then
+      XML_SOURCE="${DEBUG_DIFF_XML}"
+    else
+      XML_SOURCE="${DEBUG_AKT_XML}"
+    fi
+    echo_verbose "(Debug) Use ${XML_SOURCE}"
+  else
+    echo_verbose "Use ${XML_SOURCE}"
+  fi
+
+  GET_XML="$FETCH ${XML_SOURCE}"
+
+  # Get list of servers. Example entry of xml file:
+  # <Server>
+  #  <URL>http://m.picn.de/f/Filmliste-akt.xz</URL>
+  #  <Prio>2</Prio>
+  # </Server>
+  XML=$( ${GET_XML} )
+
+  # Awk script to select url with respect to the <Prio>-Tag
+  URL_SELECTION='BEGIN {FS = "[<>]"; urls[0]="error"; w[0]=0 }
+  /\<Prio\>/ {s += $3; w[length(w)] = s }
+  /\<URL\>/ {urls[length(urls)] = $3 }
+  END { if(length(urls) < 2 ){ print urls[0] }
+else{
+  srand(); x = int(s*rand()) + 1; i=0; while( w[i] < x ) {i+=1};
+  print urls[i] } }'
+  #  print "i=", i, "w=", w[i], "x=", x, "url=", urls[i]  } }'
+
+  XZ_URL=$( echo "$XML" | awk "$URL_SELECTION" )
+
+  echo_verbose "Url: \"$XZ_URL\""
+
+  if [ "$DEBUG" = "1" ] ; then
+    if [ "$DIFF" = "1" ] ; then
+      XZ_URL="${DEBUG_DIFF_XZ}"
+    else
+      XZ_URL="${DEBUG_AKT_XZ}"
+    fi
+    echo_verbose "(Debug) Url: \"$XZ_URL\""
+  fi
+
+  if [ "$XZ_URL" = "error" ] ; then
+    echo_verbose "Can not parse XML file to get download url for data file."
+  elif [ "$JUST_PRINT_LINK" = "1" ] ; then
+    echo "${XZ_URL}"
+  else
+
+    GET_XZ="$FETCH ${XZ_URL}"
+    UNPACK_XZ="xz -dc -"
+    INDEX_JSON="${BIN_PATH}/${BIN_NAME} --index ${DIFF_FLAGS} -f ${INDEX_FILE_FOLDER}"
+
+    # Set EXE
+    EXE=$(check_shell)
+
+    echo_verbose "Call pipe is:"
+    echo_verbose "${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}"
+
+    if [ "$EXE" = "busybox" ] ; then
+      ${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}
+
+      # No PIPESTATUS array available
+      exit $?
+    else
+      ${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}
+
+      # Return status of piped commands stored in array
+      eval "RET=\${PIPESTATUS[2]}\${PIPESTATUS[1]}\${PIPESTATUS[0]}"
+      exit $RET
+    fi
+  fi
+}
+
+# ====== Main ====================
+
+if [ "$DEBUG" = "1" ] ; then
+  echoerr "Script path: $BIN_PATH"
+  echoerr "Binary name: $BIN_NAME"
+fi
+
+#cd $BIN_PATH
+
+if [ "$1" = "update" ] ; then
+  check_if_folder_arg_given $@
+  update "$2"
+elif [ "$1" = "link" ] ; then
+  just_print_link "$2"
+else
+  echo_verbose "${BIN_PATH}/${BIN_NAME} $@"
+  ${BIN_PATH}/${BIN_NAME} "$@"
+  exit $?
+fi

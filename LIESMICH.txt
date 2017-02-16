@@ -1,0 +1,17 @@
+====  Kodi plugin für MediathekView ====
+
+Plugin zum Herunterladen und lokalen Durchsuchen des MediathekView-Datensatzes.
+Zielstellungen waren 
+• eine zügige Bedienbarkeit per Fernbedienung,
+• Autarkitizität (Es wird nur der Datensatz benötigt. Restliche Arbeit wird lokal erledigt.)
+• Ein so geringer Ressourcenverbrauch, dass das Programm auch auf dem RaspberryPi 1 genutzt werden kann. 
+
+Aufgrund des letzten Punktes wird die Hauptaufgabe des Plugins im Hintergrund durch ein natives CLI-Programm ausgeführt. (D.h. das Plugin muss für das Zielsystem kompiliert werden!)
+Der Speicherverbrauch liegt während des Updates des Datensatzes ungefähr bei 25MB (zzgl. Overhead von weget und xz)
+
+Binaries für x86_64 und armv6l (für RPi1 bis RPi3) liegen vorkompiliert dabei.
+
+
+Zum Kompilieren des CLI-Programms: Siehe README.txt
+
+Zum Installieren des Addons: Siehe README.txt

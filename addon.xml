@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.video.simple_mediathek_de" name="Mediatheken" version="0.3.0" provider-name="YggdrasiI">
+  <requires>
+    <import addon="xbmc.python" version="2.1.0"/>
+    <import addon="script.module.requests" version="2.3.0"/>
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="addon.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">TODO</summary>
+    <description lang="en_GB">TODO</description>
+    <disclaimer lang="en_GB">TODO</disclaimer>
+    <summary lang="de_DE">Zugriff auf die Mediatheken der öffentlich-rechtlichen Sender.</summary>
+		<description lang="de_DE">Plugin zum Herunterladen und lokalen Durchsuchen des MediathekView-Datensatzes mit Augenmerk auf eine zügige Bedienbarkeit per Fernbedienung, Autarkitizität, und ein so geringer Ressourcenverbrauch, dass das Programm auch auf dem RaspberryPi 1 genutzt werden kann.</description>
+    <disclaimer lang="de_DE"></disclaimer>
+    <language>de</language>
+    <platform>all</platform>
+    <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
+    <forum></forum>
+    <website></website>
+    <email></email>
+    <source>https://github.com/YggdrasiI/plugin.video.simple_mediathek_de</source>
+  </extension>
+</addon>

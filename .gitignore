@@ -1,0 +1,6 @@
+bin/*.o
+bin/obj*/*
+bin/lib*
+**/.*.swp
+**/.*.swo
+**/.ropeproject

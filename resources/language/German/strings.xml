@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+  <!-- Plugin name -->
+  <string id="32000">Deutsche Mediatheken</string>
+  <string id="32101">Allgemein</string>
+
+  <!-- Settings -->
+  <string id="32040">Videoqualität</string>
+	<string id="32102">Nachfragen</string>
+	<string id="32103">Beste verfügbare</string>
+	<string id="32104">Geringste verfügbare</string>
+	<string id="32105">Niedrig</string>
+	<string id="32106">Mittel</string>
+	<string id="32107">Hoch</string>
+	<string id="32208">Automatisches Update</string>
+	<string id="32209">Länge der History</string>
+	<string id="32210">Filmliste jetzt aktualisieren</string>
+	<string id="32211">Alle lokalen Daten des Addons löschen</string>
+</strings>
