@@ -22,6 +22,7 @@ LD_LIBRARY_PATH=${BIN_PATH}/../lib:../root/${MACH}/lib:${LD_LIBRARY_PATH}
 export LD_LIBRARY_PATH
 
 INDEX_FILE_FOLDER="/dev/shm/"  # Overwritten by --folder arg
+# INDEX_FILE_FOLDER="$HOME/.kodi/userdata/addon_data/plugin.video.simple_mediathek_de"
 XML_SOURCE="http://zdfmediathk.sourceforge.net/akt.xml"
 XML_DIFF_SOURCE="http://zdfmediathk.sourceforge.net/diff.xml"
 
@@ -199,7 +200,8 @@ if [ "$1" = "update" ] ; then
 elif [ "$1" = "link" ] ; then
   just_print_link "$2"
 else
+  check_if_folder_arg_given $@
   echo_verbose "${BIN_PATH}/${BIN_NAME} $@"
-  ${BIN_PATH}/${BIN_NAME} "$@"
+  ${BIN_PATH}/${BIN_NAME} "$@" --folder "$INDEX_FILE_FOLDER"
   exit $?
 fi

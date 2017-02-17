@@ -14,7 +14,7 @@ rpi:
 	#cd native_sources; make rpi && make install
 
 addon:
-	cd .. ; zip -r $(PROJECT).zip $(PROJECT) --exclude \*/.\* $(PROJECT)/native_sources/\*
+	cd .. ; zip --symlinks -r $(PROJECT).zip $(PROJECT) --exclude \*/.\* $(PROJECT)/native_sources/\*
 
 clean:
 	rm ../$(PROJECT).zip
