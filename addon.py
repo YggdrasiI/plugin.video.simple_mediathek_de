@@ -358,11 +358,11 @@ class SimpleMediathek:
 
         return largs
 
-    def update_db(self):
+    def update_db(self, bForceFullUpdate=False):
         blankScreen()
 
         largs = ["update"]
-        diff = mediathek.try_diff_update()
+        diff = mediathek.try_diff_update() and not bForceFullUpdate
         if diff:
             largs.append("diff")
 
@@ -450,6 +450,8 @@ def read_state_file():
         fin.close()
     except IOError:
         state = {}
+    except TypeError:
+        state = {}
 
     return state
 
@@ -496,7 +498,9 @@ def call_binary(largs):
         str_stdout = str(stdout)
 
         # Debug, store stderr stuff
-        fout = file("/dev/shm/addon.stderr", "w")
+        import random
+        x = int(10000*random.random())
+        fout = file("/dev/shm/addon.stderr.%i" % (x,), "w")
         # fout.write(stderr.read(-1))  # .encode("utf-8"))
         fout.write(str(stderr))  # .encode("utf-8"))
         fout.write(str(stdout))  # .encode("utf-8"))
@@ -567,8 +571,8 @@ def gen_search_categories(mediathek):
     if last_update[0] == -1:
         update_str = ""
     else:
-        update_str = "%10s %s %s" % (
-            "(Stand", last_update[1], (", alt)" if allow_update else ")"))
+        update_str = "%s %s %s" % (
+            "| Stand", last_update[1], ("" if allow_update else ""))
 
     categories = []
     categories.append({"name": "Sender",
@@ -611,7 +615,7 @@ def gen_search_categories(mediathek):
 #                       "selection": "",
 #                       "mode": "main",
 #                       })
-    categories.append({"name": "Datenbank aktualisieren",
+    categories.append({"name": "Filmliste aktualisieren",
                        "selection": update_str,
                        "mode": "update_db",
                        # "IsPlayable": allow_update,
@@ -833,11 +837,14 @@ def list_urls(state, urls, search_result):
             continue
         name = u"%-22s | %s... %s" % (
             squality[i][0], urls[i][:30], squality[i][1])
+        """
         url = build_url({"mode": "play_url",
                          "video_url": urls[i]}, state)
+        """
+        url = urls[i]  # Direct url seems more stable
         li = xbmcgui.ListItem(name, iconImage="DefaultVideo.png")
         li.setProperty("IsPlayable", "true")
-        li.setProperty("mimetype", "video/mpeg")
+        li.setProperty("mimetype", "video")
         is_folder = False
         li.setProperty("title", search_result.get("title", ""))
         li.setProperty("duration",
@@ -895,7 +902,7 @@ with SimpleMediathek() as mediathek:
         mode = "background_script_call"
         ok, tdiff = False, 0
         try:
-            (ok, start, end, diff) = mediathek.update_db()
+            (ok, start, end, diff) = mediathek.update_db(bForceFullUpdate=True)
             tdiff = (end-start).seconds
         except:
             ok = False
@@ -955,7 +962,8 @@ with SimpleMediathek() as mediathek:
     if mode == "update_db":
         ok, tdiff = False, 0
         if True:  # or try...
-            (ok, start, end, diff) = mediathek.update_db()
+            (ok, start, end, diff) = mediathek.update_db(
+                bForceFullUpdate=False)
             tdiff = (end-start).seconds
         else:
             ok = False
