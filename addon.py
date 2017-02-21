@@ -359,8 +359,6 @@ class SimpleMediathek:
         return largs
 
     def update_db(self, bForceFullUpdate=False):
-        blankScreen()
-
         largs = ["update"]
         diff = mediathek.try_diff_update() and not bForceFullUpdate
         if diff:
@@ -900,6 +898,8 @@ with SimpleMediathek() as mediathek:
     # RunScript handling
     if sys.argv[1] == "update_db":
         mode = "background_script_call"
+        xbmcgui.Dialog().notification(
+            addon_name, "Update gestartet", xbmcgui.NOTIFICATION_INFO)
         ok, tdiff = False, 0
         try:
             (ok, start, end, diff) = mediathek.update_db(bForceFullUpdate=True)

@@ -20,6 +20,7 @@ Installation:
 	
 
 Tested with:
+  Kodi 17.0 / LibreELEC 7.95
   Kodi 16.1 / LibreELEC 7.0.2
 
 
