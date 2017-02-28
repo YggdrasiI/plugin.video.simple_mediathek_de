@@ -22,19 +22,16 @@ LD_LIBRARY_PATH=${BIN_PATH}/../lib:../root/${MACH}/lib:${LD_LIBRARY_PATH}
 export LD_LIBRARY_PATH
 
 INDEX_FILE_FOLDER="/dev/shm/"  # Overwritten by --folder arg
-# INDEX_FILE_FOLDER="$HOME/.kodi/userdata/addon_data/plugin.video.simple_mediathek_de"
-XML_SOURCE="http://zdfmediathk.sourceforge.net/akt.xml"
-XML_DIFF_SOURCE="http://zdfmediathk.sourceforge.net/diff.xml"
-
 VERBOSE=1
 DEBUG=0
 
-# Local copies(used if DEBUG=1)
-LOCAL_URL="http://yggdrasil/mediathek"
-DEBUG_AKT_XML="${LOCAL_URL}/Filmliste-akt.xml"
-DEBUG_DIFF_XML="${LOCAL_URL}/Filmliste-diff.xml"
-DEBUG_AKT_XZ="${LOCAL_URL}/Filmliste-akt.xz"
-DEBUG_DIFF_XZ="${LOCAL_URL}/Filmliste-diff.xz"
+# Old source for XML files
+# XML_SOURCE="http://zdfmediathk.sourceforge.net/akt.xml"
+# XML_DIFF_SOURCE="http://zdfmediathk.sourceforge.net/diff.xml"
+
+# New source for XML files
+XML_SOURCE="https://res.mediathekview.de/akt.xml"
+XML_DIFF_SOURCE="https://res.mediathekview.de/diff.xml"
 
 # Fetch command had to write on stdout
 FETCH_WGET="wget -qO- "
@@ -42,6 +39,13 @@ FETCH_WGET="wget -O- "
 FETCH_CURL="curl -L "
 FETCH="${FETCH_WGET}"
 JUST_PRINT_LINK=0
+
+# Local copies(used if DEBUG=1)
+LOCAL_URL="http://yggdrasil/mediathek"
+DEBUG_AKT_XML="${LOCAL_URL}/Filmliste-akt.xml"
+DEBUG_DIFF_XML="${LOCAL_URL}/Filmliste-diff.xml"
+DEBUG_AKT_XZ="${LOCAL_URL}/Filmliste-akt.xz"
+DEBUG_DIFF_XZ="${LOCAL_URL}/Filmliste-diff.xz"
 
 echo_verbose()
 {
