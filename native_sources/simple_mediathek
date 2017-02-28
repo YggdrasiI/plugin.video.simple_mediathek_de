@@ -132,11 +132,14 @@ update()
   XML=$( ${GET_XML} )
 
   # Awk script to select url with respect to the <Prio>-Tag
-  URL_SELECTION='BEGIN {FS = "[<>]"; urls[0]="error"; w[0]=0 }
-  /\<Prio\>/ {s += $3; w[length(w)] = s }
-  /\<URL\>/ {urls[length(urls)] = $3 }
-  END { if(length(urls) < 2 ){ print urls[0] }
+	# Note that mawk not support 'length(array)' and 
+	# w[0], url[0] store the length of the arrays to avoid length() calls.
+  URL_SELECTION='BEGIN {FS = "[<>]"; urls[0]=1; w[0]=1 }
+  /\<Prio\>/ {s += $3; w[w[0]] = s; w[0] = w[0] + 1 }
+  /\<URL\>/ {urls[urls[0]] = $3; urls[0] = urls[0] + 1 }
+  END { if(urls[0] < 2 ){ print "error" }
 else{
+	w[0] = 0
   srand(); x = int(s*rand()) + 1; i=0; while( w[i] < x ) {i+=1};
   print urls[i] } }'
   #  print "i=", i, "w=", w[i], "x=", x, "url=", urls[i]  } }'
