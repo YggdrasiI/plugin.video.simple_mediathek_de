@@ -16,7 +16,7 @@ rpi:
 addon: clean
 	@# 1. Create list of addon files. Filter out uncommited data
 	@# and native_sources folder, but add root folder.
-	git ls-files | grep -v "native_sources\/" | grep -v ".gitignore" \
+	git ls-files | grep -v "\(native_sources\/\|[.]gitignore\|Makefile\)" \
 		| sed -n -e "s/.*/$(PROJECT)\/\0/p" \
 		> /dev/shm/$(PROJECT).include
 	echo "$(PROJECT)/root/*" >> /dev/shm/$(PROJECT).include
