@@ -913,16 +913,27 @@ uint32_t find_lowest_seek_over_threshold(
     linked_list_t *p_index = &p_s_ws->index;
     uint32_t start_index = start_id - LINKED_LIST_FIRST_ID;
 
-    // Check if begin of search is not to late.
+    // Check if begin of search is not too late.
     assert( threshold >
                 (*(p_index->nodes_start + ( start_index / LINKED_LIST_ARR_LEN))
                 + start_index % LINKED_LIST_ARR_LEN)->link.title_seek );
 
-    index_node_t **block =  p_index->nodes_start + ( start_index / LINKED_LIST_ARR_LEN);
-    while( (*block + LINKED_LIST_ARR_LEN - 1)->link.title_seek < threshold ){
-        // All elements of the block are to small.
+    const size_t last_index = p_index->nodes_current - p_index->nodes_start;
+    size_t node_index = (start_index / LINKED_LIST_ARR_LEN);
+    int offset_last_node = (node_index == last_index)?
+        (((p_index->next_unused_id-1)%LINKED_LIST_ARR_LEN) - 1):
+        (LINKED_LIST_ARR_LEN - 1);
+
+    index_node_t **block =  p_index->nodes_start + node_index;
+    while( (*block + offset_last_node)->link.title_seek < threshold ){
+        // All elements of the block are too small.
         block++;
-        if( *block == NULL || p_index->nodes_start + p_index->len_nodes <= block ){
+        node_index++;
+        if( node_index == last_index ){
+            offset_last_node = ((p_index->next_unused_id-1)%LINKED_LIST_ARR_LEN) - 1;
+        }
+
+        if( *block == NULL || node_index > last_index ){
             // No node exceeded the given threshold.
             if( p_stop_id != NULL ){
                 *p_stop_id = p_index->next_unused_id;
@@ -935,14 +946,16 @@ uint32_t find_lowest_seek_over_threshold(
     assert( block < p_index->nodes_start + p_index->len_nodes );
 
     /* The searched element is in
-     * [*block, *(block+LINKED_LIST_ARR_LEN-1)]
+     * [*block, *(block+END-1)]
      *
-     * Use bisect search under under the assumption
-     * (*block)[LINKED_LIST_ARR_LEN-1] => threshold
+     * Use bisect search under the assumption
+     * (*block)[END-1] => threshold
+     * 
+     * with END=LINKED_LIST_ARR_LEN or lower (at last block)
      */
 
     const uint32_t T = threshold;
-    int M = LINKED_LIST_ARR_LEN;
+    int M = offset_last_node+1; //LINKED_LIST_ARR_LEN;
     index_node_t *a = *block;
     index_node_t *c = a+M-1;
     index_node_t *b;
@@ -1004,6 +1017,22 @@ void *title_entry(
 
     //2. Seek allows evaluation of title in chunks struct.
     int iChunk = (seek / SEARCH_TITLE_ARR_LEN);
+
+#if 0
+    /* Bugfix: The latest chunk 'chunks.bufs[partial_i]'
+     *     is already copied into 'chunks.bufs[partial_i + 1]', but this
+     *     seems still not enough and (seek / SEARCH_TITLE_ARR_LEN) reaches
+     *     the index partial_i + 2...
+     *
+     * (Update) Bugfix removed because reason for bug was found and eliminated. 
+     */
+    if( iChunk > p_s_ws->chunks.partial_i ){
+        fprintf(stderr, "Requested chunk index to high! Requested: %i, available: %i\n",
+                iChunk,
+                (int) p_s_ws->chunks.partial_i);
+        iChunk = p_s_ws->chunks.partial_i;
+    }
+#endif
     char_buffer_t *p_b = &p_s_ws->chunks.bufs[iChunk];
 
     assert( p_b->p != NULL );
@@ -1116,6 +1145,7 @@ void search_read_title_file(
     // Repeat latest element for carry-over.
     *p_current_chunk = *(p_current_chunk-1);
     *p_current_seek = *(p_current_seek-1);
+    //*p_current_chunk_start_id = *(p_current_chunk_start_id-1);
 
 #ifdef COMPRESS_BROTLI
     assert( finish_decompressing );
@@ -1261,6 +1291,7 @@ int search_read_title_file_partial(
         ++p_current_seek;
         *p_current_chunk = *(p_current_chunk-1);
         *p_current_seek = *(p_current_seek-1);
+        //*p_current_chunk_start_id = *(p_current_chunk_start_id-1);
     }
 
     return finish_decompressing?1:0;

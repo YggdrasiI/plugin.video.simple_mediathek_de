@@ -369,13 +369,12 @@ int searching(
                 }
             }
 
+            output_flush(&s_ws, &s_ws.output);
+
             if( status > 0 ){
-                // Latest chunk read
-                output_flush(&s_ws, &s_ws.output);
+                // Latest chunk already read
                 break;
             }
-
-            output_flush(&s_ws, &s_ws.output);
             // Load next chunk
             status = search_read_title_file_partial(&s_ws);
         };
