@@ -111,12 +111,13 @@ install: $(SCRIPT_NAME) $(COPY_TO_ARMV6L)
 # (YggdrasiI) copy build by RPi3 into directory for RPi1.
 copy_to_armv6l:
 	echo "Update armv6l binary, too."
+	test -d ../root/armv6l || ln -s "../root/$(MACH)" "../root/armv6l"
 	mkdir -p "$(INSTALL_PREFIX)/armv6l/bin"
 	cp $(PROG_NAME) "$(INSTALL_PREFIX)/armv6l/bin/."
 
 copy_lib_to_armv6l: $(BROTLI_DEP)
-	# cp -r "../root/$(MACH)/" "../root/armv6l/"
-	ln -s "../root/$(MACH)" "../root/armv6l"
+	@# cp -r "../root/$(MACH)/" "../root/armv6l/"
+	test -d ../root/armv6l || ln -s "../root/$(MACH)" "../root/armv6l"
 	
 
 
