@@ -42,7 +42,7 @@ base_url = sys.argv[0]
 search_ranges_str = {
     "duration": ["10 min", "30 min", "60 min", "1,5 h",
                  "2 h", ""],
-    "direction": ["Mindestens", u"Höchstens"],
+    "direction": [u"Höchstens", u"Mindestens"],
     "direction_b": [u"Suche auf Mindestlänge umstellen...",
                     u"Suche auf Maximallänge umstellen..."],
     "time": ["0-10 Uhr", "10-16 Uhr", "16-20 Uhr", "20-24 Uhr", ""],
