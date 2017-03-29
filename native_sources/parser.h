@@ -240,16 +240,34 @@ search_pair_t **pattern_1_create()
 /* Create array of search pattern (of type search_pair*), followed by NULL.
  *
  * Abbreviation:
- * 0 [ (","), NULL ]   "X"
- * 1 [ (","), NULL ]   Sender
- * 2 [ (","), NULL ]   Thema
- * 3 [ (","), NULL ]   Titel
- * 4 [ (","), NULL ]   Datum
- * 5 [ (","), NULL ]   Zeit
- * 6 [ (","), NULL ]   Dauer
- * usw. mit "Größe [MB]", "Beschreibung", "Url", "Website", "Untertitel",
- * "UrlRTMP", "Url_Klein", "UrlRTMP_Klein", "Url_HD", "UrlRTMP_HD", 
- * "DatumL", "Url_History", "Geo", "neu" 
+ * Idx Beg End  Column
+ *  0   (",")   "X"
+ *  1   (",")   Sender
+ *  2   (",")   Thema
+ *  3   (",")   Titel
+ *  4   (",")   Datum
+ *  5   (",")   Zeit
+ *  6   (",")   Dauer
+ *  7   (",")   Größe [MB]
+ *  8   (",")   Beschreibung
+ *  9   (",")   Url
+ * 10   (",")   Webseite
+ * 11   (",")   Untertitel
+ * 12   (",")   UrlRTMP
+ * 13   (",")   Url_Klein
+ * 14   (",")   Url_Klein
+ * 15   (",")   UrlRTMP_Klein
+ * 16   (",")   Url_HD
+ * 17   (",")   UrlRTMP_HD
+ * 18   (",")   DatumL
+ * 19   (",")   Url_History
+ * 20   (",")   Geo
+ * 21   (",])   neu + chars until array ends | ("true"|"false").*]
+ * 22   NULL
+ *
+ * Notes:
+ *   - '"X": [...]'-Entries of json files not separated by \n anymore. (Mrz 2017)
+ *   - Separator ' ,' was changed to ',' (Mrz 2017)
  */
 search_pair_t **pattern_filmliste_flexibel_create()
 ;
