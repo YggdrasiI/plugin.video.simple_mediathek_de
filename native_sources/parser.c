@@ -495,7 +495,7 @@ search_pair_t **pattern_filmliste_flexibel_create()
     // "..."-Pair
     pairs[0]->begin.pattern.c = '"';
     pairs[0]->begin.mask = '\\';
-    pairs[0]->begin.abort = '\n';
+    pairs[0]->begin.abort = ']';
     pairs[0]->end.pattern.c = '"';
     pairs[0]->end.mask = '\\';
     pairs[0]->end.abort = '\n';
@@ -506,6 +506,9 @@ search_pair_t **pattern_filmliste_flexibel_create()
         pairs[i] = search_pair_create();
         memcpy(pairs[i], pairs[0], sizeof(search_pair_t));
     }
+    pairs[0]->begin.abort = ':';
+    pairs[0]->end.abort = ':';
+    pairs[NP-1]->end.pattern.c = ']';
 
     return pairs;
 }
