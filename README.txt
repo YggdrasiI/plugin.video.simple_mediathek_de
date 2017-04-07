@@ -9,15 +9,21 @@ Build:
      This will also compile libbrotli (compression library)
   3. Build addon archive with 'make addon'
 
-Installation: 
-  Copy addon archive into .kodi/addons/. and refresh add-on list (or restart Kodi)
-  
-  I.e.
-    cd $HOME/.kodi/addons
-    [...]
-    unzip plugin.video.simple_mediathek.zip
-    kodi-send -a "UpdateLocalAddons"
-	
+Installation:
+  1. Kodi 17.0 (Krypton) and above:
+    Allow addons from unknown sources in Preferences>System>Addons
+
+  2. Copy addon archive into .kodi/addons/. and refresh add-on list (or restart Kodi)
+    The position of .kodi depends on your system/setup.
+    Default position on OpenELEC/LibreELEC: /storage/.kodi
+    Default position on OSMC: /home/osmc/.kodi
+
+    I.e.
+      cd $HOME/.kodi/addons
+      [...]
+      unzip plugin.video.simple_mediathek.zip
+      kodi-send -a "UpdateLocalAddons"
+
 
 Tested with:
   Kodi 17.0 / LibreELEC 7.95
