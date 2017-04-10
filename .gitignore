@@ -4,3 +4,4 @@ bin/lib*
 **/.*.swp
 **/.*.swo
 **/.ropeproject
+**/*.pyo

@@ -16,6 +16,8 @@ import subprocess
 
 import keyboard
 
+from chmod_binaries import binary_setup
+
 """
 Kodi uses Python 2.7.1. It follows an incomplete list of changes
  if the addon need to changed onto Python 3.x
@@ -541,6 +543,13 @@ def call_binary_v1(largs):
         pass
 
     return (-1, "")
+
+
+def check_addon_status():
+    # Made bash script executable
+    # (After fresh addon installation in Krypthon 17.1 required.)
+    path = addon.getAddonInfo("path").decode("utf-8")
+    binary_setup(path)
 
 
 def is_searchable(pattern):
@@ -1260,6 +1269,8 @@ with SimpleMediathek() as mediathek:
             play_url(addon_handle, state_diff, args["video_url"])
 
     if mode is None or mode == "main":
+        check_addon_status()
+
         #  Top level page of plugin
         search_categories = gen_search_categories(mediathek)
 
