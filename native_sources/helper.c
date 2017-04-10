@@ -235,17 +235,20 @@ char *transform_search_title(
 
             case 0x0020: // char ' '
             case 0x0009: // char '\t'
+            case 0x002D: // char '-'
+            case 0x005F: // char '_'
                 // Trim space
                 if( p_out == out || *(p_out-1) != ' '){
                     *p_out++ = ' ';
                 }
                 break;
 
-            case 0x00c4: // char Ä
-            case 0x00d6: // char Ö
-            case 0x00dc: // char Ü
+            case 0x00c4: // char Ä (utf-8 is C3 84)
+            case 0x00d6: // char Ö (utf-8 is C3 96)
+            case 0x00dc: // char Ü (utf-8 is C3 9C)
                 //uc += 0x20; // lower case umlaut
-                *p_out++ = (*p_in) + 0x20;
+                *p_out++ = (*p_in++);
+                *p_out++ = (*p_in++) + 0x20;
                 break;
                 //case 0x00e4: // char ä
                 //case 0x00f6: // char ö

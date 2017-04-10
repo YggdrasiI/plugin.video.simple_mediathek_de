@@ -72,7 +72,7 @@ size_t parse_dauer(
  * 3. Remove some characters like "/'
  *
  * - Note: Utf-8 strings supported.
- * - Note: Create new string. Free it after usage. */
+ * - Note: Function creates new string. Free it after usage. */
 char *transform_search_title(
         const char *in)
 ;
