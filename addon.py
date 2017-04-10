@@ -800,7 +800,8 @@ def listing_add_search_results(listing, state, results):
         url = build_url({"mode": "select_result", "iresult": i}, state)
         li = xbmcgui.ListItem(name, iconImage="DefaultVideo.png")
         li.setProperty("IsPlayable", "true")
-        is_folder = True
+        # It is no folder if quality will be auto selected.
+        is_folder = (0 == int(addon.getSetting("video_quality")))
         listing.append((url, li, is_folder))
         i += 1
         if i >= max_num_entries_per_page:
@@ -846,9 +847,11 @@ def list_urls(state, urls, search_result):
         li.setProperty("IsPlayable", "true")
         li.setProperty("mimetype", "video")
         is_folder = False
-        li.setProperty("title", search_result.get("title", ""))
         li.setProperty("duration",
                        str(int(search_result.get("iduration", 0)) / 60))
+        li.setProperty("title", search_result.get("title", ""))  # Deprecated?
+        li.setInfo('video', {'title': search_result.get("title", ""),
+                             'genre': "MediathekView"})
         listing.append((url, li, is_folder))
 
     # Entry to go back to list of search results. The state variable
@@ -865,14 +868,14 @@ def list_urls(state, urls, search_result):
         cacheToDisc=directory_cache)
 
 
-def play_url(addon_handle, state, url, b_add_to_history=False):
-    # xbmc.executebuiltin('PlayMedia("%s")' % (url,))
-    xbmc.Player().play(item=("%s" % (url,)))  # , listitem=listItem)
-    """
+def play_url(addon_handle, state, url, result=None, b_add_to_history=False):
+    # xbmc.Player().play(item=("%s" % (url,))) # more reliable?!
+    # or...
     item = xbmcgui.ListItem(path=url)
-    xbmcplugin.setResolvedUrl(handle=addon_handle,
-                              succeeded=True, listitem=item)
-    """
+    item.setInfo(type='Video', infoLabels={
+        'Title': url if result is None else result.get("title", "")})
+    xbmcplugin.setResolvedUrl(handle=addon_handle, succeeded=True,
+                              listitem=item)
 
 
 def blankScreen():
@@ -945,15 +948,15 @@ with SimpleMediathek() as mediathek:
         addon_handle = int(sys.argv[1])
         xbmcplugin.setContent(addon_handle, "movies")
 
-    # Set default view
-    skin_used = xbmc.getSkinDir()
-    if skin_used in SKINS_LIST:
-        xbmc.executebuiltin('Container.SetViewMode(50)')
-    elif skin_used in SKINS_WIDE_LIST:
-        xbmc.executebuiltin('Container.SetViewMode(51)')
-    else:
-        # View for other skins
-        xbmc.executebuiltin('Container.SetViewMode(50)')
+        # Set default view
+        skin_used = xbmc.getSkinDir()
+        if skin_used in SKINS_LIST:
+            xbmc.executebuiltin('Container.SetViewMode(50)')
+        elif skin_used in SKINS_WIDE_LIST:
+            xbmc.executebuiltin('Container.SetViewMode(51)')
+        else:
+            # View for other skins
+            xbmc.executebuiltin('Container.SetViewMode(50)')
 
         # args = urlparse.parse_qs(sys.argv[2][1:])
         args = unpack_url(sys.argv[2][1:])
@@ -1139,14 +1142,14 @@ with SimpleMediathek() as mediathek:
                     elif quali in [1, 2]:
                         url = non_empty_urls[1-quali]  # [0] or [-1]
                         # Play file
-                        play_url(addon_handle, state_diff, url)
+                        play_url(addon_handle, state_diff, url, result)
                     else:
                         # Reduce on urls of quality low, mid or high
                         urls2 = urls[2*(quali-3): 2*(quali-3)+1]
                         non_empty2 = [u for u in urls2 if len(u) > 0]
                         if len(non_empty2) > 0:
                             # Play file
-                            play_url(addon_handle, state_diff, non_empty2[0])
+                            play_url(addon_handle, state_diff, non_empty2[0], result)
                         else:
                             # Show list
                             list_urls(state_diff, urls, result)
