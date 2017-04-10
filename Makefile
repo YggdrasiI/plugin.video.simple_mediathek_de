@@ -21,8 +21,9 @@ addon: clean
 		> /dev/shm/$(PROJECT).include
 	echo "$(PROJECT)/root/*" >> /dev/shm/$(PROJECT).include
 	@# 2. Create archive
-	cd .. ; zip --symlinks -r $(PROJECT).zip . \
+	# Note zip's --symlinks-flag produces non-installable archives for Kodi.
+	cd .. ; zip -r $(PROJECT).zip . \
 		-i@/dev/shm/$(PROJECT).include
 
 clean:
-	test \! -f ../$(PROJECT).zip || rm ../$(PROJECT).zip
+	test \! -f ../$(PROJECT).zip || mv ../$(PROJECT).zip ../$(PROJECT).old.zip
