@@ -13,6 +13,14 @@
 #include "brotli.h"
 #endif
 
+/* Convert 'title|topic'-string at indexing time into lower case and
+ * remove subset of special characters like -,_,|,\,".
+ *
+ * Moreover, the original title will added to the title_XXXX.br files
+ * which increased its size (currently from 3.3MB to 4.5MB)
+ */
+#define NORMALIZED_STRINGS 1
+
 
 /* Current indices of input. (Index 0 is "X"-key of json-dict) */
 #define INDEX_KEY 0
@@ -52,7 +60,7 @@ typedef struct {
 } range_t;
 
 typedef struct {
-    /* Split duration into ranges 
+    /* Split duration into ranges
      * [0, duration_borders[0]],
      * [duration_borders[0] + 1, duration_borders[1]],
      * ...
@@ -95,7 +103,7 @@ typedef struct {
 typedef struct {
     int32_t relative_start_time;
 #if 0
-    //int32_t duration, 
+    //int32_t duration,
     //int32_t length (topic_len + title_len + 1)
 #else
     uint16_t duration;
@@ -118,7 +126,7 @@ typedef struct filmliste_workspace_s {
     char_buffer_t payload_buf;
     struct tm tmp_ts; // time stamp
     channels_ws_t channels;
-    /* Entries with empty channel name 
+    /* Entries with empty channel name
      * inherit channel from previous entry.
      */
     int previous_channel;
@@ -163,7 +171,7 @@ void add_anchor(
 int update_index(
         filmliste_workspace_t *p_fl_ws,
         int channel_nr,
-        time_t day_ctime, 
+        time_t day_ctime,
         size_t start,
         //time_t start_time, /* exact start time  (thus, date + time)*/
         size_t duration)
@@ -186,7 +194,7 @@ void write_index_footer(
 int update_index2(
         filmliste_workspace_t *p_fl_ws,
         int channel_nr,
-        time_t day_ctime, 
+        time_t day_ctime,
         size_t start,
         size_t duration)
 ;
@@ -208,6 +216,16 @@ void filmliste_handle(
         char_buffer_t *p_buf_out)
 ;
 
+/* Cached write into fd.
+ *
+ * Uses snprintf to print into buffer 'buf' and flush it
+ * if not enough space is available.
+ * The buffer should be big enough that snprintf never fails
+ * for an empty buffer.
+ *
+ * Note that multiple calls of buf_snprintf concatenate the output
+ * strings. Add an explicit '\0' as last argument to omit this behavior.
+ */
 size_t buf_snprintf(
         int fd,
         char_buffer_t *buf,
@@ -229,7 +247,7 @@ size_t buf_write(
 /* Delete differential files to prevent mixing
  * of new and outdated files.
  *
- * Return number of deleted files or 
+ * Return number of deleted files or
  * -1 on error.
  */
 int remove_old_diff_files(

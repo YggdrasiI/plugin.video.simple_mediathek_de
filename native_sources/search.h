@@ -12,11 +12,13 @@
 #include "filmliste.h"
 
 //#define SEARCH_TITLE_ARR_LEN   0x100000 //=> 27MB at search
-//#define SEARCH_TITLE_ARR_LEN   0x010000 // < 25MB at search 
+//#define SEARCH_TITLE_ARR_LEN   0x010000 // < 25MB at search
 #define SEARCH_TITLE_ARR_LEN   0x040000   // < 25, too.
 
+#define MAX_SUB_PATTERN 10 // search pattern can be splited by *
+
 #if 0
-typedef struct { 
+typedef struct {
     time_t start_time;
     uint16_t duration;
     uint16_t length; //title_len;
@@ -30,6 +32,8 @@ typedef searchable_strings_prelude_t title_line_t;
 typedef struct {
     linked_list_subgroup_indizes_t groups;
     char *title_pattern;
+    char *_title_sub_pattern; // similar to title_pattern, but with '\0' at arbitary positions.
+    char *title_sub_pattern[MAX_SUB_PATTERN+1]; // +1 for extra NULL
     uint32_t current_id;
     int K;
     uint32_t used_indizes[4];
@@ -62,10 +66,10 @@ typedef struct {
 typedef struct {
     /* len is the length of bufs.
      *
-     * Latest element of this array will map on same location as 
+     * Latest element of this array will map on same location as
      * the previous element to catch the lookup case
      *     {seek of something} > SEARCH_TITLE_ARR_LEN
-     * 
+     *
      * ( We decide which chunk contains the entry with an expression like
      * (...).seek_pos / SEARCH_TITLE_ARR_LEN )
      */
@@ -77,7 +81,7 @@ typedef struct {
     //uint32_t *end_ids; // latest id in at bufs[i].p. = start_ids[i+1]-1
 
     /* Position in brotli input buffer after partial reading of file.
-     * The next decoding should be start at 
+     * The next decoding should be start at
      * 'buffer_data_pointer + decoding_start_byte_offset'.
      *
      * (Shifted into brotli decoder struct.)
@@ -120,7 +124,7 @@ typedef struct {
 
 typedef struct search_workspace_s {
     /* Timestamps for index file */
-    time_t tcreation; // Creation day of index file; 
+    time_t tcreation; // Creation day of index file;
     time_t ttoday;  // (Not stored in index file, but 86400*itoday.)
     size_t itoday; // creation_day/seconds(day) (Redundant value)
     int today_time_zone_offset; // GTM+1 + opt. day light offset
@@ -184,7 +188,7 @@ int search_do_search(
         arguments_t *p_arguments)
 ;
 
-/* Lookup into index to get seek position for 
+/* Lookup into index to get seek position for
  * title and second lookup to find this entry.
  *
  * Call only after setup with search_read_title_file(...)
@@ -205,6 +209,7 @@ void print_search_results(
         search_workspace_t *p_s_ws)
 ;
 
+#if 0 //deprecated
 /* Print Json data (without content of payload files)
  * for one id. */
 void print_search_result(
@@ -213,6 +218,7 @@ void print_search_result(
         uint32_t id,
         int prepend_comma)
 ;
+#endif
 
 /*
  * Find lowest node with
@@ -228,7 +234,7 @@ uint32_t find_lowest_seek_over_threshold(
         uint32_t start_id, uint32_t *p_stop_id)
 ;
 
-/* Return pointer on (transformed) title pattern. 
+/* Return pointer on (transformed) title pattern.
  * (Similar to title_entry()...
  */
 const char * get_title_string(
@@ -260,11 +266,25 @@ int search_read_title_file_partial(
         search_workspace_t *p_s_ws)
 ;
 
-/* Reset workspace 
+/* Reset workspace
  * to allow opening of next title
  * file.
  * (Called before search in diff file begins.)
  */
 void search_reset_workspace(
         search_workspace_t *p_s_ws)
+;
+
+/* Assumes string of form aaaXbbbXccc...
+ * in array[0] and return array
+ * with aaa, bbb, ccc, ..., NULL
+ *
+ * Return: Number of used celles of array (>= 1).
+ *
+ * Note: array[i] pointers maping into string title_pattern.
+ * Thus, reset array values to NULL, but not free'ing them.
+ */
+int split_pattern(
+        search_pattern_t *p_pattern,
+        char split_char)
 ;

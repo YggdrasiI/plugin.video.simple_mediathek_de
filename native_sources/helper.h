@@ -19,15 +19,15 @@
  * – Leading spaces will be skipped. All other non-digit characters
  *   abort the parsing of the string.
  * – No overflow detection.
- * – If 'endptr' is NULL, you can not distinct 0 from 'not found' values. 
- *   To check if a number was found compare '*endptr' with 'str'. 
+ * – If 'endptr' is NULL, you can not distinct 0 from 'not found' values.
+ *   To check if a number was found compare '*endptr' with 'str'.
  *   The 'endptr' value should point after the start value.
- * 
+ *
  */
 int strtoi(const char* str, char** endptr, int maxlen);
 #endif
 
-/* Note: Replaced in code due strange behaviour*/
+/* Note: Replaced in code due strange behavior*/
 # define my_strdupa(s) \
     (__extension__ \
      ({ \
@@ -71,10 +71,12 @@ size_t parse_dauer(
  * //3. Remove characters expect [A-z0-9]
  * 3. Remove some characters like "/'
  *
+ * Return value: length of *pp_out
  * - Note: Utf-8 strings supported.
  * - Note: Function creates new string. Free it after usage. */
-char *transform_search_title(
-        const char *in)
+size_t transform_search_title(
+        const char *p_in,
+        char **pp_out)
 ;
 
 #define transform_channel_name transform_search_title

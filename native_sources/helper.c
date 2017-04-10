@@ -195,34 +195,40 @@ size_t parse_dauer(
     return (s + 60 * (m + 60 * h));
 }
 
-char *transform_search_title(
-        const char *in)
+size_t transform_search_title(
+        const char *p_in,
+        char **pp_out)
 {
-    if( in == NULL ){
-        return NULL;
+    if( p_in == NULL ){
+        assert(0);
+        return 0;
     }
 
-    size_t len_in = strlen(in);
-    uint8_t * const out = (uint8_t *) malloc( (1 + len_in) * sizeof(uint8_t) );
-    *(out + len_in) = '\0';
+    size_t len_in = strlen(p_in);
 
-    const char *p_in = in; // current char
-    uint8_t *p_out = (uint8_t *)out; // current output position
+    Free(*pp_out);
+    /*uint8_t * const*/
+    char * const p_out =  (char *) malloc( (1 + len_in) * sizeof(char) );
+    *(p_out + len_in) = '\0';
+    *pp_out = p_out;
+
+    const char *p_cur_in = p_in; // current char
+    char *p_cur_out = p_out; // current output position
 
     /* Utf-8 character loop. */
     int i = 0, j = 0;
     int d, l;
     unsigned int uc; // 4 byte Unicode code point
-    for( l=strlen(in), uc=u8_nextchar((char *)in,&j), d=j-i;
+    for( l=strlen(p_in), uc=u8_nextchar((char *)p_in,&j), d=j-i;
             i<l;
-            i=j, uc=u8_nextchar((char *)in,&j), d=j-i )
+            i=j, uc=u8_nextchar((char *)p_in,&j), d=j-i )
     {
-        p_in = in+i;
+        p_cur_in = p_in+i;
 
         switch(uc){
             case 0x1e9e: // char ẞ
                 // Insert lower esszet
-                *p_out++ = 0x1e; *p_out++ = 0x9e;
+                *p_cur_out++ = 0x1e; *p_cur_out++ = 0x9e;
                 break;
                 //case 0x00df: // char ß
 
@@ -237,9 +243,10 @@ char *transform_search_title(
             case 0x0009: // char '\t'
             case 0x002D: // char '-'
             case 0x005F: // char '_'
+            case 0x007C: // char '|'
                 // Trim space
-                if( p_out == out || *(p_out-1) != ' '){
-                    *p_out++ = ' ';
+                if( p_cur_out == p_out || *(p_cur_out-1) != ' '){
+                    *p_cur_out++ = ' ';
                 }
                 break;
 
@@ -247,8 +254,8 @@ char *transform_search_title(
             case 0x00d6: // char Ö (utf-8 is C3 96)
             case 0x00dc: // char Ü (utf-8 is C3 9C)
                 //uc += 0x20; // lower case umlaut
-                *p_out++ = (*p_in++);
-                *p_out++ = (*p_in++) + 0x20;
+                *p_cur_out++ = (*p_cur_in++);
+                *p_cur_out++ = (*p_cur_in++) + 0x20;
                 break;
                 //case 0x00e4: // char ä
                 //case 0x00f6: // char ö
@@ -258,24 +265,24 @@ char *transform_search_title(
                 if( uc >= 0x0041 && uc <= 0x005a ) // A-Z
                 {
                     //uc += 0x20; // a-z
-                    *p_out++ = (*p_in) + 0x20;
+                    *p_cur_out++ = (*p_cur_in) + 0x20;
                 }else{
                     // Copy (multi-byte) char
                     while( d-- ){
-                        *p_out++ = *p_in++;
+                        *p_cur_out++ = *p_cur_in++;
                     }
                 }
                 break;
         };
 
         // Shift input pointer by character width (if d was not consumed in switch)
-        p_in += d;
+        p_cur_in += d;
     }
 
     // close (probably shorten) string
-    *p_out = '\0';
+    *p_cur_out = '\0';
 
-    return (char *)out;
+    return (p_cur_out - p_out); // = sizeof(p_out)
 }
 
 char *char_buffer_malloc(

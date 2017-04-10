@@ -59,7 +59,7 @@ int info_read(
 
 #if 1
     /* Read length of channel data, again
-     * (just to mirror write_index_footer() behaviour)
+     * (just to mirror write_index_footer() behavior)
      */
     int32_t bytes_was_read;
     ssize_t n = read(p_i_ws->index_fd, &bytes_was_read, sizeof(int32_t));

@@ -85,7 +85,7 @@ void output_flush(
     uint32_t p = p_output->pos_p;
     const uint32_t M = p_output->M;
 
-    if( p_output->overlap_flag == 1){ 
+    if( p_output->overlap_flag == 1){
         p = i;
     }else if(i == p){
         // No new entry available to flush
@@ -101,9 +101,9 @@ void output_flush(
             p = (i - p_output->N + M) % M;
         }
     }
-    
+
     if( p > i ){
-        // Handle [pos_p+1, M-1]. p will be 0 after this step 
+        // Handle [pos_p+1, M-1]. p will be 0 after this step
         while( p > 0 ){
             uint32_t id = p_output->p_ids[p];
             output_fill(p_s_ws, p_output->p_to_print+p, id);
@@ -112,7 +112,7 @@ void output_flush(
         }
     }
     while( p < i ){
-        // Handle [0, pos_i-1] 
+        // Handle [0, pos_i-1]
         //
         uint32_t id = p_output->p_ids[p];
         output_fill(p_s_ws, p_output->p_to_print+p, id);
@@ -140,7 +140,6 @@ void output_fill(
 
     linked_list_t *p_list = &p_s_ws->index;
     index_node_t *p_el;
-    const char *title;
 
     p_el = linked_list_get_node(p_list, id);
     uint32_t channel = LINKED_LIST_SUBGROUP(p_el->nexts.channel);
@@ -155,16 +154,29 @@ void output_fill(
 
     searchable_strings_prelude_t *p_entry =
         (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
-    title = (const char *)(p_entry+1);
-    //title = get_title_string(p_s_ws, id);
 
-    int title_len = p_entry->length; //followed by \n\0 or \0
-    /* Restrict on characters before '|' */
+    int title_len = p_entry->length; //followed by \0
+#if NORMALIZED_STRINGS > 0
+    const char *title, *title_norm;
+    title_norm = (const char *)(p_entry+1);  // Normalized title + topic string...
+    title = title_norm + title_len + 1; // Original title
+    if( title < title_norm || (title_norm - title) > 4096){ // title_len wrong?
+        assert(0);
+        title = title_norm + strlen(title_norm) + 1;
+    }
+        //title = title_norm + strlen(title_norm) + 1;
+    title_len = strlen(title);
+#else
+    const char *title;
+    title = (const char *)(p_entry+1);
+
+    /* Restrict on characters before '|' to cut of 'topic' substring*/
 #ifdef _GNU_SOURCE
     title_len = strchrnul(title, '|') - title;
 #else
     char *sep = strchr(title, '|');
     if( sep ){ title_len = sep - title; }
+#endif
 #endif
 
     // Convert channel id to string
@@ -235,7 +247,7 @@ size_t output_print(
             p = (p - Nskip + M) % M;
 
             // Limit offset
-            if( f > 0 && ( 0 > offset_left 
+            if( f > 0 && ( 0 > offset_left
                         || offset_left > p_output->p_to_print[p].used ))
             {
                 offset_left = 0;
@@ -263,7 +275,7 @@ size_t output_print(
             p = (p + Nskip) % M;
 
             // Limit offset
-            if( f > 0 && ( 0 > offset_left 
+            if( f > 0 && ( 0 > offset_left
                         || offset_left > p_output->p_to_print[p].used ))
             {
                 offset_left = 0;

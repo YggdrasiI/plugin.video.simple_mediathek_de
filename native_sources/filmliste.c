@@ -343,7 +343,8 @@ void filmliste_handle(
     }else{
         // Normalize channel name. Cheap operation because
         // channel name is mostly an empty string.
-        char *channel_str2 = transform_channel_name(channel_str);
+        char *channel_str2 = NULL;
+        transform_channel_name(channel_str, &channel_str2);
         channel_nr = get_channel_number(&p_fl_ws->channels, channel_str2, 1);
         Free(channel_str2);
         p_fl_ws->previous_channel = channel_nr;
@@ -412,12 +413,13 @@ void filmliste_handle(
     urls_len[5] = search_pair_get_chars(p_buf_in, *(start+INDEX_URLRTMP_HD), &urls_str[5], NULL, 1);
     _unused(urls_len);
 
-#if 0
-    // Output similar to awk script.
-    int globOffset = -1;
-    dprintf(fd, "%s[%i,%i,%i,%i,\"%s %s\"]\n", ",", globOffset,
-            channel_nr, relative_start_time, duration, title_str, topic_str);
-#else
+#if NORMALIZED_STRINGS > 0
+    // Normalize title and topic string
+    char *title_str_norm = NULL;
+    char *topic_str_norm = NULL;
+    title_len = transform_search_title(title_str, &title_str_norm);
+    topic_len = transform_search_title(topic_str, &topic_str_norm);
+#endif
 
     update_index2(p_fl_ws,
             channel_nr,
@@ -436,7 +438,7 @@ void filmliste_handle(
             //(int32_t)(topic_len + title_len + 1)
             /* Packing reduces filesize by approx. 10% */
             (uint16_t)(duration),
-            (uint16_t)(topic_len + title_len + 1)
+            (uint16_t)(topic_len + 1 + title_len) /* %s|%s */
         };
         p_fl_ws->searchable_strings.seek += buf_write(
                 p_fl_ws->searchable_strings.fd,
@@ -453,11 +455,22 @@ void filmliste_handle(
 #ifdef COMPRESS_BROTLI
                 &p_fl_ws->brotli_title,
 #endif
-                //"%s|%s\n%c",
+#if NORMALIZED_STRINGS > 0
+                "%s|%s%c%s%c",
+                title_str_norm, topic_str_norm, '\0',
+                title_str, '\0'
+#else
                 "%s|%s%c",
-                title_str, topic_str, '\0');
+                title_str, topic_str, '\0'
+#endif
+                );
         //p_fl_ws->searchable_strings.item += 1;
     }
+
+#if NORMALIZED_STRINGS > 0
+    Free(title_str_norm);
+    Free(topic_str_norm);
+#endif
 
     // Write payload in second buffer
     if( p_fl_ws->payload.fd > 0 )
@@ -495,7 +508,6 @@ void filmliste_handle(
         linked_list_write_partial( p_fl_ws->index_fd, &p_fl_ws->index, 0);
     }
 
-#endif
 }
 
 size_t buf_snprintf(

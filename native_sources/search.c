@@ -25,7 +25,7 @@ search_workspace_t search_ws_create(
     output_t output = output_init(
             p_arguments->max_num_results,
             p_arguments->skiped_num_results,
-            p_arguments->reversed_results, 
+            p_arguments->reversed_results,
             2 /* offset for ",\n" */);
 
 
@@ -116,8 +116,7 @@ void uninit_chunks(
     assert( p_chunks->len > 1 );
 
     /* Clear chunks
-     * Not all chunks hat do be in usage and
-     * pointer of last used chunk is repation of previous.
+     * In general, not all chunks were used and last pointer equals previous one.
      */
     int i;
     for( i=0; i<p_chunks->len - 1; ++i){
@@ -257,7 +256,7 @@ void read_index_footer(
             p_s_ws->index_fd, &p_s_ws->channels);
 
     /* Read length of channel data, again
-     * (just to mirror write_index_footer() behaviour)
+     * (just to mirror write_index_footer() behavior)
      */
     int32_t bytes_was_read;
     ssize_t n = read(p_s_ws->index_fd, &bytes_was_read, sizeof(int32_t));
@@ -265,53 +264,6 @@ void read_index_footer(
     assert( len_channel_data == bytes_was_read);
     _unused(n); _unused(len_channel_data);
 }
-
-#if 0
-// like transform_search_title, but latin-1 only.
-const char *transform_search_title_latin_1(const char *in){
-  size_t len_in = strlen(in);
-  char * const out = (char *) malloc( (1 + len_in) * sizeof(char) );
-  *(out + len_in) = '\0';
-
-  const char *p_in = in; // current char
-  const char * const end_in = in + len_in; // current char
-  char *p_out = out; // current output position
-
-  while( p_in < end_in ){
-      switch(*p_in){
-          case '"':
-          case '\'':
-          case '\\':
-          //case '/'':
-          //case '-'':
-              // Ignore character
-              break;
-          case '\t':
-          case ' ':
-              if( p_out == out || *(p_out-1) != ' '){
-                  *p_out++ = ' ';
-              }
-              break;
-          case 'Ä':
-          case 'Ü':
-          case 'Ö':
-          //case 'ẞ': // no iso8890-1 char.
-          default:
-              if( *p_in >= 'A' && *p_in <= 'Z'){
-                  *p_out++ = *p_in + 32; // lowercase
-              }else{
-                  *p_out++ = *p_in;
-              }
-      };
-      ++p_in;
-  }
-
-  // close string (out could be shorter than in)
-  *p_out = '\0';
-
-  return (const char *)out;
-}
-#endif
 
 /*
  * The programm arguments could describe search
@@ -527,7 +479,7 @@ int _search_by_title_(
     const uint32_t found_before = p_s_ws->output.found;
     uint32_t *p_found = &p_s_ws->output.found;
 
-    assert( p_pattern->title_pattern != NULL );
+    assert( p_pattern->title_sub_pattern[0] != NULL );
 
     // Loop over all arrays of nodes.
     int i, ichunk_begin, ichunk_end;
@@ -573,19 +525,29 @@ int _search_compare_title_(
         index_node_t *p_el)
 {
     assert( p_pattern->title_pattern != NULL );
+    assert( p_pattern->title_sub_pattern[0] != NULL );
     //linked_list_t *p_list = &p_s_ws->index;
-    const char *title = get_title_string(p_s_ws, p_el->id);
-#ifdef _GNU_SOURCE
-    // Optinal TODO: Switch to strstr() if input was reduced to lower case.
-    char *hit = strcasestr(title, p_pattern->title_pattern);
-    //char *hit = strstr(title, p_pattern->title_pattern);
+
+    // Split pattern by each '*' and search substring separately.
+    const char *title_topic_normalized = get_title_string(p_s_ws, p_el->id);
+    const char **sub_pat = (const char **)p_pattern->title_sub_pattern;
+    while( *sub_pat != NULL ){
+#if NORMALIZED_STRINGS > 0
+        const char *hit = strstr(title_topic_normalized, *sub_pat);
 #else
-    char *hit = strstr(title, p_pattern->title_pattern);
+#ifdef _GNU_SOURCE
+        const char *hit = strcasestr(title_topic_normalized, *sub_pat);
+#else
+        const char *hit = strstr(title_topic_normalized, *sub_pat);
 #endif
-
-    //DEBUG( fprintf(stderr, "%s\n", title) );
-
-    return (hit?0:-1);
+#endif
+        if( hit == NULL ){
+            return -1;
+        }
+        title_topic_normalized = hit + strlen(*sub_pat);
+        sub_pat++;
+    }
+    return 0;
 }
 
 /* Inner function of search_do_search */
@@ -608,7 +570,7 @@ int _search_do_search_(
     uint32_t *p_found = &p_s_ws->output.found;
 
     if( K == 0 ){
-        if( p_pattern->title_pattern != NULL ){
+        if( p_pattern->title_sub_pattern[0] != NULL ){
             return _search_by_title_(p_s_ws, p_pattern);
         }else{
             fprintf(stderr, "Search aborted. It was no criteria set.\n");
@@ -665,7 +627,7 @@ int _search_do_search_(
         }
 
         // Id fulfill all releations. Now, compare the title string
-        if(( p_pattern->title_pattern == NULL ||
+        if(( p_pattern->title_sub_pattern[0] == NULL ||
                     _search_compare_title_(p_s_ws, p_pattern, p_el) == 0 ) &&
                 _all_arguments_fulfilled(p_s_ws, p_el) == 0 )
         {
@@ -699,6 +661,8 @@ void print_search_results(
     output_print(fd, &p_s_ws->output);
 }
 
+#if 0
+// Deprecated/Unused function?!
 void print_search_result(
         int fd,
         search_workspace_t *p_s_ws,
@@ -707,7 +671,6 @@ void print_search_result(
 {
     linked_list_t *p_list = &p_s_ws->index;
     index_node_t *p_el;
-    const char *title;
 
     p_el = linked_list_get_node(p_list, id);
     uint32_t channel = LINKED_LIST_SUBGROUP(p_el->nexts.channel);
@@ -722,16 +685,28 @@ void print_search_result(
 
     searchable_strings_prelude_t *p_entry =
         (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
-    title = (const char *)(p_entry+1);
-    //title = get_title_string(p_s_ws, id);
 
-    int title_len = p_entry->length; //followed by \n\0 or \0
-    /* Restrict on characters before '|' */
+    int title_len = p_entry->length; //followed by \0
+#if NORMALIZED_STRINGS > 0
+    const char *title, *title_norm;
+    title_norm = (const char *)(p_entry+1);  // Normalized title + topic string...
+    title = title_norm + title_len + 1; // Original title
+    if( title < title_norm || (title_norm - title) > 4096){ // title_len wrong?
+        assert(0);
+        title = title_norm + strlen(title_norm) + 1;
+    }
+    title_len = strlen(title);
+#else
+    const char *title;
+    title = (const char *)(p_entry+1);
+
+    /* Restrict on characters before '|' to cut of 'topic' substring*/
 #ifdef _GNU_SOURCE
     title_len = strchrnul(title, '|') - title;
 #else
     char *sep = strchr(title, '|');
     if( sep ){ title_len = sep - title; }
+#endif
 #endif
 
     // Convert channel id to string
@@ -762,6 +737,7 @@ void print_search_result(
             payload_anchor
            );
 }
+#endif
 
 int search_do_search(
         search_workspace_t *p_s_ws,
@@ -771,14 +747,14 @@ int search_do_search(
     search_pattern_t pattern = {
         //{-1, NUM_TIME-1, NUM_DURATIONS-1, NO_CHANNEL}, /* linked_list_subgroup_indizes_t */
         {{{-1, -1, -1, NO_CHANNEL}}}, /* linked_list_subgroup_indizes_t */
-        NULL,
+        NULL, NULL, {NULL}, // title_pattern + _title_sub_pattern  Array of NULL values...
         LINKED_LIST_FIRST_ID, // current_id
         0,                    // K/num_used_indizes
         {-1, -1, -1, -1},     // used_indizes
         {0, 0, 0, 0}          // start_ids
     };
-
-    pattern.title_pattern = transform_search_title(p_arguments->title);
+    transform_search_title(p_arguments->title, &pattern.title_pattern);
+    split_pattern(&pattern, '*');
     DEBUG( fprintf(stderr, "Search pattern: '%s'\n", pattern.title_pattern) );
 
     //p_s_ws->search_result.match_found = 0;
@@ -841,8 +817,8 @@ int search_do_search(
         // First, try untransformed channel name
         int ic = get_channel_number(&p_s_ws->channels, p_arguments->channelName, 0);
         if( ic == -1){ // Try transformed name
-            char *norm_chan_name = transform_channel_name(
-                    p_arguments->channelName);
+            char *norm_chan_name = NULL;
+            transform_channel_name(p_arguments->channelName, &norm_chan_name);
             ic = get_channel_number(&p_s_ws->channels, norm_chan_name, 0);
             Free(norm_chan_name);
         }
@@ -876,7 +852,7 @@ int search_do_search(
         _search_do_search_(p_s_ws, &pattern);
 
         if( p_s_ws->output.found >= p_s_ws->output.M
-                && p_s_ws->output.reversed_flag == 0 
+                && p_s_ws->output.reversed_flag == 0
                 ){
             break;
         }
@@ -888,6 +864,8 @@ int search_do_search(
 
     if( pattern.title_pattern){
         Free(pattern.title_pattern);
+        pattern.title_sub_pattern[0] = NULL;
+        Free(pattern._title_sub_pattern);
     }
 
     // Transfer data into output buffer
@@ -950,7 +928,7 @@ uint32_t find_lowest_seek_over_threshold(
      *
      * Use bisect search under the assumption
      * (*block)[END-1] => threshold
-     * 
+     *
      * with END=LINKED_LIST_ARR_LEN or lower (at last block)
      */
 
@@ -1024,7 +1002,7 @@ void *title_entry(
      *     seems still not enough and (seek / SEARCH_TITLE_ARR_LEN) reaches
      *     the index partial_i + 2...
      *
-     * (Update) Bugfix removed because reason for bug was found and eliminated. 
+     * (Update) Bugfix removed because reason for bug was found and eliminated.
      */
     if( iChunk > p_s_ws->chunks.partial_i ){
         fprintf(stderr, "Requested chunk index to high! Requested: %i, available: %i\n",
@@ -1152,12 +1130,23 @@ void search_read_title_file(
 #endif
 #ifndef NDEBUG
     searchable_strings_prelude_t *p_entry;
-    const char *title;
 
     /* Print text of first entry */
     p_entry = (searchable_strings_prelude_t *) title_entry(
             p_s_ws, LINKED_LIST_FIRST_ID);
+
+#if NORMALIZED_STRINGS > 0
+    const char *title, *title_norm;
+    title_norm = (const char *)(p_entry+1);  // Normalized title + topic string...
+    title = title_norm + p_entry->length  + 1; // Original title
+    if( title < title_norm || (title_norm - title) > 4096){ // p_entry->length wrong?
+        assert(0);
+        title = title_norm + strlen(title_norm) + 1;
+    }
+#else
+    const char *title;
     title = (const char *)(p_entry+1);
+#endif
     fprintf(stderr, "First title (n=%u): %s\n", p_entry->length, title);
 
     /* Print text of latest entry */
@@ -1177,7 +1166,16 @@ void search_read_title_file(
 
     p_entry = (searchable_strings_prelude_t *)(p_b->p + last_seek
             - p_s_ws->chunks.start_seeks[iChunk]);
-    title = (const char *)((const char *)p_entry + sizeof(searchable_strings_prelude_t));
+#if NORMALIZED_STRINGS > 0
+    title_norm = ((const char *)p_entry) + sizeof(searchable_strings_prelude_t);
+    title = title_norm + p_entry->length  + 1; // Original title
+    if( title < title_norm || (title_norm - title) > 4096){ // p_entry->length wrong?
+        assert(0);
+        title = title_norm + strlen(title_norm) + 1;
+    }
+#else
+    title = ((const char *)p_entry) + sizeof(searchable_strings_prelude_t);
+#endif
     fprintf(stderr, "Last title (n=%u): %s\n", p_entry->length, title);
 #endif
 }
@@ -1308,6 +1306,7 @@ int _search_by_title_partial_(
     uint32_t *p_found = &p_s_ws->output.found;
 
     assert( p_pattern->title_pattern != NULL );
+    assert( p_pattern->title_sub_pattern[0] != NULL );
 
     // This id is the first in the currently loaded chunsk(s)
     uint32_t chunk_start_id = p_s_ws->chunks.start_ids[
@@ -1375,14 +1374,14 @@ int search_gen_patterns_for_partial(
 
     search_pattern_t first_pattern = {
         {{{-1, -1, -1, NO_CHANNEL}}}, /* linked_list_subgroup_indizes_t */
-        NULL,
+        NULL, NULL, {NULL}, // title_pattern + _title_sub_pattern  Array of NULL values...
         LINKED_LIST_FIRST_ID, // current_id
         0,                    // K/num_used_indizes
         {-1, -1, -1, -1},     // used_indizes
         {0, 0, 0, 0}          // start_ids
     };
-    first_pattern.title_pattern = transform_search_title(p_arguments->title);
-
+    transform_search_title(p_arguments->title, &first_pattern.title_pattern);
+    split_pattern(&first_pattern, '*');
 
     // 0. Eval (or over-estimate) number of pattern and init first entry
     int len_results = 1;
@@ -1460,8 +1459,8 @@ int search_gen_patterns_for_partial(
         // First, try untransformed channel name
         int ic = get_channel_number(&p_s_ws->channels, p_arguments->channelName, 0);
         if( ic == -1){ // Try transformed name
-            char *norm_chan_name = transform_channel_name(
-                    p_arguments->channelName);
+            char *norm_chan_name = NULL;
+            transform_channel_name(p_arguments->channelName, &norm_chan_name);
             ic = get_channel_number(&p_s_ws->channels, norm_chan_name, 0);
             Free(norm_chan_name);
         }
@@ -1674,10 +1673,64 @@ void search_reset_workspace(
 
     if( p_s_ws->p_arguments->diff_update ){
         p_s_ws->payload.id = FIRST_DIFF_INDEX - 1;
-        p_s_ws->searchable_strings.id = FIRST_DIFF_INDEX - 1; 
+        p_s_ws->searchable_strings.id = FIRST_DIFF_INDEX - 1;
     }else{
         p_s_ws->payload.id = -1;
-        p_s_ws->searchable_strings.id = -1; 
+        p_s_ws->searchable_strings.id = -1;
     }
 
+}
+
+int split_pattern(
+        search_pattern_t *p_pattern,
+        char split_char)
+{
+    char **array  = p_pattern->title_sub_pattern;
+
+    if( MAX_SUB_PATTERN < 1 ){
+        assert(0); // Hey, at least two elements required in title_sub_pattern
+        *array = NULL;
+        return 0;
+    }
+
+    //Clear previous copy of title_pattern
+    Free(p_pattern->_title_sub_pattern);
+    p_pattern->_title_sub_pattern = strndup(p_pattern->title_pattern, 1000);
+
+    // Map on new
+    *array = p_pattern->_title_sub_pattern;
+
+    char **pp_cur = array;
+
+    char *p_star = strchr(*pp_cur, split_char);
+    while( p_star != NULL && (pp_cur-array) < MAX_SUB_PATTERN ){
+        *p_star = '\0'; // cut string
+        if( *pp_cur == p_star ){
+            // * found on first character, which indicates an empty word between two *'s
+            // or between * and begin/end of title_pattern.
+            // Just set begin of current token on next char.
+            *pp_cur = p_star+1;
+        }else{
+            // Begin next token
+            ++pp_cur;
+            *pp_cur = p_star+1;
+        }
+        p_star = strchr(*pp_cur, split_char);
+    }
+    if( **pp_cur != '\0' ){
+        ++pp_cur;
+    }
+    *pp_cur = NULL; // mark end of array
+
+#ifndef NDEBUG
+    fprintf(stderr, "Transformed title pattern: ");
+    char **l  = p_pattern->title_sub_pattern;
+    while( *l != NULL ){
+        fprintf(stderr, "'%s' ", *l);
+        ++l;
+    }
+    fprintf(stderr, "\n");
+#endif
+
+    return (pp_cur-array);
 }

@@ -47,7 +47,7 @@ static struct argp_option options[] = {
         2},
     // group 3
     {"title", 't', "TITLE", OPTION_NO_USAGE,
-        "For search mode. Restrict output on entries containing this title",
+        "For search mode. Restrict output on entries containing this title. Use * to separate multiple keywords.",
         3},
     {"beginMin", 'b', "TIME MIN", OPTION_NO_USAGE,
         "For search mode. Min begin time of entries in seconds",

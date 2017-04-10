@@ -405,7 +405,9 @@ break_both:
     dprintf(fdout, "\n]}\n");
 
     if( 0 < len_patterns ){
-        free(p_pattern_list[0].title_pattern); //same in each element
+        p_pattern_list[0].title_sub_pattern[0] = NULL;
+        free(p_pattern_list[0]._title_sub_pattern);
+        free(p_pattern_list[0].title_pattern);
         free(p_pattern_list);
     }
 #else
@@ -496,13 +498,13 @@ int info_reading(
     int fdout = 1;
 
     // Try to open diff file and if not found...
-    p_arguments->diff_update = 1; 
+    p_arguments->diff_update = 1;
     search_workspace_t i_ws = search_ws_create(p_arguments);
     if( open_index_file(&i_ws, i_ws.p_arguments) ){
         // ... take normal file.
-        i_ws.p_arguments->diff_update = 0; 
+        i_ws.p_arguments->diff_update = 0;
         // search_reset_workspace(&s_ws); // Not needed during info mode
-        
+
         if( open_index_file(&i_ws, i_ws.p_arguments) ){
             fprintf(stderr, "Opening of index file failed.\n");
             return -1;

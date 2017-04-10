@@ -124,13 +124,13 @@ copy_lib_to_armv6l: $(BROTLI_DEP)
 ####################### Testing ############################
 
 nemiver:
-	nemiver ./$(SCRIPT_NAME) $(TEST_ARGS)
+	nemiver ./$(PROG_NAME) $(TEST_ARGS)
 
 valgrind:
-	valgrind ./$(SCRIPT_NAME) $(TEST_ARGS)
+	valgrind ./$(PROG_NAME) $(TEST_ARGS)
 
 leak:
-	valgrind  --leak-check=full ./$(SCRIPT_NAME) $(TEST_ARGS)
+	valgrind  --leak-check=full ./$(PROG_NAME) $(TEST_ARGS)
 
 test:
 	./$(SCRIPT_NAME) $(TEST_ARGS)
