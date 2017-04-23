@@ -36,6 +36,10 @@
  */
 #define READ_TITLE_FILE_PARTIAL 
 
+/* Replace é with e and similar (over 300 cases...).
+ */
+#define REPLACE_COMPOSITE_CHARS
+
 #define NL (0x0a)
 
 #define OWN_STRTOL 1
