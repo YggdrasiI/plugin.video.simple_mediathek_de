@@ -485,6 +485,19 @@ def call_binary(largs):
     path = addon.getAddonInfo("path").decode("utf-8")
     script = os.path.join(path, "root", "bin", "simple_mediathek")
     largs.insert(0, script)
+
+    # Convert args into unicode strings
+    # (Check if Kore app sends latin encoded?!)
+    largs_uni = []
+    for l in largs:
+        if isinstance(l, __builtins__.unicode):
+            largs_uni.append(l)
+        try:
+            largs_uni.append(l.decode("utf-8"))
+        except UnicodeDecodeError:
+            largs_uni.append(l.decode("latin1"))
+    largs = largs_uni
+
     try:
         ret = 0
         p = subprocess.Popen(
