@@ -187,11 +187,11 @@ void output_fill(
 #if 0
     const char *absolute_day_str = ctime(&absolute_day_begin);
 #else
-    struct tm * timeinfo;
+    struct tm * p_timeinfo;
     char absolute_day_str[80];
 
-    timeinfo = localtime (&absolute_day_begin);
-    strftime(absolute_day_str, 80, "%d. %b. %Y %R", timeinfo);
+    p_timeinfo = localtime (&absolute_day_begin);
+    strftime(absolute_day_str, 80, "%d. %b. %Y %R", p_timeinfo);
 #endif
     int retry;
     const char _format[] = ",\n\t{\"id\": %i, \"title\": \"%.*s\", " \

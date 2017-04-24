@@ -15,9 +15,10 @@ search_workspace_t search_ws_create(
     time_t tnow = time(NULL);
     struct tm tm_now = *localtime(&tnow);
 
-    int clock_offset = 3600 + (1 == tm_now.tm_isdst)?3600:0; // GTM+1 + daylight saving
+    int clock_offset = 3600 + (1 == tm_now.tm_isdst?3600:0); // GTM+1 + daylight saving
     //tnow = (tnow / 86400) * 86400; // Rounding nearby begin of day
     //size_t nlocalday = (tnow + clock_offset) / 86400;
+    //DEBUG( fprintf(stderr, "DST: %i, Clock offset: %i\n", tm_now.tm_isdst, clock_offset); )
 
     size_t nlocalday = (tnow + clock_offset) / 86400;  // NDay relative to current time zone
     time_t tlocalday_begin = nlocalday * 86400 + clock_offset; // Begin of day in current time zone

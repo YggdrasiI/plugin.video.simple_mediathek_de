@@ -12,7 +12,7 @@ filmliste_workspace_t filmliste_ws_create(
     time_t tnow = time(NULL);
     struct tm tm_now = *localtime(&tnow);
 
-    int clock_offset = 3600 + (1 == tm_now.tm_isdst)?3600:0; // GTM+1 + daylight saving
+    int clock_offset = 3600 + (1 == tm_now.tm_isdst?3600:0); // GTM+1 + daylight saving
     //tnow = (tnow / 86400) * 86400; // Rounding nearby begin of day
     //size_t nlocalday = (tnow + clock_offset) / 86400;
 
