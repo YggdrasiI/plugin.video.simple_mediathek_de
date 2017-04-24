@@ -492,10 +492,11 @@ def call_binary(largs):
     for l in largs:
         if isinstance(l, __builtins__.unicode):
             largs_uni.append(l)
-        try:
-            largs_uni.append(l.decode("utf-8"))
-        except UnicodeDecodeError:
-            largs_uni.append(l.decode("latin1"))
+        else:
+            try:
+                largs_uni.append(l.decode("utf-8"))
+            except UnicodeDecodeError:
+                largs_uni.append(l.decode("latin1"))
     largs = largs_uni
 
     try:
