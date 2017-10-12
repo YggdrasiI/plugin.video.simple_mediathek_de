@@ -71,6 +71,16 @@
 /* For all entries without given channel / for empty channel string */
 #define UNKNOWN_CHANNEL 0 
 
+/* Separator between title and topic string.
+ * The splitted strings should not contain the character.
+ * */
+#define SPLIT_CHAR '|' 
+
+/*
+ * Constant to inform that topic string of previous entry should be used.
+ * ( "title|\t" or  "title\t" expands to "title|previous_topic"
+ */
+#define BACKTRACK_CHAR '\t' 
 
 #ifdef NDEBUG
 #define DEBUG(X) 

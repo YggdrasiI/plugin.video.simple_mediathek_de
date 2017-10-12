@@ -37,6 +37,7 @@ filmliste_workspace_t filmliste_ws_create(
         linked_list_create(tlocalday_begin),
         -1, // index_fd
         NULL, // index_folder
+//        {NULL, 0, NULL}, // prev_topic
 #ifdef COMPRESS_BROTLI
         brotli_encoder_ws_create(BROTLI_COMPRESS_QUALITY),
         brotli_encoder_ws_create(BROTLI_COMPRESS_QUALITY),
@@ -332,6 +333,7 @@ void filmliste_handle(
     const char *channel_str;
     const char *topic_str;
     const char *title_str;
+    unsigned char title_len_byte; // = min(0xFF, title_len)
     //const char *description_str;
 
     // #Channel
@@ -353,6 +355,7 @@ void filmliste_handle(
     // #Thema
     topic_len = search_pair_get_chars(p_buf_in, *(start+INDEX_THEMA),
             &topic_str, NULL, 1);
+    const char prev_topic_keyword[] = {/*BACKTRACK_CHAR,*/ '\0'};
 
     // #Titel
     title_len = search_pair_get_chars(p_buf_in, *(start+INDEX_TITEL),
@@ -418,8 +421,19 @@ void filmliste_handle(
     char *title_str_norm = NULL;
     char *topic_str_norm = NULL;
     title_len = transform_search_title(title_str, &title_str_norm);
-    topic_len = transform_search_title(topic_str, &topic_str_norm);
+    if( topic_len == 0 ){
+        topic_str = (char *)prev_topic_keyword;
+        topic_len = sizeof(prev_topic_keyword);
+    }else{
+        topic_len = transform_search_title(topic_str, &topic_str_norm);
+    }
+#else
+    if( topic_len == 0 ){
+        topic_str = (char *)prev_topic_keyword;
+        topic_len = sizeof(prev_topic_keyword);
+    }
 #endif
+    title_len_byte = (title_len<0xFF?title_len:0xFF);
 
     update_index2(p_fl_ws,
             channel_nr,
@@ -456,11 +470,13 @@ void filmliste_handle(
                 &p_fl_ws->brotli_title,
 #endif
 #if NORMALIZED_STRINGS > 0
-                "%s|%s%c%s%c",
+                "%s%s|%s%c%s%c",
+                title_len_byte,
                 title_str_norm, topic_str_norm, '\0',
                 title_str, '\0'
 #else
-                "%s|%s%c",
+                "%s%s|%s%c",
+                title_len_byte,
                 title_str, topic_str, '\0'
 #endif
                 );

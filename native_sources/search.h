@@ -30,6 +30,16 @@ typedef searchable_strings_prelude_t title_line_t;
 #endif
 
 typedef struct {
+    uint8_t len8;
+    const char *p;
+} short_string_t;
+
+typedef struct {
+    uint32_t len;
+    const char *p;
+} string_t;
+
+typedef struct {
     linked_list_subgroup_indizes_t groups;
     char *title_pattern;
     char *_title_sub_pattern; // similar to title_pattern, but with '\0' at arbitary positions.
@@ -236,8 +246,12 @@ uint32_t find_lowest_seek_over_threshold(
 
 /* Return pointer on (transformed) title pattern.
  * (Similar to title_entry()...
+ *
+ *      -1     0            ... len
+ * [len byte] [^ret pointer]     |
  */
-const char * get_title_string(
+//const char * get_title_string(
+short_string_t get_title_string(
         search_workspace_t *p_s_ws,
         uint32_t id)
 ;

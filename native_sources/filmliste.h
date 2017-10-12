@@ -111,6 +111,14 @@ typedef struct {
 #endif
 } searchable_strings_prelude_t;
 
+/* Pointer into buffer string. If buffer is deleted, a copy of the substring
+ * should be saved for further usage. */
+typedef struct {
+    const char *target;
+    size_t target_len;
+    const char *_target_copy;
+} buf_string_copy_t;
+
 typedef struct filmliste_workspace_s {
     /* Timestamps for index file */
     time_t tcreation;  // Time stamp where this program run.
@@ -134,6 +142,7 @@ typedef struct filmliste_workspace_s {
     linked_list_t index;
     int index_fd;
     const char *index_folder;
+    buf_string_copy_t prev_topic;
 #ifdef COMPRESS_BROTLI
     brotli_encoder_workspace_t brotli_title;
     brotli_encoder_workspace_t brotli_payload;

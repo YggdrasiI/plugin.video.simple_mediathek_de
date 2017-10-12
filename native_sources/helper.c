@@ -543,17 +543,15 @@ size_t transform_search_title(
                                      case 0x0171: /* ű => u */
                                      case 0x01D3: /* Ǔ => u */
                                      case 0x01D4: /* ǔ => u */
+                                     case 0x01D5: /* Ǖ => u */
+                                     case 0x01DA: /* ǚ => u */
+                                     case 0x01DB: /* Ǜ => u */
+                                     case 0x01DC: /* ǜ => u */
                                      case 0x0244: /* Ʉ => u */
                                      case 0x0289: /* ʉ => u */
                                      case 0x1EE4: /* Ụ => u */
                                      case 0x1EE5: /* ụ => u */
                                          { *p_cur_out++ = 117; break;}
-                                     case 0x01D5: /* Ǖ => v */
-                                     case 0x01D6: /* ǖ => v */
-                                     case 0x01D9: /* Ǚ => v */
-                                     case 0x01DA: /* ǚ => v */
-                                     case 0x01DB: /* Ǜ => v */
-                                     case 0x01DC: /* ǜ => v */
                                      case 0x1E7C: /* Ṽ => v */
                                      case 0x1E7D: /* ṽ => v */
                                      case 0x1E7E: /* Ṿ => v */
@@ -611,8 +609,10 @@ size_t transform_search_title(
                                      case 0x1E92: /* Ẓ => z */
                                      case 0x1E93: /* ẓ => z */
                                          { *p_cur_out++ = 122; break;}
+                                     case 0x01D6: /* ǖ => ü */
                                      case 0x01D7: /* Ǘ => ü */
                                      case 0x01D8: /* ǘ => ü */
+                                     case 0x01D9: /* Ǚ => ü */
                                          { *p_cur_out++ = 195; *p_cur_out++ = 188; break;}
                                      default:
                                          // Copy (multi-byte) char

@@ -28,7 +28,7 @@ Kodi uses Python 2.7.1. It follows an incomplete list of changes
 """
 
 # If False, state_diff will be saved with setProperty.
-save_state_in_url = False
+save_state_in_url = True
 
 # If True, duration menu is prepended by min/max-selection
 duration_separate_minmax = False
@@ -47,8 +47,8 @@ search_ranges_str = {
     "duration": ["10 min", "30 min", "60 min", "1,5 h",
                  "2 h", ""],
     "direction": [u"Höchstens", u"Mindestens"],
-    "direction_b": [u"Suche auf Mindestlänge umstellen...",
-                    u"Suche auf Maximallänge umstellen..."],
+    "direction_b": [u"Suche auf Maximallänge umstellen...",
+                    u"Suche auf Mindestlänge umstellen..."],
     "time": ["0-10 Uhr", "10-16 Uhr", "16-20 Uhr", "20-24 Uhr", ""],
     "day": ["Heute und gestern", "2 Tage", "5 Tage", "7 Tage", "14 Tage",
             ""],  # "Kalender", ""],
@@ -1283,6 +1283,8 @@ with SimpleMediathek() as mediathek:
             play_url(addon_handle, state_diff, args["video_url"])
 
     if mode is None or mode == "main":
+        xbmc.log(msg="Plugin|"+sys.argv[0]+sys.argv[2],
+                 level=xbmc.LOGERROR)
         check_addon_status()
 
         #  Top level page of plugin

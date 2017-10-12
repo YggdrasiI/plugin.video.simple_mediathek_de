@@ -528,24 +528,43 @@ int _search_compare_title_(
     assert( p_pattern->title_pattern != NULL );
     assert( p_pattern->title_sub_pattern[0] != NULL );
     //linked_list_t *p_list = &p_s_ws->index;
+    
+#define get_title_len(X) (strchrnul(X, SPLIT_CHAR)-X)
 
     // Split pattern by each '*' and search substring separately.
-    const char *title_topic_normalized = get_title_string(p_s_ws, p_el->id);
+    //const char *string_to_search = get_title_string(p_s_ws, p_el->id);
+    short_string_t title_str = get_title_string(p_s_ws, p_el->id);
+    const char * string_to_search = title_str.p;
+
+    // Check if title string is followed by topic string. If not, search previous
+    // topic string.
+    const char *prev_topic = NULL;
+    size_t string_to_search_len = 
+        (title_str.len8==0xFF?get_title_len(string_to_search):title_str.len8);
+    if( *(string_to_search + string_to_search_len) == '\0' ){
+        prev_topic = get_prev_topic(p_el);
+    }
+
     const char **sub_pat = (const char **)p_pattern->title_sub_pattern;
     while( *sub_pat != NULL ){
 #if NORMALIZED_STRINGS > 0
-        const char *hit = strstr(title_topic_normalized, *sub_pat);
+        const char *hit = strstr(string_to_search, *sub_pat);
 #else
 #ifdef _GNU_SOURCE
-        const char *hit = strcasestr(title_topic_normalized, *sub_pat);
+        const char *hit = strcasestr(string_to_search, *sub_pat);
 #else
-        const char *hit = strstr(title_topic_normalized, *sub_pat);
+        const char *hit = strstr(string_to_search, *sub_pat);
 #endif
 #endif
         if( hit == NULL ){
+            if( prev_topic != NULL ){
+                string_to_search  = prev_topic;
+                prev_topic = NULL;
+                continue;
+            }
             return -1;
         }
-        title_topic_normalized = hit + strlen(*sub_pat);
+        string_to_search = hit + strlen(*sub_pat);
         sub_pat++;
     }
     return 0;
@@ -969,14 +988,16 @@ uint32_t find_lowest_seek_over_threshold(
     return a->link.title_seek;
 }
 
-const char * get_title_string(
+short_string_t get_title_string(
         search_workspace_t *p_s_ws,
         uint32_t id)
 {
     searchable_strings_prelude_t *p_entry;
-    const char *title;
     p_entry = (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
-    title = (const char *)(p_entry+1);
+    short_string_t title = {
+        *((uint8_t *)(p_entry+1)); //First byte is packed length information....
+        (const char *)(p_entry+1)+1;
+    };
     return title;
 }
 
@@ -1033,7 +1054,7 @@ void search_read_title_file(
      * The chunks suits the following condition:
      *   [title.begin, title.end] is part of chunk N
      *   <=>
-     *   N = title.seek % LINKED_LIST_ARR_LEN
+     *   N = title.seek / LINKED_LIST_ARR_LEN
      *
      * Note that the length of the latest title in a chunk
      * affects its length.
@@ -1202,16 +1223,17 @@ int search_read_title_file_partial(
     int fd = p_s_ws->searchable_strings.fd;
 
     if( p_chunks->len > 0 ){
-        if( 1 ){
-            // Clear chunks of previous run.
-            int i;
-            //for( i=0; i<p_chunks->len; ++i)
-            for( i=p_chunks->partial_i; i<=p_chunks->partial_i; ++i) // it's only one...
-            {
-                char_buffer_t *p_x = &p_chunks->bufs[i];
-                if( p_x->p ){
-                    char_buffer_clear(p_x);
-                }
+        // Save latest topic string.
+        // TODO
+
+        // Clear chunks of previous run.
+        int i;
+        //for( i=0; i<p_chunks->len; ++i)
+        for( i=p_chunks->partial_i; i<=p_chunks->partial_i; ++i) // it's only one filled...
+        {
+            char_buffer_t *p_x = &p_chunks->bufs[i];
+            if( p_x->p ){
+                char_buffer_clear(p_x);
             }
         }
         ++p_chunks->partial_i;
@@ -1734,4 +1756,11 @@ int split_pattern(
 #endif
 
     return (pp_cur-array);
+}
+
+const char *get_prev_topic(
+        search_workspace_t *p_s_ws,
+        index_node_t *p_el)
+{
+        id = LINKED_LIST_ID(p_el->nexts.subgroup_ids[used_indizes[0]]);
 }

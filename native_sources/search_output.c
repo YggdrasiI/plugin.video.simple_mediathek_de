@@ -172,10 +172,14 @@ void output_fill(
 
     /* Restrict on characters before '|' to cut of 'topic' substring*/
 #ifdef _GNU_SOURCE
-    title_len = strchrnul(title, '|') - title;
+    title_len = strchrnul(title, SPLIT_CHAR) - title;
 #else
-    char *sep = strchr(title, '|');
-    if( sep ){ title_len = sep - title; }
+    char *sep = strchr(title, SPLIT_CHAR);
+    if( sep ){
+        title_len = sep - title;
+    }else{
+        title_len = strlen(title);
+    }
 #endif
 #endif
 

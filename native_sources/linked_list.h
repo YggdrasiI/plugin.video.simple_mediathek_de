@@ -193,7 +193,7 @@ typedef struct {
     index_node_t *dummy_nodes;    // Place for some nodes which will not be serialized with the rest.
 
     /* Pointer to next free entry for data.
-     * Store your next element here and all then
+     * Store your next element here and call then
      * push_item(...)
      * */
     index_node_t *next_unused;
