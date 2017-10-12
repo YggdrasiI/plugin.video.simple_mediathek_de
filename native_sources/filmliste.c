@@ -2,7 +2,9 @@
 #include "open.h"
 #include "filmliste.h"
 
+#ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L // for setenv on gcc
+#endif
 
 filmliste_workspace_t filmliste_ws_create(
         arguments_t *p_arguments)
@@ -37,7 +39,7 @@ filmliste_workspace_t filmliste_ws_create(
         linked_list_create(tlocalday_begin),
         -1, // index_fd
         NULL, // index_folder
-//        {NULL, 0, NULL}, // prev_topic
+        {NULL, 0, NULL}, // prev_topic
 #ifdef COMPRESS_BROTLI
         brotli_encoder_ws_create(BROTLI_COMPRESS_QUALITY),
         brotli_encoder_ws_create(BROTLI_COMPRESS_QUALITY),

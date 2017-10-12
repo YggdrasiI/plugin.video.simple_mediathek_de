@@ -72,15 +72,20 @@
 #define UNKNOWN_CHANNEL 0 
 
 /* Separator between title and topic string.
- * The splitted strings should not contain the character.
- * */
-#define SPLIT_CHAR '|' 
+ * The splitted strings should not contain this character.
+ */
+#define SPLIT_CHAR '|'
 
-/*
- * Constant to inform that topic string of previous entry should be used.
+/* Highest byte value used to mark that prefetecd length information 
+ * of a short_string_t is invalid. Use len(...), etc to get length info.
+ */
+#define UNDEFINED_TITLE_LENGTH (0xFF);
+#define MAXIMAL_TITLE_LENGTH (UNDEFINED_TITLE_LENGTH - 1);
+
+/* Constant to inform that topic string of previous entry should be used.
  * ( "title|\t" or  "title\t" expands to "title|previous_topic"
  */
-#define BACKTRACK_CHAR '\t' 
+#define BACKTRACK_CHAR '\t'
 
 #ifdef NDEBUG
 #define DEBUG(X) 

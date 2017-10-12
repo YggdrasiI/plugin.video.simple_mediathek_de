@@ -302,3 +302,14 @@ int split_pattern(
         search_pattern_t *p_pattern,
         char split_char)
 ;
+
+/*
+ * Go back over elements until non-empty topic
+ * string is reached or begin of block.
+ * In the second case the backuped topic of the previous block
+ * will be returned.
+ */
+const char *get_prev_topic(
+        search_workspace_t *p_s_ws,
+        index_node_t *p_el)
+;

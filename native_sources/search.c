@@ -470,6 +470,75 @@ void _num_used_pattern(
     p_pattern->K = n;
 }
 
+/* Return 0 on match */
+int _search_compare_title_(
+        search_workspace_t *p_s_ws,
+        search_pattern_t *p_pattern,
+        index_node_t *p_el)
+{
+    assert( p_pattern->title_pattern != NULL );
+    assert( p_pattern->title_sub_pattern[0] != NULL );
+    //linked_list_t *p_list = &p_s_ws->index;
+    
+#define get_title_len(X) (strchrnul(X, SPLIT_CHAR)-X)
+
+    // Split pattern by '*' and search each substring separately.
+    //const char *string_to_search = get_title_string(p_s_ws, p_el->id);
+    short_string_t title_str = get_title_string(p_s_ws, p_el->id);
+
+    /*
+     * Structure of above byte array: "[X]{TITLE}[|{TOPIC}]"
+     * where: 
+     * X : Offset of | character (uint_8) or
+     * TITLE : Title string followed by | or \0
+     * TOPIC : Topic string followed by \0
+     *
+     * Invalid input data could miss \0, but the buffer
+     * is limited by \0.
+     */
+
+    const char * string_to_search = title_str.p; // TITLE
+    size_t string_to_search_len =
+        (title_str.len8==0xFF?get_title_len(string_to_search):title_str.len8);
+
+    // Check if title string is followed by topic string. If not, 
+    // search for pointer on previous topic string.
+    const char *prev_topic = NULL;
+    if( *(string_to_search + string_to_search_len) == '\0' ){
+        prev_topic = get_prev_topic(p_s_ws, p_el);
+    }
+
+    /* Loop through sub pattern...
+     * Firstly , string_to_search maps on the title|topic string.
+     * Secondly it maps to the prev_topic string.
+     *
+     * Return 0 if all subpattern could be found.
+     */
+    const char **sub_pat = (const char **)p_pattern->title_sub_pattern;
+    while( *sub_pat != NULL ){
+#if NORMALIZED_STRINGS > 0
+        const char *hit = strstr(string_to_search, *sub_pat);
+#else
+#ifdef _GNU_SOURCE
+        const char *hit = strcasestr(string_to_search, *sub_pat);
+#else
+        const char *hit = strstr(string_to_search, *sub_pat);
+#endif
+#endif
+        if( hit == NULL ){
+            if( prev_topic != NULL ){
+                string_to_search  = prev_topic;
+                prev_topic = NULL;
+                continue;
+            }
+            return -1;
+        }
+        string_to_search = hit + strlen(*sub_pat);
+        sub_pat++;
+    }
+    return 0;
+}
+
 /* Linear search by title pattern only (slow).*/
 int _search_by_title_(
         search_workspace_t *p_s_ws,
@@ -517,57 +586,6 @@ int _search_by_title_(
 
     // End of list reached. Return if at least one element was found.
     return ((*p_found > found_before)?0:-1);
-}
-
-/* Return 0 on match */
-int _search_compare_title_(
-        search_workspace_t *p_s_ws,
-        search_pattern_t *p_pattern,
-        index_node_t *p_el)
-{
-    assert( p_pattern->title_pattern != NULL );
-    assert( p_pattern->title_sub_pattern[0] != NULL );
-    //linked_list_t *p_list = &p_s_ws->index;
-    
-#define get_title_len(X) (strchrnul(X, SPLIT_CHAR)-X)
-
-    // Split pattern by each '*' and search substring separately.
-    //const char *string_to_search = get_title_string(p_s_ws, p_el->id);
-    short_string_t title_str = get_title_string(p_s_ws, p_el->id);
-    const char * string_to_search = title_str.p;
-
-    // Check if title string is followed by topic string. If not, search previous
-    // topic string.
-    const char *prev_topic = NULL;
-    size_t string_to_search_len = 
-        (title_str.len8==0xFF?get_title_len(string_to_search):title_str.len8);
-    if( *(string_to_search + string_to_search_len) == '\0' ){
-        prev_topic = get_prev_topic(p_el);
-    }
-
-    const char **sub_pat = (const char **)p_pattern->title_sub_pattern;
-    while( *sub_pat != NULL ){
-#if NORMALIZED_STRINGS > 0
-        const char *hit = strstr(string_to_search, *sub_pat);
-#else
-#ifdef _GNU_SOURCE
-        const char *hit = strcasestr(string_to_search, *sub_pat);
-#else
-        const char *hit = strstr(string_to_search, *sub_pat);
-#endif
-#endif
-        if( hit == NULL ){
-            if( prev_topic != NULL ){
-                string_to_search  = prev_topic;
-                prev_topic = NULL;
-                continue;
-            }
-            return -1;
-        }
-        string_to_search = hit + strlen(*sub_pat);
-        sub_pat++;
-    }
-    return 0;
 }
 
 /* Inner function of search_do_search */
@@ -995,8 +1013,8 @@ short_string_t get_title_string(
     searchable_strings_prelude_t *p_entry;
     p_entry = (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
     short_string_t title = {
-        *((uint8_t *)(p_entry+1)); //First byte is packed length information....
-        (const char *)(p_entry+1)+1;
+        *((uint8_t *)(p_entry+1)), //First byte contain packed length information....
+        (const char *)(p_entry+1)+1
     };
     return title;
 }
@@ -1762,5 +1780,6 @@ const char *get_prev_topic(
         search_workspace_t *p_s_ws,
         index_node_t *p_el)
 {
-        id = LINKED_LIST_ID(p_el->nexts.subgroup_ids[used_indizes[0]]);
+        //id = LINKED_LIST_ID(p_el->nexts.subgroup_ids[used_indizes[0]]);
+        return NULL;
 }
