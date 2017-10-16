@@ -3,7 +3,6 @@
 SCRIPT_NAME=simple_mediathek
 PROG_NAME=$(SCRIPT_NAME).bin
 BROTLI=1
-TEST_ARGS=-s --dayMin 0 --dayMax 7 --title="\"extra 3\""
 
 # Scripts will installed in $INSTALL_PREFIX/bin
 # Binaries will insatlled in $INSTALL_PREFIX/$MACH
@@ -123,26 +122,43 @@ copy_lib_to_armv6l: $(BROTLI_DEP)
 
 ####################### Testing ############################
 
-nemiver:
-	nemiver ./$(PROG_NAME) $(TEST_ARGS)
-
-valgrind:
-	valgrind ./$(PROG_NAME) $(TEST_ARGS)
-
-leak:
-	valgrind  --leak-check=full ./$(PROG_NAME) $(TEST_ARGS)
+_LD_LIBRARY_PATH=$(shell echo "LD_LIBRARY_PATH=.:../root/${MACH}/lib:${LD_LIBRARY_PATH}")
+# Test args for indexing...
+TEST_ARGS=--index -i /dev/shm/Filmliste-akt.json
+# Test args for searching...
+#TEST_ARGS=-s --dayMin 0 --dayMax 7 --title="\"extra 3\""
+# Test args for payload fetch...
+#TEST_ARGS=--payload 0
 
 test:
 	./$(SCRIPT_NAME) $(TEST_ARGS)
 
+nemiver:
+	$(_LD_LIBRARY_PATH) nemiver ./$(PROG_NAME) $(TEST_ARGS)
+
+valgrind:
+	$(_LD_LIBRARY_PATH) valgrind ./$(PROG_NAME) $(TEST_ARGS)
+
+leak:
+	$(_LD_LIBRARY_PATH) valgrind  --leak-check=full ./$(PROG_NAME) $(TEST_ARGS)
+
+download:
+	./$(SCRIPT_NAME) download
+
 index:
-	./$(SCRIPT_NAME) -a -i /dev/shm/filme.json
+	./$(SCRIPT_NAME) -a -i /dev/shm/Filmliste-akt.json
+
+search:
+	./$(SCRIPT_NAME) -s --dayMin 99 -n 5 --title="Livestream"
 
 info:
 	./$(SCRIPT_NAME) --info
 
 payload:
 	./$(SCRIPT_NAME) --payload 0
+
+
+############################################################
 
 .PHONY: clean
 

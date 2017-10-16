@@ -118,8 +118,8 @@ static const char strings_file_template[] = "%s/titles_%04i%s.index";
 
 typedef struct {
   size_t len;
-  size_t used;
-  char * p;
+  size_t used;  // unconsumed chars begins at 'p+used'
+  char * p;     // pointer to allocation of at least 'len' bytes.
 } char_buffer_t;
 
 

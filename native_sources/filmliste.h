@@ -103,20 +103,32 @@ typedef struct {
 typedef struct {
     int32_t relative_start_time;
 #if 0
-    //int32_t duration,
-    //int32_t length (topic_len + title_len + 1)
+    int32_t duration;
+    //int32_t UNUSED_length; // (topic_len + title_len + 1)
+    int32_t topic_string_offset;
 #else
     uint16_t duration;
-    uint16_t length; // TODO: Not required due '\0' after string?!
+    //uint16_t UNUSED_length; // TODO: Not required due '\0' after string?!
+    /* Offset is (title_len + 1) if topic string set or
+     * distance to topic_string of previous entry.
+     *
+     * - Handling of offsets which can not be represended within 16 bits:
+     *     Force inserting of topic string.
+     * - All entries between 'this' entry and the 'offset entry' share
+     *   the same topic string. Thus at buffer flushing only one string 
+     *   had to be cached...
+     * */
+    int16_t topic_string_offset;
 #endif
 } searchable_strings_prelude_t;
 
 /* Pointer into buffer string. If buffer is deleted, a copy of the substring
  * should be saved for further usage. */
 typedef struct {
-    const char *target;
     size_t target_len;
-    const char *_target_copy;
+    const char *target;
+    size_t _copy_size;
+    char *_copy;
 } buf_string_copy_t;
 
 typedef struct filmliste_workspace_s {

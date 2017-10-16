@@ -39,7 +39,7 @@ filmliste_workspace_t filmliste_ws_create(
         linked_list_create(tlocalday_begin),
         -1, // index_fd
         NULL, // index_folder
-        {NULL, 0, NULL}, // prev_topic
+        {0, NULL, 0, NULL}, // prev_topic
 #ifdef COMPRESS_BROTLI
         brotli_encoder_ws_create(BROTLI_COMPRESS_QUALITY),
         brotli_encoder_ws_create(BROTLI_COMPRESS_QUALITY),
@@ -81,6 +81,7 @@ void filmliste_ws_destroy(
     free(p_fl_ws->_buf);
     p_fl_ws->_buf = NULL;
 
+    Free(p_fl_ws->prev_topic._copy);
     //free(p_fl_ws->tmp);
     //p_fl_ws->tmp = NULL;
 
@@ -335,7 +336,6 @@ void filmliste_handle(
     const char *channel_str;
     const char *topic_str;
     const char *title_str;
-    unsigned char title_len_byte; // = min(0xFF, title_len)
     //const char *description_str;
 
     // #Channel
@@ -357,7 +357,6 @@ void filmliste_handle(
     // #Thema
     topic_len = search_pair_get_chars(p_buf_in, *(start+INDEX_THEMA),
             &topic_str, NULL, 1);
-    const char prev_topic_keyword[] = {/*BACKTRACK_CHAR,*/ '\0'};
 
     // #Titel
     title_len = search_pair_get_chars(p_buf_in, *(start+INDEX_TITEL),
@@ -421,21 +420,27 @@ void filmliste_handle(
 #if NORMALIZED_STRINGS > 0
     // Normalize title and topic string
     char *title_str_norm = NULL;
-    char *topic_str_norm = NULL;
+    //char *topic_str_norm = NULL;
     title_len = transform_search_title(title_str, &title_str_norm);
     if( topic_len == 0 ){
-        topic_str = (char *)prev_topic_keyword;
-        topic_len = sizeof(prev_topic_keyword);
+        topic_str = (char *)p_fl_ws->prev_topic.target;
+        topic_len = p_fl_ws->prev_topic.target_len;
     }else{
-        topic_len = transform_search_title(topic_str, &topic_str_norm);
+        //topic_len = transform_search_title(topic_str, &topic_str_norm);
+        p_fl_ws->prev_topic.target_len = transform_search_title(topic_str, &p_fl_ws->prev_topic._copy); // Free+Malloc of _copy
+        p_fl_ws->prev_topic.target = p_fl_ws->prev_topic._copy;
+        p_fl_ws->prev_topic._copy_size = p_fl_ws->prev_topic.target_len; // TODO: Remove above Mallocs
     }
 #else
     if( topic_len == 0 ){
-        topic_str = (char *)prev_topic_keyword;
-        topic_len = sizeof(prev_topic_keyword);
+        topic_str = (char *)p_fl_ws->prev_topic.target;
+        topic_len = p_fl_ws->prev_topic.target_len;
+    }else{
+        p_fl_ws->prev_topic.target_len = topic_len;
+        p_fl_ws->prev_topic.target = topic_str;
+        //Free(p_fl_ws->prev_topic._target_copy); // Redundant
     }
 #endif
-    title_len_byte = (title_len<0xFF?title_len:0xFF);
 
     update_index2(p_fl_ws,
             channel_nr,
@@ -454,7 +459,7 @@ void filmliste_handle(
             //(int32_t)(topic_len + title_len + 1)
             /* Packing reduces filesize by approx. 10% */
             (uint16_t)(duration),
-            (uint16_t)(topic_len + 1 + title_len) /* %s|%s */
+            (uint16_t)(title_len + 1) /* %s| */
         };
         p_fl_ws->searchable_strings.seek += buf_write(
                 p_fl_ws->searchable_strings.fd,
@@ -472,13 +477,12 @@ void filmliste_handle(
                 &p_fl_ws->brotli_title,
 #endif
 #if NORMALIZED_STRINGS > 0
-                "%s%s|%s%c%s%c",
-                title_len_byte,
-                title_str_norm, topic_str_norm, '\0',
+                "%s|%s%c%s%c",
+                title_str_norm,
+                p_fl_ws->prev_topic.target, '\0',
                 title_str, '\0'
 #else
-                "%s%s|%s%c",
-                title_len_byte,
+                "%s|%s%c",
                 title_str, topic_str, '\0'
 #endif
                 );
@@ -487,7 +491,7 @@ void filmliste_handle(
 
 #if NORMALIZED_STRINGS > 0
     Free(title_str_norm);
-    Free(topic_str_norm);
+    //Free(topic_str_norm);
 #endif
 
     // Write payload in second buffer
@@ -669,4 +673,4 @@ int remove_old_diff_files(
     }
     Free(tmp);
     return n_del;
-}
+ }

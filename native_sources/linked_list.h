@@ -201,7 +201,7 @@ typedef struct {
      * Starts 1 because 0 marks unset values. Moreover,
      * 'id-1' is the distance to the begin in the serialized data.
      */
-    uint32_t next_unused_id; // starts with 1. 0 = uset values EDIT: Now, starts with 0...
+    uint32_t next_unused_id;
 
     /* Hold pointer to all previous elements of subsets.
      * Required to update index_node_t->nexts anchors.

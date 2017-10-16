@@ -53,6 +53,7 @@ search_workspace_t search_ws_create(
         -1, // index_fd
 //        {p_arguments->max_num_results, 0,
 //            p_arguments->skiped_num_results, NULL}, // search_result_t
+        {0, NULL, 0, NULL}, // prev_topic
 #ifdef COMPRESS_BROTLI
         brotli_decoder_ws_create(),
 //        brotli_decoder_ws_create(),
@@ -145,6 +146,7 @@ void search_ws_destroy(
     Free(p_s_ws->_buf);
 
     //Free(p_s_ws->tmp);
+    Free(p_s_ws->prev_topic._copy);
 
     channels_ws_destroy(&p_s_ws->channels);
     //index_data_destroy(&p_s_ws->index);
@@ -483,30 +485,21 @@ int _search_compare_title_(
 #define get_title_len(X) (strchrnul(X, SPLIT_CHAR)-X)
 
     // Split pattern by '*' and search each substring separately.
-    //const char *string_to_search = get_title_string(p_s_ws, p_el->id);
-    short_string_t title_str = get_title_string(p_s_ws, p_el->id);
+    const char *string_to_search = get_title_string(p_s_ws, p_el->id);
 
     /*
-     * Structure of above byte array: "[X]{TITLE}[|{TOPIC}]"
+     * Structure of above byte array: "{TITLE}{SPLIT_CHAR}|[{TOPIC}]"
      * where: 
-     * X : Offset of | character (uint_8) or
-     * TITLE : Title string followed by | or \0
+     * TITLE : Title string followed by | 
      * TOPIC : Topic string followed by \0
-     *
-     * Invalid input data could miss \0, but the buffer
+     * (and SPLIT_CHAR is defined in settings.h)
+     * Invalid input data could miss \0, but the complete buffer
      * is limited by \0.
      */
 
-    const char * string_to_search = title_str.p; // TITLE
-    size_t string_to_search_len =
-        (title_str.len8==0xFF?get_title_len(string_to_search):title_str.len8);
 
-    // Check if title string is followed by topic string. If not, 
-    // search for pointer on previous topic string.
+    int b_check_topic_substring_available = 1;
     const char *prev_topic = NULL;
-    if( *(string_to_search + string_to_search_len) == '\0' ){
-        prev_topic = get_prev_topic(p_s_ws, p_el);
-    }
 
     /* Loop through sub pattern...
      * Firstly , string_to_search maps on the title|topic string.
@@ -526,6 +519,7 @@ int _search_compare_title_(
 #endif
 #endif
         if( hit == NULL ){
+            //if( b_check_topic_substring_available ){ }
             if( prev_topic != NULL ){
                 string_to_search  = prev_topic;
                 prev_topic = NULL;
@@ -1006,16 +1000,14 @@ uint32_t find_lowest_seek_over_threshold(
     return a->link.title_seek;
 }
 
-short_string_t get_title_string(
+const char * get_title_string(
         search_workspace_t *p_s_ws,
         uint32_t id)
 {
     searchable_strings_prelude_t *p_entry;
     p_entry = (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
-    short_string_t title = {
-        *((uint8_t *)(p_entry+1)), //First byte contain packed length information....
-        (const char *)(p_entry+1)+1
-    };
+
+    const char *title = (const char *)(p_entry+1);
     return title;
 }
 
@@ -1088,7 +1080,7 @@ void search_read_title_file(
     assert( p_s_ws->searchable_strings_len > 0 );
     assert( p_s_ws->searchable_strings.fd > -1 );
     title_chunks_t *p_chunks = &p_s_ws->chunks;
-    int fd = p_s_ws->searchable_strings.fd;
+    int const fd = p_s_ws->searchable_strings.fd;
 
     uninit_chunks(p_s_ws);
     init_chunks(p_s_ws);
@@ -1178,7 +1170,8 @@ void search_read_title_file(
 #if NORMALIZED_STRINGS > 0
     const char *title, *title_norm;
     title_norm = (const char *)(p_entry+1);  // Normalized title + topic string...
-    title = title_norm + p_entry->length  + 1; // Original title
+    //title = title_norm + p_entry->length  + 1; // Original title
+    title = title_norm + strlen(title_norm) + 1; // Original title
     if( title < title_norm || (title_norm - title) > 4096){ // p_entry->length wrong?
         assert(0);
         title = title_norm + strlen(title_norm) + 1;
@@ -1187,7 +1180,7 @@ void search_read_title_file(
     const char *title;
     title = (const char *)(p_entry+1);
 #endif
-    fprintf(stderr, "First title (n=%u): %s\n", p_entry->length, title);
+    fprintf(stderr, "First title: %s\n", title);
 
     /* Print text of latest entry */
     // 1. Find position of last entry.
@@ -1208,7 +1201,8 @@ void search_read_title_file(
             - p_s_ws->chunks.start_seeks[iChunk]);
 #if NORMALIZED_STRINGS > 0
     title_norm = ((const char *)p_entry) + sizeof(searchable_strings_prelude_t);
-    title = title_norm + p_entry->length  + 1; // Original title
+    //title = title_norm + p_entry->length  + 1; // Original title
+    title = title_norm + strlen(title_norm) + 1; // Original title
     if( title < title_norm || (title_norm - title) > 4096){ // p_entry->length wrong?
         assert(0);
         title = title_norm + strlen(title_norm) + 1;
@@ -1216,7 +1210,7 @@ void search_read_title_file(
 #else
     title = ((const char *)p_entry) + sizeof(searchable_strings_prelude_t);
 #endif
-    fprintf(stderr, "Last title (n=%u): %s\n", p_entry->length, title);
+    fprintf(stderr, "Last title: %s\n", title);
 #endif
 }
 
@@ -1238,11 +1232,24 @@ int search_read_title_file_partial(
     assert( p_s_ws->searchable_strings_len > 0 );
     assert( p_s_ws->searchable_strings.fd > -1 );
     title_chunks_t *p_chunks = &p_s_ws->chunks;
-    int fd = p_s_ws->searchable_strings.fd;
+    int const fd = p_s_ws->searchable_strings.fd;
 
     if( p_chunks->len > 0 ){
+
         // Save latest topic string.
-        // TODO
+        buf_string_copy_t *p_topic = &p_s_ws->prev_topic;
+        if( p_topic->target ){
+            //size_t len_new = strlen(p_topic->target);
+            size_t const len_new = p_topic->target_len;
+            if( len_new < p_topic->_copy_size ){
+                memcpy(p_topic->_copy, p_topic->target, len_new+1); // +1 for '\0'
+            }else{
+                Free(p_topic->_copy);
+                p_topic->_copy = strdup(p_topic->target);
+                p_topic->_copy_size = len_new + 1;
+            }
+            //p_topic->target_len = len_new;
+        }
 
         // Clear chunks of previous run.
         int i;
@@ -1776,10 +1783,40 @@ int split_pattern(
     return (pp_cur-array);
 }
 
-const char *get_prev_topic(
+
+int get_title_and_topic(
         search_workspace_t *p_s_ws,
-        index_node_t *p_el)
+        uint32_t id,
+        const char **p_title,
+        const char **p_topic
+        )
 {
-        //id = LINKED_LIST_ID(p_el->nexts.subgroup_ids[used_indizes[0]]);
-        return NULL;
+    searchable_strings_prelude_t *p_entry;
+    p_entry = (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
+
+    // Limits
+    title_chunks_t *p_chunks = &p_s_ws->chunks;
+    char_buffer_t *p_current_chunk = &p_chunks->bufs[p_chunks->partial_i];
+    char * const buf_start = p_current_chunk->p;
+    char * const buf_stop = buf_start + p_current_chunk->len;
+
+    const char * const title = (const char *)(p_entry+1);
+
+    const char * const topic_candidate = title + p_entry->topic_string_offset;
+    if( topic_candidate < buf_start ){
+        *p_topic = p_s_ws->prev_topic.target;
+    }else if( topic_candidate < buf_stop){
+        *p_topic = topic_candidate;
+        p_s_ws->prev_topic.target = topic_candidate;
+        //p_s_ws->prev_topic.target_len = strlen(topic_candidate); // Unused
+    }else{
+        assert(topic_candidate < buf_stop);
+        // Offset to high!
+        *p_topic = NULL;
+        return -1;
+    }
+
+    assert(title+strlen(title) < buf_stop);
+    *p_title = title;
+    return 0;
 }

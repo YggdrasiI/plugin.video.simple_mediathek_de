@@ -29,10 +29,12 @@ typedef struct {
 typedef searchable_strings_prelude_t title_line_t;
 #endif
 
+#if 0
 typedef struct {
     uint8_t len8;
     const char *p;
 } short_string_t;
+#endif
 
 typedef struct {
     uint32_t len;
@@ -155,6 +157,7 @@ typedef struct search_workspace_s {
     title_chunks_t chunks;
     int index_fd; // Input fd
 //    search_result_t search_result;
+    buf_string_copy_t prev_topic;
 #ifdef COMPRESS_BROTLI
     brotli_decoder_workspace_t brotli_title;
     //  brotli_decoder_workspace_t brotli_payload;
@@ -247,11 +250,9 @@ uint32_t find_lowest_seek_over_threshold(
 /* Return pointer on (transformed) title pattern.
  * (Similar to title_entry()...
  *
- *      -1     0            ... len
- * [len byte] [^ret pointer]     |
+ * Pattern could contain '|topic' substring.
  */
-//const char * get_title_string(
-short_string_t get_title_string(
+const char * get_title_string(
         search_workspace_t *p_s_ws,
         uint32_t id)
 ;
@@ -309,7 +310,10 @@ int split_pattern(
  * In the second case the backuped topic of the previous block
  * will be returned.
  */
-const char *get_prev_topic(
+int get_title_and_topic(
         search_workspace_t *p_s_ws,
-        index_node_t *p_el)
+        uint32_t id,
+        const char **p_title,
+        const char **p_topic
+        )
 ;

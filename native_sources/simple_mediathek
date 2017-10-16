@@ -8,7 +8,8 @@
 # /storage/.kodi/userdata/addon_data/plugin.video.simple_mediathek_de
 #
 
-BIN_NAME="${0##*/}.bin"
+BIN_NAME="${0##*/}"
+BIN_NAME="${BIN_NAME%.*}.bin"  # Strip .local and add .bin
 BIN_PATH="./${0%/*}"
 MACH=$(uname -m)
 
@@ -22,7 +23,7 @@ LD_LIBRARY_PATH=${BIN_PATH}/../lib:../root/${MACH}/lib:${LD_LIBRARY_PATH}
 export LD_LIBRARY_PATH
 
 INDEX_FILE_FOLDER="/dev/shm/"  # Overwritten by --folder arg
-VERBOSE=1
+VERBOSE=0
 DEBUG=0
 
 # Old source for XML files
@@ -38,10 +39,9 @@ FETCH_WGET="wget -qO- "
 FETCH_WGET="wget -O- "
 FETCH_CURL="curl -L "
 FETCH="${FETCH_WGET}"
-JUST_PRINT_LINK=0
 
 # Local copies(used if DEBUG=1)
-LOCAL_URL="http://yggdrasil/mediathek"
+LOCAL_URL="http://localhost:8000"
 DEBUG_AKT_XML="${LOCAL_URL}/Filmliste-akt.xml"
 DEBUG_DIFF_XML="${LOCAL_URL}/Filmliste-diff.xml"
 DEBUG_AKT_XZ="${LOCAL_URL}/Filmliste-akt.xz"
@@ -92,15 +92,7 @@ check_shell()
   esac
 }
 
-just_print_link()
-{
-  # Print link for manually download..
-  JUST_PRINT_LINK=1
-  DEBUG=0
-  update "$1"
-}
-
-update()
+setup()
 {
   # Set diff flag
   if [ "$1" = "1" -o "$1" = "diff" ] ; then
@@ -163,32 +155,75 @@ else{
 
   if [ "$XZ_URL" = "error" ] ; then
     echo_verbose "Can not parse XML file to get download url for data file."
-  elif [ "$JUST_PRINT_LINK" = "1" ] ; then
-    echo "${XZ_URL}"
+    exit -1
+  fi
+}
+
+just_print_link()
+{
+  # Print link for manually download..
+  DEBUG=0
+  setup "$1"
+  echo "${XZ_URL}"
+}
+
+update()
+{ 
+  setup "$1"
+
+  GET_XZ="$FETCH ${XZ_URL}"
+  UNPACK_XZ="xz -dc -"
+  INDEX_JSON="${BIN_PATH}/${BIN_NAME} --index ${DIFF_FLAGS} -f ${INDEX_FILE_FOLDER}"
+
+  echo_verbose "Call pipe is:"
+  echo_verbose "${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}"
+
+  # Set EXE
+  EXE=$(check_shell)
+  if [ "$EXE" = "busybox" ] ; then
+    ${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}
+
+    # No PIPESTATUS array available
+    exit $?
   else
+    ${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}
 
-    GET_XZ="$FETCH ${XZ_URL}"
-    UNPACK_XZ="xz -dc -"
-    INDEX_JSON="${BIN_PATH}/${BIN_NAME} --index ${DIFF_FLAGS} -f ${INDEX_FILE_FOLDER}"
+    # Return status of piped commands stored in array
+    eval "RET=\${PIPESTATUS[2]}\${PIPESTATUS[1]}\${PIPESTATUS[0]}"
+    exit $RET
+  fi
+}
 
-    # Set EXE
-    EXE=$(check_shell)
+download()
+{
+  setup "$1"
 
-    echo_verbose "Call pipe is:"
-    echo_verbose "${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}"
+  if [ "${DIFF}" = "1" ] ; then
+    FILENAME="${INDEX_FILE_FOLDER}Filmliste-diff.json"
+  else
+    FILENAME="${INDEX_FILE_FOLDER}Filmliste-akt.json"
+  fi
 
-    if [ "$EXE" = "busybox" ] ; then
-      ${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}
+  GET_XZ="$FETCH ${XZ_URL}"
+  UNPACK_XZ="xz -dc -"
+  ADD_NEWLINES="s/],\"/],\n\"/g"
 
-      # No PIPESTATUS array available
-      exit $?
-    else
-      ${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}
+  echo_verbose "Call pipe is:"
+  echo_verbose "${GET_XZ} | ${UNPACK_XZ} | sed -e "${ADD_NEWLINES}" > \"${FILENAME}\""
 
-      # Return status of piped commands stored in array
-      eval "RET=\${PIPESTATUS[2]}\${PIPESTATUS[1]}\${PIPESTATUS[0]}"
-      exit $RET
-    fi
+  # Set EXE
+  EXE=$(check_shell)
+  if [ "$EXE" = "busybox" ] ; then
+    ${GET_XZ} | ${UNPACK_XZ} | sed -e "${ADD_NEWLINES}" > "${FILENAME}"
+
+    # No PIPESTATUS array available
+    exit $?
+  else
+    ${GET_XZ} | ${UNPACK_XZ} | sed -e "${ADD_NEWLINES}" > "${FILENAME}"
+
+    # Return status of piped commands stored in array
+    eval "RET=\${PIPESTATUS[2]}\${PIPESTATUS[1]}\${PIPESTATUS[0]}"
+    exit $RET
   fi
 }
 
@@ -206,6 +241,8 @@ if [ "$1" = "update" ] ; then
   update "$2"
 elif [ "$1" = "link" ] ; then
   just_print_link "$2"
+elif [ "$1" = "download" ] ; then
+  download "$2"
 else
   check_if_folder_arg_given $@
   echo_verbose "${BIN_PATH}/${BIN_NAME} $@"
