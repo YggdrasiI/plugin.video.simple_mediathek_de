@@ -51,6 +51,10 @@ class FilmlisteParser:
         #with io.open(filename_full, "r", encoding="utf8") as fin: # lame!!
             line_beginning = fin.tell()
             data = fin.readline()  # undecoded utf-8 string
+
+            #remove "{" if first line begins with '{'
+            if data[0] == "{": data = data[1:]
+
             while data:
                 # Key : [Values] split
                 if data.find(":") > -1:
@@ -83,12 +87,12 @@ class FilmlisteParser:
             json.load(fin, object_pairs_hook=process_pairs)
 
     """ Assumed raw input structure:
-        "Filmliste" : [ "14.12.2016, 23:23", "14.12.2016, 22:23", "3",
-            "MSearch [Vers.: 2.1.0]", "4d511865fac2da58fcd1a6a3e0100735" ],
-        "Filmliste" : [ "Sender", "Thema", "Titel", "Datum", "Zeit",
-            "Dauer", "Größe [MB]", "Beschreibung", "Url", "Website",
-            "Url Untertitel", "Url RTMP", "Url Klein", "Url RTMP Klein",
-            "Url HD", "Url RTMP HD", "DatumL", "Url History", "Geo", "neu" ],
+            "Filmliste":["14.12.2016,23:23","14.12.2016,22:23","3",
+                "MSearch[Vers.:2.1.0]","4d511865fac2da58fcd1a6a3e0100735"],
+            "Filmliste":["Sender","Thema","Titel","Datum","Zeit",
+                "Dauer","Größe[MB]","Beschreibung","Url","Website",
+                "UrlUntertitel","UrlRTMP","UrlKlein","UrlRTMPKlein",
+                "UrlHD","UrlRTMPHD","DatumL","UrlHistory","Geo","neu"],
     """
     def handle_key_filmliste(self, entry):
         if "hash" in self.metadata:
@@ -111,9 +115,9 @@ class FilmlisteParser:
             self.metadata["hash"] = entry[4]
 
     """ Assumed raw input structure:
-        "X" : [ "3Sat", "3sat", "Goldkinder", "13.12.2016", "23:10:00",
-        "00:44:14", "764", "[Desc]", "[url], "[website]", "", "", "", "",
-        "88|3328k_p36v13.mp4", "", "1481667000", "", "DE-AT-CH", "true" ],
+        "X":["3Sat","3sat","Goldkinder","13.12.2016","23:10:00",
+        "00:44:14","764","[Desc]","[url],"[website]","","","","",
+        "88|3328k_p36v13.mp4","","1481667000","","DE-AT-CH","true"],
     """
     def handle_key_x(self, entry, seek_position=-1):
         if "used_label_indizes" in self.metadata:
@@ -202,5 +206,5 @@ class FilmlisteParser:
 
 p = FilmlisteParser()
 # p.parse_dumb("../test.json")
-p.parse_dumb("/dev/shm/filme.json")
+p.parse_dumb("/dev/shm/Filmliste-akt.json")
 p.save("/dev/shm/tmp.py.json")
