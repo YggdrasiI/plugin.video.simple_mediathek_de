@@ -129,6 +129,8 @@ _LD_LIBRARY_PATH=$(shell echo "LD_LIBRARY_PATH=.:../root/${MACH}/lib:${LD_LIBRAR
 # Test args for searching...
 # TEST_ARGS=-s --dayMin 0 --dayMax 7 --title="\"extra 3\""
 TEST_ARGS=--search -t "Tagesschau" -n 2,0 -r --dayMax 10 -C "ARD" --durationMin "14m"
+TEST_ARGS=-s -t "tagesschau" --dayMax 0 --dayMin 0
+
 # Test args for payload fetch...
 # TEST_ARGS=--payload 0
 

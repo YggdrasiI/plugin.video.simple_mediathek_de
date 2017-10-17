@@ -152,11 +152,16 @@ void output_fill(
     uint32_t payload_anchor = ( (p_el->link.payload_seek & 0xFFFFFF)
             | p_el->link.payload_file_id << 24) ;
 
-    searchable_strings_prelude_t *p_entry =
-        (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
+    searchable_strings_prelude_t *p_entry;
+    size_t iChunk = title_entry(p_s_ws, id, &p_entry);
 
     title_chunks_t *p_chunks = &p_s_ws->chunks;
+#ifdef READ_TITLE_FILE_PARTIAL 
+    assert(iChunk == p_chunks->partial_i);
     char_buffer_t *p_current_chunk = &p_chunks->bufs[p_chunks->partial_i];
+#else
+    char_buffer_t *p_current_chunk = &p_chunks->bufs[iChunk];
+#endif
     char * const buf_start = p_current_chunk->p;
     char * const buf_stop = buf_start + p_current_chunk->len;
 

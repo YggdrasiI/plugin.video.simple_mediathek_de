@@ -366,8 +366,8 @@ int _all_arguments_fulfilled(
 {
     arguments_t *p_arguments = p_s_ws->p_arguments;
 
-    searchable_strings_prelude_t *p_entry =
-        (searchable_strings_prelude_t *) title_entry(p_s_ws, p_el->id);
+    searchable_strings_prelude_t *p_entry;
+    title_entry(p_s_ws, p_el->id, &p_entry);
 
     uint32_t duration = (uint32_t) p_entry->duration;
     if( p_arguments->durationMin > -1 &&
@@ -520,6 +520,14 @@ int _search_compare_title_(
      */
     const char **sub_pat = (const char **)p_pattern->title_sub_pattern;
     while( *sub_pat != NULL ){
+
+#if 1
+        if( string_to_search == NULL ){
+            int b_use_prev_topic2 = (0 < get_title_and_topic(
+                        p_s_ws, p_el->id, &string_to_search, &prev_topic));
+        }
+#endif
+
 #if NORMALIZED_STRINGS > 0
         const char *hit = strstr(string_to_search, *sub_pat);
 #else
@@ -725,8 +733,8 @@ void print_search_result(
     uint32_t payload_anchor = ( (p_el->link.payload_seek & 0xFFFFFF)
         | p_el->link.payload_file_id << 24) ;
 
-    searchable_strings_prelude_t *p_entry =
-        (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
+    searchable_strings_prelude_t *p_entry;
+    title_entry(p_s_ws, id, &p_entry);
 
     int title_len = p_entry->length; //followed by \0
 #if NORMALIZED_STRINGS > 0
@@ -807,7 +815,7 @@ int search_do_search(
     //p_s_ws->search_result.match_found = 0;
 
     if( p_arguments->dayMin > -1 ){
-        int relative_day_to_now = p_arguments->dayMax; // Begin with oldest.
+        int relative_day_to_now = p_arguments->dayMax + 1; // Begin with oldest.
         int relative_day_to_creation = relative_day_to_now -
             (p_s_ws->search_itoday - p_s_ws->itoday);
         if( relative_day_to_creation < 0 ){
@@ -817,7 +825,7 @@ int search_do_search(
             return -1;
         }
 
-        int relative_day_to_creation2 = p_arguments->dayMin
+        int relative_day_to_creation2 = p_arguments->dayMin + 1
             - (p_s_ws->search_itoday - p_s_ws->itoday);
 
         // Cut ranges
@@ -826,7 +834,7 @@ int search_do_search(
         relative_day_to_creation2 = clip(0, relative_day_to_creation2,
                 NUM_REALTIVE_DATE-1);
 
-        assert( relative_day_to_creation > relative_day_to_creation2 );
+        assert( relative_day_to_creation >= relative_day_to_creation2 );
 
         // Apply range cut on input args to keep range width on same value.
         // This is important for the next_search_tuple() function.
@@ -1020,15 +1028,16 @@ const char * get_title_string(
         uint32_t id)
 {
     searchable_strings_prelude_t *p_entry;
-    p_entry = (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
+    title_entry(p_s_ws, id, &p_entry);
 
     const char *title = (const char *)(p_entry+1);
     return title;
 }
 
-void *title_entry(
+size_t title_entry(
         search_workspace_t *p_s_ws,
-        uint32_t entry_id)
+        uint32_t entry_id,
+        searchable_strings_prelude_t **pp_entry)
 {
     assert( entry_id >= LINKED_LIST_FIRST_ID );
     assert( entry_id < p_s_ws->index.next_unused_id );
@@ -1063,9 +1072,9 @@ void *title_entry(
     assert( p_b->p != NULL );
 
     // searchable_strings_prelude_t*
-    void *ret = (void *)(p_b->p + seek - p_s_ws->chunks.start_seeks[iChunk]);
-
-    return ret;
+    *pp_entry = (searchable_strings_prelude_t *)(
+            p_b->p + seek - p_s_ws->chunks.start_seeks[iChunk]);
+    return iChunk;
 }
 
 
@@ -1176,11 +1185,9 @@ void search_read_title_file(
     assert( finish_decompressing );
 #endif
 #ifndef NDEBUG
-    searchable_strings_prelude_t *p_entry;
-
     /* Print text of first entry */
-    p_entry = (searchable_strings_prelude_t *) title_entry(
-            p_s_ws, LINKED_LIST_FIRST_ID);
+    searchable_strings_prelude_t *p_entry;
+    title_entry(p_s_ws, LINKED_LIST_FIRST_ID, &p_entry);
 
 #if NORMALIZED_STRINGS > 0
     const char *title, *title_norm;
@@ -1452,7 +1459,7 @@ int search_gen_patterns_for_partial(
         //len_results *= (p_arguments->dayMax - p_arguments->dayMin + 1);
 
         // ... better is
-        int relative_day_to_creation = p_arguments->dayMax // Begin with oldest.
+        int relative_day_to_creation = p_arguments->dayMax + 1 // Begin with oldest.
             - (p_s_ws->search_itoday - p_s_ws->itoday);
         if( relative_day_to_creation < 0 ){
             // This day is to young to be found in this index file.
@@ -1461,7 +1468,7 @@ int search_gen_patterns_for_partial(
             return 0;
         }
 
-        int relative_day_to_creation2 = p_arguments->dayMin
+        int relative_day_to_creation2 = p_arguments->dayMin + 1
             - (p_s_ws->search_itoday - p_s_ws->itoday);
 
         // Cut ranges
@@ -1806,11 +1813,17 @@ int get_title_and_topic(
         )
 {
     searchable_strings_prelude_t *p_entry;
-    p_entry = (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
+    size_t iChunk;
+    iChunk = title_entry(p_s_ws, id, &p_entry);
 
     // Limits
     title_chunks_t *p_chunks = &p_s_ws->chunks;
+#ifdef READ_TITLE_FILE_PARTIAL 
+    assert(iChunk == p_chunks->partial_i);
     char_buffer_t *p_current_chunk = &p_chunks->bufs[p_chunks->partial_i];
+#else
+    char_buffer_t *p_current_chunk = &p_chunks->bufs[iChunk];
+#endif
     char * const buf_start = p_current_chunk->p;
     char * const buf_stop = buf_start + p_current_chunk->len;
 

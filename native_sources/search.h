@@ -207,11 +207,15 @@ int search_do_search(
  * title and second lookup to find this entry.
  *
  * Call only after setup with search_read_title_file(...)
+ *
+ * Return value is the index of chunk.bufs[] where the entry 
+ *   could be found.
+ * The evaluated entry will be stored in pp_entry.
  */
-void *title_entry(
+size_t title_entry(
         search_workspace_t *p_s_ws,
-        uint32_t entry_id
-        )
+        uint32_t entry_id,
+        searchable_strings_prelude_t **pp_entry)
 ;
 
 void search_read_title_file(

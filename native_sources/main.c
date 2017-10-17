@@ -416,11 +416,11 @@ break_both:
     while( 1 ) { // Read normal file, diff file, and then breaks.
         search_read_title_file(&s_ws);
         search_do_search(&s_ws, p_arguments);
-      if(s_ws.p_arguments.diff_update){
+      if(s_ws.p_arguments->diff_update){
           break;
       }else{
           // Set flag and open differential files.
-          s_ws.p_arguments.diff_update = 1;
+          s_ws.p_arguments->diff_update = 1;
           if( open_index_file(&s_ws, s_ws.p_arguments) ){
               // No diff files available
               break;
