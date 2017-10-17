@@ -152,6 +152,9 @@ index:
 search:
 	./$(SCRIPT_NAME) -s --title="Livestream" -n 50 --durationMax 0 --beginMax 121m
 
+topic:
+	./$(SCRIPT_NAME) -s --topic="Tagesschau mit Gebärdensprache" -n 10 -C "ARD"
+
 info:
 	./$(SCRIPT_NAME) --info
 

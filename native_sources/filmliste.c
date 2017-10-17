@@ -428,6 +428,7 @@ void filmliste_handle(
 
         p_fl_ws->prev_topic_seek = (p_fl_ws->searchable_strings.seek /*+ sizeof(start_dur_len)*/
                 + title_len + 1);
+       topic_str = p_fl_ws->prev_topic.target;
     }/*else{
        topic_str = (char *)p_fl_ws->prev_topic.target;
        topic_len = p_fl_ws->prev_topic.target_len;
