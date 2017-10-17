@@ -2,7 +2,7 @@
 
 SCRIPT_NAME=simple_mediathek
 PROG_NAME=$(SCRIPT_NAME).bin
-BROTLI=0
+BROTLI=1
 
 # Scripts will installed in $INSTALL_PREFIX/bin
 # Binaries will insatlled in $INSTALL_PREFIX/$MACH
@@ -30,6 +30,7 @@ endif
 ifeq ($(MAKECMDGOALS),debug)
 CFLAGS+= -g
 ODIR=obj_debug
+BROTLI=0
 else
 CFLAGS+= -O3 -DNDEBUG
 CFLAGS+= -Wall

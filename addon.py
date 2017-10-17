@@ -150,6 +150,12 @@ class SimpleMediathek:
     def get_current_pattern(self):
         return self.state.get("current_pattern", {})
 
+    def get_livestream_pattern(self):
+        return {"title": "Livestream", "args": [
+            "--durationMax", "0",
+            "--beginMax", "7260",  # 1. Jan 1970, 1 Uhr, Winterzeit.
+        ]}
+
     def update_state(self, changes, b_update_changed_flag):
         flag_backup = self.state.changed
         if isinstance(changes, __builtins__.dict):
@@ -359,6 +365,9 @@ class SimpleMediathek:
             largs.append("%i" % (d0,))
             largs.append("--beginMax")
             largs.append("%i" % (d1,))
+
+        for other_arg in pattern.get("args", []):
+            largs.append(other_arg)
 
         return largs
 
@@ -804,6 +813,16 @@ def listing_add_test(listing, state):
     listing.append((url, li, is_folder))
 
 
+def listing_add_livestreams(listing, state):
+    xxx = mediathek.get_search_results().get("found", [])
+    name = "%s" % ("Livestreams")
+    url = build_url({"mode": "start_search_livestreams"}, state)
+    li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
+    li.setProperty("IsPlayable", "true")
+    is_folder = True
+    listing.append((url, li, is_folder))
+
+
 def listing_add_search_results(listing, state, results):
     """ Example line:
         {"id": 154344, "title": "...",
@@ -839,8 +858,11 @@ def listing_search_page_link(listing, state, results, ipage):
         name = "Nächste Seite (%i)" % (ipage+1)
 
     # pattern = mediathek.get_current_pattern()
+        url = build_url(
+            state)
     if True:  # is_searchable(pattern):
-        url = build_url({"mode": "start_search",
+        url = build_url({"mode": ("start_search_livestreams" if
+                                  b_livestream else "start_search"),
                          "page": ipage}, state)
         li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
         li.setProperty("IsPlayable", "true")
@@ -986,6 +1008,7 @@ with SimpleMediathek() as mediathek:
         mode = args.get("mode", None)
         prev_mode = args.get("prev_mode", "None")  # str
         sameFolder = (prev_mode != "None")  # do NOT use 'is not'
+        b_livestream = False
 
         # Update with unsaved changes, but not force
         # write of changes at end of script
@@ -1214,8 +1237,14 @@ with SimpleMediathek() as mediathek:
         state_diff.update(changes)  # propagated by Uri
         mode = "main"
 
-    if mode == "start_search":
-        pattern = mediathek.get_current_pattern()
+
+    if mode in ["start_search", "start_search_livestreams"]:
+        if mode == "start_search_livestreams":
+            pattern = mediathek.get_livestream_pattern()
+            b_livestream = True
+        else:
+            pattern = mediathek.get_current_pattern()
+
         search_args = mediathek.create_search_params(pattern)
 
         # Add page flag
@@ -1238,6 +1267,7 @@ with SimpleMediathek() as mediathek:
             # mode = "main"
 
         mode = "show_search_result"
+
         state_diff["latest_search"] = results
 
     if mode == "show_search_result":
@@ -1321,6 +1351,8 @@ with SimpleMediathek() as mediathek:
             listing.append((url, li, is_folder))
 
         # listing_add_test(listing, state_diff)
+        listing_add_livestreams(listing, state_diff)
+
         listing_add_search(listing, mediathek, state_diff)
         xbmcplugin.addDirectoryItems(addon_handle, listing, len(listing))
         xbmcplugin.endOfDirectory(

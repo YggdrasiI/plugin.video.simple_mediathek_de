@@ -27,3 +27,7 @@ addon: clean
 
 clean:
 	test \! -f ../$(PROJECT).zip || mv ../$(PROJECT).zip ../$(PROJECT).old.zip
+
+
+update:
+	cp addon.py $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
