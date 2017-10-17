@@ -198,7 +198,6 @@ class SimpleMediathek:
             return False
         if (now - ctime_list) > 3 * 3600:
             return True
-
         return False
 
     def try_diff_update(self):
@@ -213,6 +212,8 @@ class SimpleMediathek:
         return self.state.get("channels", {})
 
     def add_to_history(self, search_pattern):
+        if b_livestream:
+            return
         hist = self.state.setdefault("history", [])
         self.MAX_HIST_LEN = int(addon.getSetting("history_length"))
         # Remove previous position
@@ -222,9 +223,9 @@ class SimpleMediathek:
         except:
             pass
         hist.insert(0, search_pattern)
-        self.state.set_changed()
         if len(hist) > self.MAX_HIST_LEN:
             hist = hist[-self.MAX_HIST_LEN:]
+        self.state.set_changed()
 
     def get_history(self):
         # if "history" not in self.state:
@@ -244,10 +245,14 @@ class SimpleMediathek:
             days = pattern["iday_range"]
             date0 = datetime.date.fromtimestamp(min(days))
             date1 = datetime.date.fromtimestamp(max(days))
-            day_range = "%s–%s" % (
-                date0.strftime("%d.%b"),
-                date1.strftime("%d.%b"),
-            )
+            if date1 != date0:
+                day_range = "%s–%s" % (
+                    date0.strftime("%d.%b"),
+                    date1.strftime("%d.%b"),
+                )
+            else:
+                day_range = "%s" % (date0.strftime("%d.%b")),
+
             return day_range
 
         return search_ranges_str["day"][pattern.get("iday", -1)]
@@ -322,7 +327,7 @@ class SimpleMediathek:
             largs.append("-C")
             largs.append("%s" % (chan_name,))
 
-        if len(pattern.get("iday_range", [])) > 0:
+        if pattern.get("iday_range"):
             days = pattern.get("iday_range")
             date0 = datetime.date.fromtimestamp(min(days))
             date1 = datetime.date.fromtimestamp(max(days))
@@ -586,8 +591,7 @@ def is_searchable(pattern):
     if pattern.get("iduration", -1) > -1:
         i_crit_used += 1
 
-    if(pattern.get("iday_range", -1) > -1
-       or pattern.get("iday", -1) > -1):
+    if (pattern.get("iday_range") or pattern.get("iday", -1) > -1):
         i_crit_used += 1
 
     if pattern.get("ibegin", -1) > -1:
@@ -806,7 +810,7 @@ def listing_add_test(listing, state):
 
     xxx = mediathek.get_search_results().get("found", [])
     name = "%-20s %s %i" % ("Test", str(prev_mode), len(xxx))
-    url = build_url({"mode": "update_db"}, state)
+    url = build_url({"mode": "select_calendar"}, state)
     li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
     li.setProperty("IsPlayable", "true")
     is_folder = True
@@ -936,6 +940,19 @@ def blankScreen():
     pass
 
 
+def handle_update_side_effects(args):
+    """
+    Simple updates simply update a key-value pair.
+    More complex relations could be placed here.
+    Return True if the normal update of the key should be avoided.
+    """
+    if args.get("item") == "iday":
+        pattern = mediathek.get_current_pattern()
+        if "iday_range" in pattern:
+            pattern.pop("iday_range")
+
+    return False
+
 # ==============================================
 # Main code
 
@@ -1040,7 +1057,48 @@ with SimpleMediathek() as mediathek:
 
     if mode == "select_calendar":
         # Not implemented
-        mode = "main"
+        dialog = xbmcgui.Dialog()
+        result1 = dialog.input('Erstes Datum eingeben',
+                               type=xbmcgui.INPUT_DATE)
+        if len(result1) > 0:
+            # Split and check "DD/MM/YYYY" format. Extra spaces, i.e.
+            # '22/ 1/2000' had to be free'd by the spaces.
+            result1 = result1.replace(" ", "")
+            try:
+                # datetime1 = datetime.strptime(str(result1), '%d/%m/%Y') #miss
+                # sec1 = int(datetime1.ctime())
+                t = time.strptime(result1, '%d/%m/%Y')
+                sec1 = int(time.strftime("%s", t))
+
+
+                result2 = dialog.input('Zweites Datum eingeben',
+                                      result1,
+                                      type=xbmcgui.INPUT_DATE)
+                if len(result2) > 0:
+                    result2 = result2.replace(" ", "")
+                    t = time.strptime(result2, '%d/%m/%Y')
+                    sec2 = int(time.strftime("%s", t))
+                else:
+                    sec2 = sec1
+
+                iday_range = [sec1, sec2]
+                iday_range.sort()
+                pattern = mediathek.get_current_pattern()
+                if "iday" in pattern: pattern.pop("iday")
+                pattern.update({"iday_range": iday_range})
+
+                changes = {"current_pattern": pattern}
+                mediathek.update_state(changes, False)  # Unwritten update
+                state_diff.update(changes)  # propagated by Uri
+
+                mode = "main"
+            # except (ValueError, TypeError) as e:
+            except (RuntimeError,) as e:
+                xbmcgui.Dialog().notification(
+                    addon_name, "Error during parsing of date strings.",
+                    xbmcgui.NOTIFICATION_ERROR, 5000)
+                mode = "select_day"
+
 
     if mode == "select_day":
         names = search_ranges_str["day"]
@@ -1215,6 +1273,7 @@ with SimpleMediathek() as mediathek:
             if "value" in args:
                 try:
                     value = int(args["value"])
+                    handle_update_side_effects(args)
                 except ValueError:
                     value = args["value"]
 
@@ -1350,7 +1409,7 @@ with SimpleMediathek() as mediathek:
 
             listing.append((url, li, is_folder))
 
-        # listing_add_test(listing, state_diff)
+        listing_add_test(listing, state_diff)
         listing_add_livestreams(listing, state_diff)
 
         listing_add_search(listing, mediathek, state_diff)
