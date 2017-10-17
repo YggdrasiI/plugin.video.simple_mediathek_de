@@ -40,7 +40,9 @@ search_workspace_t search_ws_create(
         tnow, // search_tnow
         tlocalday_begin, // search_ttoday
         nlocalday, // search_itoday
-
+#ifdef WITH_TOPIC_OPTION
+        p_arguments->title?0:1, //restrict_string_search_on_topic
+#endif
         {-1, -1, 0}, // payload
         {-1, -1, 0}, // searchable_strings
         0, // searchable_strings_len
@@ -485,21 +487,30 @@ int _search_compare_title_(
 #define get_title_len(X) (strchrnul(X, SPLIT_CHAR)-X)
 
     // Split pattern by '*' and search each substring separately.
-    const char *string_to_search = get_title_string(p_s_ws, p_el->id);
+    const char *string_to_search = NULL, *prev_topic = NULL;
+    //const char *string_to_search = get_title_string(p_s_ws, p_el->id);
+    int b_use_prev_topic = (0 < get_title_and_topic(
+            p_s_ws, p_el->id, &string_to_search, &prev_topic));
 
     /*
-     * Structure of above byte array: "{TITLE}{SPLIT_CHAR}|[{TOPIC}]"
+     * Structure of above byte array: "{TITLE}{SPLIT_CHAR}[{TOPIC}]"
      * where: 
      * TITLE : Title string followed by | 
-     * TOPIC : Topic string followed by \0
-     * (and SPLIT_CHAR is defined in settings.h)
-     * Invalid input data could miss \0, but the complete buffer
-     * is limited by \0.
+     * TOPIC : Topic string followed by \0. Only set if topic differs from
+     *         previous entry.
+     * SPLIT_CHAR: Defined in settings.h)
+     *
+     * Invalid input data could miss the '\0', but the complete buffer
+     * is limited by '\0'.
      */
 
-
-    int b_check_topic_substring_available = 1;
-    const char *prev_topic = NULL;
+#ifdef WITH_TOPIC_OPTION
+     if( p_s_ws->restrict_string_search_on_topic ){
+         // Start directly with topic string
+         string_to_search = prev_topic;
+         b_use_prev_topic = 0;
+     }
+#endif
 
     /* Loop through sub pattern...
      * Firstly , string_to_search maps on the title|topic string.
@@ -519,10 +530,9 @@ int _search_compare_title_(
 #endif
 #endif
         if( hit == NULL ){
-            //if( b_check_topic_substring_available ){ }
-            if( prev_topic != NULL ){
+            if( b_use_prev_topic ){
                 string_to_search  = prev_topic;
-                prev_topic = NULL;
+                b_use_prev_topic = 0;
                 continue;
             }
             return -1;
@@ -785,7 +795,12 @@ int search_do_search(
         {-1, -1, -1, -1},     // used_indizes
         {0, 0, 0, 0}          // start_ids
     };
+#ifdef WITH_TOPIC_OPTION
+    transform_search_title(p_s_ws->restrict_string_search_on_topic?
+            p_arguments->topic:p_arguments->title, &pattern.title_pattern);
+#else
     transform_search_title(p_arguments->title, &pattern.title_pattern);
+#endif
     split_pattern(&pattern, '*');
     DEBUG( fprintf(stderr, "Search pattern: '%s'\n", pattern.title_pattern) );
 
@@ -1170,7 +1185,6 @@ void search_read_title_file(
 #if NORMALIZED_STRINGS > 0
     const char *title, *title_norm;
     title_norm = (const char *)(p_entry+1);  // Normalized title + topic string...
-    //title = title_norm + p_entry->length  + 1; // Original title
     title = title_norm + strlen(title_norm) + 1; // Original title
     if( title < title_norm || (title_norm - title) > 4096){ // p_entry->length wrong?
         assert(0);
@@ -1238,17 +1252,11 @@ int search_read_title_file_partial(
 
         // Save latest topic string.
         buf_string_copy_t *p_topic = &p_s_ws->prev_topic;
-        if( p_topic->target ){
-            //size_t len_new = strlen(p_topic->target);
-            size_t const len_new = p_topic->target_len;
-            if( len_new < p_topic->_copy_size ){
-                memcpy(p_topic->_copy, p_topic->target, len_new+1); // +1 for '\0'
-            }else{
-                Free(p_topic->_copy);
-                p_topic->_copy = strdup(p_topic->target);
-                p_topic->_copy_size = len_new + 1;
-            }
-            //p_topic->target_len = len_new;
+        if( p_topic->target && p_topic->target != p_topic->_copy){
+            charcpy(&p_topic->_copy, &p_topic->_copy_size,
+                    //p_topic->target, p_topic->target_len);
+                    p_topic->target, strlen(p_topic->target));
+            p_topic->target = p_topic->_copy;
         }
 
         // Clear chunks of previous run.
@@ -1258,6 +1266,7 @@ int search_read_title_file_partial(
         {
             char_buffer_t *p_x = &p_chunks->bufs[i];
             if( p_x->p ){
+                //printf("Remove chunk %i\n", i);
                 char_buffer_clear(p_x);
             }
         }
@@ -1356,29 +1365,29 @@ int _search_by_title_partial_(
     assert( p_pattern->title_pattern != NULL );
     assert( p_pattern->title_sub_pattern[0] != NULL );
 
-    // This id is the first in the currently loaded chunsk(s)
+    // This id is the first in the currently loaded chunk(s) (of title file)
     uint32_t chunk_start_id = p_s_ws->chunks.start_ids[
         p_s_ws->chunks.partial_i];
-    // This id is the first after the currently loaded chunk(s)
+    // This id is the first after the currently loaded chunk(s) (of title file)
     uint32_t chunk_stop_id = p_s_ws->chunks.start_ids[
         p_s_ws->chunks.partial_i + 1];
 
-    // Loop over chunk of nodes.
-    int i, ichunk_begin, ichunk_end;
+    // Loop over affected nodes in the index blocks.
+    int i, iblock_begin, iblock_end;
     index_node_t *p_el, *p_end;
-    ichunk_begin = (chunk_start_id - LINKED_LIST_FIRST_ID) / LINKED_LIST_ARR_LEN;
-    ichunk_end = (chunk_stop_id - LINKED_LIST_FIRST_ID - 1) / LINKED_LIST_ARR_LEN;
+    iblock_begin = (chunk_start_id - LINKED_LIST_FIRST_ID) / LINKED_LIST_ARR_LEN; // Falsch?!
+    iblock_end = (chunk_stop_id - LINKED_LIST_FIRST_ID - 1) / LINKED_LIST_ARR_LEN;
 
-    assert( ichunk_begin <= ichunk_end );
-    assert( ichunk_end <= p_list->len_nodes - 1);
+    assert( iblock_begin <= iblock_end );
+    assert( iblock_end <= p_list->len_nodes - 1);
 
-    for( i=ichunk_begin; i<=ichunk_end; i++){
+    for( i=iblock_begin; i<=iblock_end; i++){
         if( p_list->nodes_start[i] != NULL ){
             p_el = p_list->nodes_start[i];
-            p_end =(i==ichunk_end)?
+            p_end =(i==iblock_end)?
                 ( p_el + ( (chunk_stop_id - LINKED_LIST_FIRST_ID - 1)%LINKED_LIST_ARR_LEN) + 1 ):
                 ( p_el + LINKED_LIST_ARR_LEN );
-            if( i==ichunk_begin ){
+            if( i==iblock_begin ){
                 p_el += ( (chunk_start_id - LINKED_LIST_FIRST_ID )%LINKED_LIST_ARR_LEN);
             }
 
@@ -1399,7 +1408,7 @@ int _search_by_title_partial_(
         }
     }
 
-    // End of list reached. Return if at least one element was found.
+    // End of list reached. Return 1 if at least one new element was found.
     p_pattern->current_id = chunk_stop_id;
     return ((*p_found > found_before)?1:0);
 }
@@ -1428,7 +1437,12 @@ int search_gen_patterns_for_partial(
         {-1, -1, -1, -1},     // used_indizes
         {0, 0, 0, 0}          // start_ids
     };
+#ifdef WITH_TOPIC_OPTION
+    transform_search_title(p_s_ws->restrict_string_search_on_topic?
+            p_arguments->topic:p_arguments->title, &first_pattern.title_pattern);
+#else
     transform_search_title(p_arguments->title, &first_pattern.title_pattern);
+#endif
     split_pattern(&first_pattern, '*');
 
     // 0. Eval (or over-estimate) number of pattern and init first entry
@@ -1771,7 +1785,7 @@ int split_pattern(
     *pp_cur = NULL; // mark end of array
 
 #ifndef NDEBUG
-    fprintf(stderr, "Transformed title pattern: ");
+    fprintf(stderr, "Transformed title/topic pattern: ");
     char **l  = p_pattern->title_sub_pattern;
     while( *l != NULL ){
         fprintf(stderr, "'%s' ", *l);
@@ -1801,14 +1815,19 @@ int get_title_and_topic(
     char * const buf_stop = buf_start + p_current_chunk->len;
 
     const char * const title = (const char *)(p_entry+1);
+    assert(title+strlen(title) < buf_stop);
+    *p_title = title;
 
     const char * const topic_candidate = title + p_entry->topic_string_offset;
     if( topic_candidate < buf_start ){
         *p_topic = p_s_ws->prev_topic.target;
+        return 2;
     }else if( topic_candidate < buf_stop){
         *p_topic = topic_candidate;
         p_s_ws->prev_topic.target = topic_candidate;
         //p_s_ws->prev_topic.target_len = strlen(topic_candidate); // Unused
+
+        return p_entry->topic_string_offset<0?1:0;
     }else{
         assert(topic_candidate < buf_stop);
         // Offset to high!
@@ -1816,7 +1835,5 @@ int get_title_and_topic(
         return -1;
     }
 
-    assert(title+strlen(title) < buf_stop);
-    *p_title = title;
     return 0;
 }

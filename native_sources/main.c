@@ -37,7 +37,7 @@ int indexing(
 #if 0
     if( p_arguments->output_file ){
         fdout = open(p_arguments->output_file, O_CREAT|O_WRONLY|O_TRUNC,
-            S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
+                S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
         if( fdout < 0 ){
             fprintf(stderr, "Can not open file '%s'\n", p_arguments->output_file);
             return -1;
@@ -49,7 +49,7 @@ int indexing(
 
 
     /* Gen list of search patterns.
-     */
+    */
     //search_pair_t **pairs = pattern_1_create();
     search_pair_t **pairs = pattern_filmliste_flexibel_create();
 
@@ -95,7 +95,7 @@ int indexing(
         search_ws_destroy(&i_ws);
         p_arguments->diff_update = 1;
     }else{
-      remove_old_diff_files(p_arguments);
+        remove_old_diff_files(p_arguments);
     }
 
 
@@ -147,26 +147,26 @@ int indexing(
         assert( ret_search == SEARCH_MATCH_PAIRS);
     }
 
-if( p_arguments->diff_update && fl_ws.list_creation_time > main_list_creation_time
-        && (fl_ws.list_creation_time - main_list_creation_time ) > 86400 ){
+    if( p_arguments->diff_update && fl_ws.list_creation_time > main_list_creation_time
+            && (fl_ws.list_creation_time - main_list_creation_time ) > 86400 ){
 
-    char *main_day_str = (char *) malloc(40 * sizeof(char));
-    char *diff_day_str = (char *) malloc(40 * sizeof(char));
-    struct tm * timeinfo;
+        char *main_day_str = (char *) malloc(40 * sizeof(char));
+        char *diff_day_str = (char *) malloc(40 * sizeof(char));
+        struct tm * timeinfo;
 
-    timeinfo = localtime (&main_list_creation_time);
-    strftime (main_day_str, 40, "%d. %b. %Y %R", timeinfo);
-    timeinfo = localtime (&fl_ws.list_creation_time);
-    strftime (diff_day_str, 40, "%d. %b. %Y %R", timeinfo);
+        timeinfo = localtime (&main_list_creation_time);
+        strftime (main_day_str, 40, "%d. %b. %Y %R", timeinfo);
+        timeinfo = localtime (&fl_ws.list_creation_time);
+        strftime (diff_day_str, 40, "%d. %b. %Y %R", timeinfo);
 
-    // TODO: Es fehlt das Wissen über die genaue Generierung der Diff-Updates
-    // Ein einfacher Check mit dist(..) <= 24 reicht nicht aus.
-    fprintf(stderr, "Warning: Differential updates covers only current day, " \
-            "but the given data is already older...\n" \
-            "Date of main index: %s\n" \
-            "Date of diff index: %s\n",
-            main_day_str, diff_day_str);
-}
+        // TODO: Es fehlt das Wissen über die genaue Generierung der Diff-Updates
+        // Ein einfacher Check mit dist(..) <= 24 reicht nicht aus.
+        fprintf(stderr, "Warning: Differential updates covers only current day, " \
+                "but the given data is already older...\n" \
+                "Date of main index: %s\n" \
+                "Date of diff index: %s\n",
+                main_day_str, diff_day_str);
+    }
 
 #endif
     write_index_header(&fl_ws);
@@ -179,7 +179,7 @@ if( p_arguments->diff_update && fl_ws.list_creation_time > main_list_creation_ti
         // Search for group of tuples
 #if 1
         ret_search = parser_search(&buf_in, buf_start, &buf_stop,
-                    pairs, pair_start, &pair_stop);
+                pairs, pair_start, &pair_stop);
 #else
         buf_stop = buf_in.used;
         ret_search = SEARCH_FAILED_END_OF_BUFFER;
@@ -228,8 +228,9 @@ if( p_arguments->diff_update && fl_ws.list_creation_time > main_list_creation_ti
 
         // All data consumed? Fetch more data until buf_stop < buf_in.used.
         while( buf_stop >= buf_in.used ){
-            buf_stop -= buf_in.used;
             //DEBUG( fprintf(stderr, "Fetch new buf_in data\n"); )
+            filmliste_cache_data_before_buffer_clears(&buf_in, &fl_ws);
+            buf_stop -= buf_in.used;
             buf_in.used = read(fdin, buf_in.p, MY_BUFSIZ);
             if( buf_in.used == 0 ){
                 // No more data available

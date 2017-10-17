@@ -2,7 +2,7 @@
 
 SCRIPT_NAME=simple_mediathek
 PROG_NAME=$(SCRIPT_NAME).bin
-BROTLI=1
+BROTLI=0
 
 # Scripts will installed in $INSTALL_PREFIX/bin
 # Binaries will insatlled in $INSTALL_PREFIX/$MACH
@@ -124,11 +124,12 @@ copy_lib_to_armv6l: $(BROTLI_DEP)
 
 _LD_LIBRARY_PATH=$(shell echo "LD_LIBRARY_PATH=.:../root/${MACH}/lib:${LD_LIBRARY_PATH}")
 # Test args for indexing...
-TEST_ARGS=--index -i /dev/shm/Filmliste-akt.json
+# TEST_ARGS=--index -i /dev/shm/Filmliste-akt.json
 # Test args for searching...
-#TEST_ARGS=-s --dayMin 0 --dayMax 7 --title="\"extra 3\""
+# TEST_ARGS=-s --dayMin 0 --dayMax 7 --title="\"extra 3\""
+TEST_ARGS=--search -t "Tagesschau" -n 2,0 -r --dayMax 10 -C "ARD" --durationMin "14m"
 # Test args for payload fetch...
-#TEST_ARGS=--payload 0
+# TEST_ARGS=--payload 0
 
 test:
 	./$(SCRIPT_NAME) $(TEST_ARGS)
@@ -149,7 +150,7 @@ index:
 	./$(SCRIPT_NAME) -a -i /dev/shm/Filmliste-akt.json
 
 search:
-	./$(SCRIPT_NAME) -s --dayMin 99 -n 5 --title="Livestream"
+	./$(SCRIPT_NAME) -s --title="Livestream" -n 50 --durationMax 0 --beginMax 121m
 
 info:
 	./$(SCRIPT_NAME) --info

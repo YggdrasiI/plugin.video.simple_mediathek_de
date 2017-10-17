@@ -47,8 +47,13 @@ static struct argp_option options[] = {
         2},
     // group 3
     {"title", 't', "TITLE", OPTION_NO_USAGE,
-        "For search mode. Restrict output on entries containing this title. Use * to separate multiple keywords.",
+        "For search mode. Restrict output on entries containing this title/topic. Use * to separate multiple keywords.",
         3},
+#ifdef WITH_TOPIC_OPTION
+    {"topic", 'T', "TOPIC", OPTION_NO_USAGE,
+        "For search mode. Like --title, but search in topic string, only. --title value overrides this option.",
+        3},
+#endif
     {"beginMin", 'b', "TIME MIN", OPTION_NO_USAGE,
         "For search mode. Min begin time of entries in seconds",
         3},
@@ -87,6 +92,10 @@ static struct argp_option options[] = {
             "Differential updates (hourly) updates to the (bigger) daily files.\n" \
             "In combination with --search: Search only in differential index.",
         3},
+    // group 4
+    {"anchor", -1, "ANCHOR(S)", OPTION_NO_USAGE,
+        "Synonym for --payload",
+        4},
     { 0 }
 };
 
@@ -99,6 +108,9 @@ arguments_t default_arguments()
     arguments.output_file = NULL;
     arguments.index_folder = index_folder;
     arguments.title = NULL;
+#ifdef WITH_TOPIC_OPTION
+    arguments.topic = NULL;
+#endif
     arguments.beginMin = -1;
     arguments.beginMax = -1;
     arguments.dayMin = -1;
@@ -327,7 +339,12 @@ void fprint_args(FILE *stream, arguments_t *args){
 
     if( args->mode == SEARCH_MODE ){
         fprintf(stream, "Output file: %s\n", args->output_file?args->output_file:"-");
-        fprintf(stream, "Title: %s\n", args->title?args->title:"Not set");
+        fprintf(stream, "Title/Topic: %s\n", args->title?args->title:"Not set");
+#ifdef WITH_TOPIC_OPTION
+        if( !args->title ){
+            fprintf(stream, "Topic: %s\n", args->topic?args->topic:"Not set");
+        }
+#endif
         fprintf(stream, "Begin range: [%i, %i]\n", args->beginMin, args->beginMax);
         fprintf(stream, "Day range: [%i, %i]\n", args->dayMin, args->dayMax);
         fprintf(stream, "Duration range: [%i, %i]\n", args->durationMin, args->durationMax);
@@ -366,6 +383,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         case 'o': p_arguments->output_file = arg; break;
         case 'f': p_arguments->index_folder = arg; break;
         case 't': p_arguments->title = arg; break;
+        case 'T': p_arguments->topic = arg; break;
         case 'b': convertInt(arg, &p_arguments->beginMin); break;
         case 'B': convertInt(arg, &p_arguments->beginMax); break;
         case 'd': convertInt(arg, &p_arguments->dayMin); break;
@@ -380,6 +398,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                       memcpy(p_arguments->channelName, arg, l);
                       break;
                   }
+        case -1: 
         case 'p': {
                       p_arguments->mode = PAYLOAD_MODE;
                       parseInts(arg, ',', 

@@ -106,8 +106,8 @@ void _info_print(
     timeinfo = localtime (&list_creation_day);
     strftime (list_day_str, 40, "%d. %b. %Y %R", timeinfo);
 
-    dprintf(fd, "  \"icreation\": %i,\n  \"creation\": \"%s\",\n" \
-            "  \"ilistcreation\": %i,\n  \"listcreation\": \"%s\",\n",
+    dprintf(fd, "  \"icreation\": %li,\n  \"creation\": \"%s\",\n" \
+            "  \"ilistcreation\": %li,\n  \"listcreation\": \"%s\",\n",
             absolute_day, absolute_day_str,
             list_creation_day, list_day_str);
 

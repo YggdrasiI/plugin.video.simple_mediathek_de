@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "helper.h"
+#include "utf8.h"
 
 #if OWN_STRTOL > 0
 int strtoi(const char* str, char** endptr, int maxlen)
@@ -651,4 +652,23 @@ char *char_buffer_malloc(
         x[size] = '\0';
     }
     return x;
+}
+
+void charcpy(
+        char **p_dest,
+        size_t *p_dest_len, /* >= strlen(dest) */
+        const char * const source,
+        const size_t source_len)
+{
+    char *dest = *p_dest;
+    if( source_len > *p_dest_len ){
+        free(dest);
+        *p_dest_len = source_len + 16;  // A few more bytes to avoid reallocations later; optional.
+        dest = char_buffer_malloc(*p_dest_len);
+        *p_dest = dest;
+    }
+    if( dest ){
+        memcpy(dest, source, source_len);
+        dest[source_len] = '\0';
+    }
 }

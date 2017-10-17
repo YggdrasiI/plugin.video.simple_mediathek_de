@@ -127,7 +127,7 @@ typedef struct {
 typedef struct {
     size_t target_len;
     const char *target;
-    size_t _copy_size;
+    size_t _copy_size;  // called 'size' because it holds 'strlen(_copy)<= _copy_size'
     char *_copy;
 } buf_string_copy_t;
 
@@ -155,6 +155,9 @@ typedef struct filmliste_workspace_s {
     int index_fd;
     const char *index_folder;
     buf_string_copy_t prev_topic;
+    // Seek position of topic string MINUS sizeof(start_dur_len)
+    // (The adding of sizeof(...) was stripped out.)
+    uint32_t prev_topic_seek;
 #ifdef COMPRESS_BROTLI
     brotli_encoder_workspace_t brotli_title;
     brotli_encoder_workspace_t brotli_payload;
@@ -220,8 +223,13 @@ int update_index2(
         size_t duration)
 ;
 
-/* Close old file handler and start new one. Return 0 on success.*/
+/* Close old file handler and start new one. Returns 0 on success.*/
 int init_next_payload_file(
+        filmliste_workspace_t *p_fl_ws)
+;
+
+/* Close old file handler and start new one. Returns 0 on success.*/
+int init_next_searchable_file(
         filmliste_workspace_t *p_fl_ws)
 ;
 
@@ -273,4 +281,9 @@ size_t buf_write(
  */
 int remove_old_diff_files(
         arguments_t *p_arguments)
+;
+
+void filmliste_cache_data_before_buffer_clears(
+        const char_buffer_t *p_buf_in,
+        filmliste_workspace_t *p_fl_ws)
 ;

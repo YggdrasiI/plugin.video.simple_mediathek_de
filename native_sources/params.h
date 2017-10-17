@@ -4,12 +4,17 @@
 #include <limits.h>
 #include <stdint.h>
 
+#define WITH_TOPIC_OPTION
+
 typedef struct arguments {
     enum { UNDEFINED_MODE, INDEXING_MODE, SEARCH_MODE, PAYLOAD_MODE, INFO_MODE } mode;
     const char *input_file;
     const char *output_file;
     const char *index_folder;
     const char *title;
+#ifdef WITH_TOPIC_OPTION
+    const char *topic;
+#endif
     int32_t  beginMin;
     int32_t  beginMax;
     int32_t  dayMin;

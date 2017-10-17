@@ -145,7 +145,9 @@ typedef struct search_workspace_s {
     time_t search_tnow;  // Time stamp where this program run.
     time_t search_ttoday; // ttoday;  Timestamp of begin of (local) day
     size_t search_itoday; // itoday; Days since 1970-01-01 (localtime) => itoday*86400 <= tcreation
-
+#ifdef WITH_TOPIC_OPTION
+    int restrict_string_search_on_topic;
+#endif
     file_data_t payload;
     file_data_t searchable_strings; // Title + Topic
     size_t searchable_strings_len;
@@ -309,6 +311,12 @@ int split_pattern(
  * string is reached or begin of block.
  * In the second case the backuped topic of the previous block
  * will be returned.
+ *
+ * Return value:
+ *   0 - Topic appends title string.
+ *   1 - Previous topic string pointer returned.
+ *   2 - Cached previous topic string pointer returned.
+ *  -1 - Can not evaluate topic pointer.
  */
 int get_title_and_topic(
         search_workspace_t *p_s_ws,

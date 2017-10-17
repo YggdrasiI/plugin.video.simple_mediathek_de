@@ -155,9 +155,14 @@ void output_fill(
     searchable_strings_prelude_t *p_entry =
         (searchable_strings_prelude_t *) title_entry(p_s_ws, id);
 
+    title_chunks_t *p_chunks = &p_s_ws->chunks;
+    char_buffer_t *p_current_chunk = &p_chunks->bufs[p_chunks->partial_i];
+    char * const buf_start = p_current_chunk->p;
+    char * const buf_stop = buf_start + p_current_chunk->len;
+
     //int title_len = p_entry->length; //followed by \0
-    const char *title, *topic;
-    uint32_t title_len, topic_len;
+    const char *title, *topic, *topic_candidate;
+    uint32_t title_len;
 #if NORMALIZED_STRINGS > 0
     const char *title_norm;
     uint32_t title_norm_len;
@@ -166,12 +171,10 @@ void output_fill(
     title = title_norm + title_norm_len + 1; // Original title
     title_len = strlen(title);
 
-    // TODO: nur korrekt für positives offset.
-    topic = title_norm + p_entry->topic_string_offset;
-    topic_len = title_norm_len - p_entry->topic_string_offset;
+    topic_candidate = title_norm + p_entry->topic_string_offset;
 #else
     title = (const char *)(p_entry+1);
-    topic = title_norm + p_entry->topic_string_offset;
+    topic_candidate = title + p_entry->topic_string_offset;
 
     /* Restrict on characters before '|' to cut of 'topic' substring*/
 #ifdef _GNU_SOURCE
@@ -186,8 +189,20 @@ void output_fill(
 #endif
     assert(title_len < -10000U); // Underflow check
 #endif
-    // TODO: nur korrekt für positives offset.
-    topic_len = title_len - p_entry->topic_string_offset;
+
+    // Use cached topic string if value not stored in current buffer.
+    if( topic_candidate < buf_start ){
+        topic = p_s_ws->prev_topic.target;
+    }else if( topic_candidate < buf_stop){
+        topic = topic_candidate;
+    }else{
+        assert(topic_candidate < buf_stop);
+        // Offset to high!
+        topic = NULL;
+    }
+    if( *topic == '\0'){
+        assert(0);
+    }
 
     // Convert channel id to string
     const char *channel_str = get_channel_name(&p_s_ws->channels, channel);
@@ -204,7 +219,7 @@ void output_fill(
     strftime(absolute_day_str, 80, "%d. %b. %Y %R", p_timeinfo);
 #endif
     int retry;
-    const char _format[] = ",\n\t{\"id\": %i, \"topic\": \"%.*s\", \"title\": \"%.*s\", " \
+    const char _format[] = ",\n\t{\"id\": %i, \"topic\": \"%s\", \"title\": \"%.*s\", " \
                           "\n\t\t\"ibegin\": %u, \"begin\": \"%s\", " \
                           "\"iduration\": %u, " \
                           "\"ichannel\": %u, \"channel\": \"%s\", " \
@@ -212,8 +227,7 @@ void output_fill(
     for(retry=0; retry<2; ++retry){
         int len_needed = snprintf(p_out->p, p_out->len,
                 _format, id,
-                topic_len, topic,
-                title_len, title,
+                topic, title_len, title,
                 (uint32_t) absolute_day_begin, absolute_day_str,
                 (uint32_t) p_entry->duration,
                 channel, channel_str,

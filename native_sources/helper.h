@@ -85,3 +85,11 @@ size_t transform_search_title(
 char *char_buffer_malloc(
         size_t size)
 ;
+
+/* Memcpy with resize of destination if required. */
+void charcpy(
+        char **p_dest,
+        size_t *p_dest_len, /* >= strlen(dest) */
+        const char * const source,
+        const size_t source_len)
+;

@@ -12,7 +12,7 @@ void info_print(
 
 /* Same output like info_print but after indexing step
  */
-void info_print(
+void info_print2(
         int fd,
-        search_workspace_t *p_i_ws)
+        filmliste_workspace_t *p_fl_ws)
 ;
