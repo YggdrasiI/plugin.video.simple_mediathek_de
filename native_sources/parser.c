@@ -202,7 +202,7 @@ ssize_t search_pair_write(
     if( sp->buf.used > 0 ){
         w1 = write(fd, sp->buf.p, sp->buf.used);
         if( (ssize_t)sp->buf.used > w1 ){
-            fprintf(stderr, "Write of %li bytes failed.\n", sp->buf.used);
+            fprintf(stderr, "Write of %zd bytes failed.\n", sp->buf.used);
             return -1;
         }
     }
@@ -211,7 +211,7 @@ ssize_t search_pair_write(
         size_t l = (sp->hit_end - sp->hit_begin);
         w2 = write(fd, sp->hit_begin, l);
         if( (ssize_t)l > w2 ){
-            fprintf(stderr, "Write of %lu bytes failed.\n", l);
+            fprintf(stderr, "Write of %zu bytes failed.\n", l);
             return -1;
         }
     }
@@ -244,7 +244,7 @@ void search_array_flush(
     ssize_t w = write(fd, p_buf->p, p_buf->used);
     if( (ssize_t)p_buf->used > w )
     {
-        fprintf(stderr, "Write of %li bytes failed.\n", p_buf->used);
+        fprintf(stderr, "Write of %zi bytes failed.\n", p_buf->used);
     }
     assert( w == p_buf->used );
     p_buf->used = 0;
@@ -257,7 +257,7 @@ void fsearch_array_flush(
     size_t w = fwrite(p_buf->p, 1, p_buf->used, stream);
     if( (size_t)p_buf->used > w )
     {
-        fprintf(stderr, "Write of %li bytes failed.\n", p_buf->used);
+        fprintf(stderr, "Write of %zi bytes failed.\n", p_buf->used);
     }
     assert( w == p_buf->used );
     p_buf->used = 0;
@@ -288,7 +288,7 @@ void search_pair_write_cached(
 
         // Re-check if buffer is still to small.
         if( required > (p_buf->len - p_buf->used)){
-            fprintf(stderr, "Caching of %lu bytes failed. Buffer too small!\n", required);
+            fprintf(stderr, "Caching of %zu bytes failed. Buffer too small!\n", required);
         }
     }
 
@@ -321,7 +321,7 @@ void search_array_write_cached(
         search_array_flush(fd, p_buf);
 
         if( 1 > (p_buf->len -  p_buf->used) ){
-            fprintf(stderr, "Hey, buffer of length %li is too small!\n", p_buf->len);
+            fprintf(stderr, "Hey, buffer of length %zi is too small!\n", p_buf->len);
             return;
         }
     }

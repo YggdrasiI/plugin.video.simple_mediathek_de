@@ -111,7 +111,7 @@ int open_payload_file(
 #else
     ssize_t n = read(fd, p_buf_in->p + 0, p_buf_in->len);
     if( n == -1 ){
-        fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %lu\n",
+        fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %zu\n",
                 "(open_payload_file) file reading failed.",
                 0, (int)p_buf_in->len, n);
         p_buf_in->used = 0;
@@ -201,7 +201,7 @@ int payload_do_search(
         size_t bytes_to_read = p_buf_in->len;
         ssize_t n = read(fd, p_buf_in->p + 0, bytes_to_read);
         if( n == -1 ){
-            fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %lu\n",
+            fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %zu\n",
                     "(payload_do_search) file reading failed.",
                     (int)*p_current_seek, (int)next_seek, n);
             assert(0);
@@ -278,7 +278,7 @@ int payload_do_search(
         size_t bytes_to_read = (next_seek-*p_current_seek);
         ssize_t n = read(fd, p_buf_in->p + 0, bytes_to_read);
         if( n == -1 ){
-            fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %lu\n",
+            fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %zu\n",
                     "(payload_do_search) file reading failed.",
                     (int)*p_current_seek, (int)next_seek, n);
             p_buf_in->used = 0;

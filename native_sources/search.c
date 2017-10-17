@@ -1131,7 +1131,7 @@ void search_read_title_file(
         assert( p_current_chunk->p == NULL );
 
         p_current_chunk->len = (next_seek - current_seek);
-        //DEBUG( fprintf(stderr, "Allocate buffer of len %li for [%i, %i)\n",
+        //DEBUG( fprintf(stderr, "Allocate buffer of len %zi for [%i, %i)\n",
         //            p_current_chunk->len, current_seek, next_seek) );
         p_current_chunk->p = (char *)malloc(
                 p_current_chunk->len * sizeof(char));
@@ -1151,7 +1151,7 @@ void search_read_title_file(
 #else
         ssize_t n = read(fd, p_current_chunk->p, p_current_chunk->len);
         if( (ssize_t) p_current_chunk->len > n ){
-            fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %lu\n",
+            fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %zu\n",
                     "(search_read_title_file) file reading failed.",
                     current_seek, next_seek, n);
         }
@@ -1310,7 +1310,7 @@ int search_read_title_file_partial(
     assert( p_current_chunk->p == NULL );
 
     p_current_chunk->len = (next_seek - current_seek);
-    //DEBUG( fprintf(stderr, "Allocate buffer of len %li for [%i, %i)\n",
+    //DEBUG( fprintf(stderr, "Allocate buffer of len %zi for [%i, %i)\n",
     //            p_current_chunk->len, current_seek, next_seek) );
     p_current_chunk->p = (char *)malloc(
             p_current_chunk->len * sizeof(char));
@@ -1330,7 +1330,7 @@ int search_read_title_file_partial(
 #else
     ssize_t n = read(fd, p_current_chunk->p, p_current_chunk->len);
     if( (ssize_t) p_current_chunk->len > n ){
-        fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %lu\n",
+        fprintf(stderr, "%s Current byte range: [%i,%i). Number read bytes: %zu\n",
                 "(search_read_title_file) file reading failed.",
                 current_seek, next_seek, n);
     }

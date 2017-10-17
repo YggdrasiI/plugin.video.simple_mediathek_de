@@ -236,7 +236,7 @@ void linked_list_write_partial(
         w = write(fd, p_list->dummy_nodes, bytes_to_write);
         if( (ssize_t)bytes_to_write > w )
         {
-            fprintf(stderr, "(linked_list_write_partial) Write of %li bytes failed.\n", bytes_to_write);
+            fprintf(stderr, "(linked_list_write_partial) Write of %zi bytes failed.\n", bytes_to_write);
         }
 #if 1
         // Search bug... Reset used next-id of dummy note to put it in initial state
@@ -388,7 +388,7 @@ void linked_list_write_partial(
         w = write(fd, *pp_i, bytes_to_write);
         if( (ssize_t)bytes_to_write > w )
         {
-            fprintf(stderr, "(linked_list_write_partial) Write of %li bytes failed.\n", bytes_to_write);
+            fprintf(stderr, "(linked_list_write_partial) Write of %zi bytes failed.\n", bytes_to_write);
         }
 
 #ifndef NDEBUG
@@ -421,7 +421,7 @@ void linked_list_write_partial(
             w = write(fd, p_i, bytes_to_write);
             if( (ssize_t)bytes_to_write > w )
             {
-                fprintf(stderr, "(linked_list_write_partial) Write of %li bytes failed.\n", bytes_to_write);
+                fprintf(stderr, "(linked_list_write_partial) Write of %zi bytes failed.\n", bytes_to_write);
             }
         }
 
@@ -442,7 +442,7 @@ void linked_list_write_partial(
         w = write(fd, p_list->first_ids.ids, bytes_to_write);
         if( (ssize_t)bytes_to_write > w )
         {
-            fprintf(stderr, "(linked_list_write_partial) Write of %li bytes failed.\n", bytes_to_write);
+            fprintf(stderr, "(linked_list_write_partial) Write of %zi bytes failed.\n", bytes_to_write);
         }
     }
 
