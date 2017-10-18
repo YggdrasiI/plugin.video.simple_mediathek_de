@@ -21,7 +21,7 @@ search_workspace_t search_ws_create(
     //DEBUG( fprintf(stderr, "DST: %i, Clock offset: %i\n", tm_now.tm_isdst, clock_offset); )
 
     size_t nlocalday = (tnow + clock_offset) / 86400;  // NDay relative to current time zone
-    time_t tlocalday_begin = nlocalday * 86400 + clock_offset; // Begin of day in current time zone
+    time_t tlocalday_begin = nlocalday * 86400 - clock_offset; // Begin of day in current time zone
 
     output_t output = output_init(
             p_arguments->max_num_results,
@@ -340,11 +340,14 @@ int next_search_tuple(
         if( iNow > 0 && iNow > m )
         {
             p_pattern->groups.i_relative_date--;
+            p_pattern->explicit_day_check = 0; // Younger days can not be the oldest
             return 0;
         }else{
             // Restore start value of 'third numeral'.
             p_pattern->groups.i_relative_date =
                 p_pattern_first->groups.i_relative_date;
+            p_pattern->explicit_day_check =
+                p_pattern_first->explicit_day_check;
         }
     }
 
@@ -362,6 +365,7 @@ int next_search_tuple(
  */
 int _all_arguments_fulfilled(
         search_workspace_t *p_s_ws,
+        search_pattern_t *p_pattern,
         index_node_t *p_el)
 {
     arguments_t *p_arguments = p_s_ws->p_arguments;
@@ -369,7 +373,7 @@ int _all_arguments_fulfilled(
     searchable_strings_prelude_t *p_entry;
     title_entry(p_s_ws, p_el->id, &p_entry);
 
-    uint32_t duration = (uint32_t) p_entry->duration;
+    uint32_t const duration = (uint32_t const) p_entry->duration;
     if( p_arguments->durationMin > -1 &&
             p_arguments->durationMin > duration){
         return -1;
@@ -380,13 +384,15 @@ int _all_arguments_fulfilled(
         return -1;
     }
 
-    time_t absolute_time = (time_t)(p_s_ws->ttoday + p_entry->relative_start_time);
+    time_t const absolute_time = (time_t const)(p_s_ws->ttoday + p_entry->relative_start_time);
 
     // TODO: Fix issue at daylight changes (require summer time flag for earch entry)
     // THE GTM+1 had not to be appied because it is an relative value.
-    int32_t entry_summer_offset_s = 0;
-    int32_t begin = (absolute_time + p_s_ws->today_time_zone_offset
-            + entry_summer_offset_s) % (86400);
+    int32_t const entry_summer_offset_s = 0;
+    int32_t const entry_absolute_begin = (absolute_time
+            /*+ p_s_ws->today_time_zone_offset*/ // Already contained ttoday!
+            + entry_summer_offset_s);
+    int32_t const begin = entry_absolute_begin  % (86400);
 
     if( p_arguments->beginMin > -1 &&
             p_arguments->beginMin > begin){
@@ -409,16 +415,18 @@ int _all_arguments_fulfilled(
     int32_t relative_day = (p_s_ws->search_ttoday - p_s_ws->ttoday)
         / (24*3600); // seconds -> days
 
-    if( p_arguments->dayMin > -1 &&
-            p_arguments->dayMin > relative_day ){
-        return -1;
-    }
-    if( p_arguments->dayMax > -1 &&
-            p_arguments->dayMax < relative_day ){
-        return -1;
-    }
 #endif
 
+    if(p_pattern->explicit_day_check){
+#if 1
+        if( p_pattern->explicit_dayMin > entry_absolute_begin ){
+            return -1;
+        }
+        if( p_pattern->explicit_dayMax <= entry_absolute_begin ){
+            return -1;
+        }
+#endif
+    }
     return 0;
 }
 
@@ -483,7 +491,7 @@ int _search_compare_title_(
     assert( p_pattern->title_pattern != NULL );
     assert( p_pattern->title_sub_pattern[0] != NULL );
     //linked_list_t *p_list = &p_s_ws->index;
-    
+
 #define get_title_len(X) (strchrnul(X, SPLIT_CHAR)-X)
 
     // Split pattern by '*' and search each substring separately.
@@ -494,8 +502,8 @@ int _search_compare_title_(
 
     /*
      * Structure of above byte array: "{TITLE}{SPLIT_CHAR}[{TOPIC}]"
-     * where: 
-     * TITLE : Title string followed by | 
+     * where:
+     * TITLE : Title string followed by |
      * TOPIC : Topic string followed by \0. Only set if topic differs from
      *         previous entry.
      * SPLIT_CHAR: Defined in settings.h)
@@ -520,14 +528,6 @@ int _search_compare_title_(
      */
     const char **sub_pat = (const char **)p_pattern->title_sub_pattern;
     while( *sub_pat != NULL ){
-
-#if 1
-        if( string_to_search == NULL ){
-            int b_use_prev_topic2 = (0 < get_title_and_topic(
-                        p_s_ws, p_el->id, &string_to_search, &prev_topic));
-        }
-#endif
-
 #if NORMALIZED_STRINGS > 0
         const char *hit = strstr(string_to_search, *sub_pat);
 #else
@@ -582,7 +582,7 @@ int _search_by_title_(
 
             while( p_el < p_end ){
                 if( _search_compare_title_(p_s_ws, p_pattern, p_el) == 0 &&
-                    _all_arguments_fulfilled(p_s_ws, p_el) == 0 )
+                    _all_arguments_fulfilled(p_s_ws, p_pattern, p_el) == 0 )
                 {
                     output_add_id(&p_s_ws->output, p_el->id);
                     if( *p_found >= found_max
@@ -679,7 +679,7 @@ int _search_do_search_(
         // Id fulfill all releations. Now, compare the title string
         if(( p_pattern->title_sub_pattern[0] == NULL ||
                     _search_compare_title_(p_s_ws, p_pattern, p_el) == 0 ) &&
-                _all_arguments_fulfilled(p_s_ws, p_el) == 0 )
+                _all_arguments_fulfilled(p_s_ws, p_pattern, p_el) == 0 )
         {
             output_add_id(&p_s_ws->output, id);
         }
@@ -797,15 +797,17 @@ int search_do_search(
     search_pattern_t pattern = {
         //{-1, NUM_TIME-1, NUM_DURATIONS-1, NO_CHANNEL}, /* linked_list_subgroup_indizes_t */
         {{{-1, -1, -1, NO_CHANNEL}}}, /* linked_list_subgroup_indizes_t */
-        NULL, NULL, {NULL}, // title_pattern + _title_sub_pattern  Array of NULL values...
+        NULL, NULL, {NULL},   // title_pattern + _title_sub_pattern  Array of NULL values...
         LINKED_LIST_FIRST_ID, // current_id
         0,                    // K/num_used_indizes
         {-1, -1, -1, -1},     // used_indizes
-        {0, 0, 0, 0}          // start_ids
+        {0, 0, 0, 0},         // start_ids
+        0, 0, 0               // explicit_day_check, explicit_dayMin, explicit_dayMax
     };
 #ifdef WITH_TOPIC_OPTION
-    transform_search_title(p_s_ws->restrict_string_search_on_topic?
-            p_arguments->topic:p_arguments->title, &pattern.title_pattern);
+    transform_search_title(
+            p_s_ws->restrict_string_search_on_topic?p_arguments->topic:p_arguments->title,
+            &pattern.title_pattern);
 #else
     transform_search_title(p_arguments->title, &pattern.title_pattern);
 #endif
@@ -836,6 +838,16 @@ int search_do_search(
 
         assert( relative_day_to_creation >= relative_day_to_creation2 );
 
+        pattern.groups.i_relative_date = relative_day_to_creation;
+        if(relative_day_to_creation == NUM_REALTIVE_DATE-1){
+            pattern.explicit_day_check = 1;
+            pattern.explicit_dayMin = max(0,
+                    p_s_ws->search_ttoday - p_arguments->dayMax * 86400);
+            pattern.explicit_dayMax = p_s_ws->search_ttoday + (1 - p_arguments->dayMin) * 86400;
+        }else{
+            pattern.explicit_day_check = 0;
+        }
+
         // Apply range cut on input args to keep range width on same value.
         // This is important for the next_search_tuple() function.
         p_arguments->dayMax = relative_day_to_creation
@@ -843,7 +855,6 @@ int search_do_search(
         p_arguments->dayMin = relative_day_to_creation2
             + (p_s_ws->search_itoday - p_s_ws->itoday);
 
-        pattern.groups.i_relative_date = relative_day_to_creation;
     }
 
     int i;
@@ -1400,7 +1411,7 @@ int _search_by_title_partial_(
 
             while( p_el < p_end ){
                 if( _search_compare_title_(p_s_ws, p_pattern, p_el) == 0  &&
-                        _all_arguments_fulfilled(p_s_ws, p_el) == 0 )
+                        _all_arguments_fulfilled(p_s_ws, p_pattern, p_el) == 0 )
                 {
                     output_add_id(&p_s_ws->output, p_el->id);
                     if( *p_found >= found_max ){
@@ -1438,11 +1449,12 @@ int search_gen_patterns_for_partial(
 
     search_pattern_t first_pattern = {
         {{{-1, -1, -1, NO_CHANNEL}}}, /* linked_list_subgroup_indizes_t */
-        NULL, NULL, {NULL}, // title_pattern + _title_sub_pattern  Array of NULL values...
+        NULL, NULL, {NULL},   // title_pattern + _title_sub_pattern  Array of NULL values...
         LINKED_LIST_FIRST_ID, // current_id
         0,                    // K/num_used_indizes
         {-1, -1, -1, -1},     // used_indizes
-        {0, 0, 0, 0}          // start_ids
+        {0, 0, 0, 0},         // start_ids
+        0, 0, 0               // explicit_day_check, explicit_dayMin, explicit_dayMax
     };
 #ifdef WITH_TOPIC_OPTION
     transform_search_title(p_s_ws->restrict_string_search_on_topic?
@@ -1479,6 +1491,16 @@ int search_gen_patterns_for_partial(
 
         assert( relative_day_to_creation >= relative_day_to_creation2 );
 
+        first_pattern.groups.i_relative_date = relative_day_to_creation;
+        if(relative_day_to_creation == NUM_REALTIVE_DATE-1){
+            first_pattern.explicit_day_check = 1;
+            first_pattern.explicit_dayMin = max(0,
+                    p_s_ws->search_ttoday - p_arguments->dayMax * 86400);
+            first_pattern.explicit_dayMax = p_s_ws->search_ttoday + (1 - p_arguments->dayMin) * 86400;
+        }else{
+            first_pattern.explicit_day_check = 0;
+        }
+
         // Apply range cut on input args to keep range width on same value.
         // This is important for the next_search_tuple() function.
         p_arguments->dayMax = relative_day_to_creation
@@ -1486,7 +1508,7 @@ int search_gen_patterns_for_partial(
         p_arguments->dayMin = relative_day_to_creation2
             + (p_s_ws->search_itoday - p_s_ws->itoday);
 
-        first_pattern.groups.i_relative_date = relative_day_to_creation;
+
         len_results *= (relative_day_to_creation - relative_day_to_creation2 + 1);
     }
 
@@ -1701,7 +1723,7 @@ int search_do_search_partial(
         // Id fulfill all releations. Now, compare the title string
         if(( p_pattern->title_pattern == NULL ||
                     _search_compare_title_(p_s_ws, p_pattern, p_el) == 0 ) &&
-                _all_arguments_fulfilled(p_s_ws, p_el) == 0 )
+                _all_arguments_fulfilled(p_s_ws, p_pattern, p_el) == 0 )
         {
             output_add_id(&p_s_ws->output, p_el->id);
         }
@@ -1818,9 +1840,10 @@ int get_title_and_topic(
 
     // Limits
     title_chunks_t *p_chunks = &p_s_ws->chunks;
-#ifdef READ_TITLE_FILE_PARTIAL 
+#ifdef READ_TITLE_FILE_PARTIAL
     assert(iChunk == p_chunks->partial_i);
-    char_buffer_t *p_current_chunk = &p_chunks->bufs[p_chunks->partial_i];
+    //char_buffer_t *p_current_chunk = &p_chunks->bufs[p_chunks->partial_i];
+    char_buffer_t *p_current_chunk = &p_chunks->bufs[iChunk];
 #else
     char_buffer_t *p_current_chunk = &p_chunks->bufs[iChunk];
 #endif

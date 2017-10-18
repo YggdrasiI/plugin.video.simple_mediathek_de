@@ -50,6 +50,13 @@ typedef struct {
     int K;
     uint32_t used_indizes[4];
     uint32_t start_ids[4];
+    /* Force check if 'datum(dayMax/oldest)' <=  'begin' <= 'datum(dayMin/youngest)'
+     * This check is only required for pattern of the oldest day subgroup,
+     * because it spans over multiple days.
+     */
+    uint8_t explicit_day_check; // Forces check
+    time_t explicit_dayMin; // Translation of dayMax(sic!) arg into begin of current local day.
+    time_t explicit_dayMax; // First second after end of local day.
 
 } search_pattern_t;
 
@@ -208,7 +215,7 @@ int search_do_search(
  *
  * Call only after setup with search_read_title_file(...)
  *
- * Return value is the index of chunk.bufs[] where the entry 
+ * Return value is the index of chunk.bufs[] where the entry
  *   could be found.
  * The evaluated entry will be stored in pp_entry.
  */

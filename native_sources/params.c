@@ -171,7 +171,7 @@ void normalize_args(
             &p_arguments->beginMin, &p_arguments->beginMax);
     normalize_range(0, INT_MAX, -1,
             &p_arguments->durationMin, &p_arguments->durationMax);
-    normalize_range(0, INT_MAX, -1,
+    normalize_range(0, MAX_DAY_OFFSET, -1,
             &p_arguments->dayMin, &p_arguments->dayMax);
 
     if( p_arguments->channelName != NULL && p_arguments->channelNr != NO_CHANNEL ){
@@ -199,7 +199,7 @@ void normalize_args(
         assert(MAX_ALLOWED_NUMBER_OF_RESULTS > p_arguments->skiped_num_results);
         p_arguments->max_num_results = MAX_ALLOWED_NUMBER_OF_RESULTS - p_arguments->skiped_num_results;
         fprintf(stderr, "Number of requested values reduced on %u!\n",
-                p_arguments->skiped_num_results 
+                p_arguments->skiped_num_results
                );
     }
 }
@@ -346,7 +346,11 @@ void fprint_args(FILE *stream, arguments_t *args){
         }
 #endif
         fprintf(stream, "Begin range: [%i, %i]\n", args->beginMin, args->beginMax);
-        fprintf(stream, "Day range: [%i, %i]\n", args->dayMin, args->dayMax);
+        if( args->dayMax < MAX_DAY_OFFSET ){
+            fprintf(stream, "Day range: [%i, %i]\n", args->dayMin, args->dayMax);
+        }else{
+            fprintf(stream, "Day range: [%i, max]\n", args->dayMin);
+        }
         fprintf(stream, "Duration range: [%i, %i]\n", args->durationMin, args->durationMax);
         fprintf(stream, "Channel number: %i\t", args->channelNr);
         fprintf(stream, "Channel name: %s\n", args->channelName);
@@ -398,10 +402,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                       memcpy(p_arguments->channelName, arg, l);
                       break;
                   }
-        case -1: 
+        case -1:
         case 'p': {
                       p_arguments->mode = PAYLOAD_MODE;
-                      parseInts(arg, ',', 
+                      parseInts(arg, ',',
                               &p_arguments->payload_anchors_len,
                               &p_arguments->payload_anchors);
                       break;

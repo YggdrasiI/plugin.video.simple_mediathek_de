@@ -6,6 +6,14 @@
 
 #define WITH_TOPIC_OPTION
 
+/* Maximal day to go behind.
+ *
+ * Restrictions:
+ * - Multiplication with seconds(day) should not lead to overflows of time_t
+ * - Current day - MAX_DAY_OFFSET should map below day 0.
+ * * */
+#define MAX_DAY_OFFSET ((INT_MAX-1)/86400)
+
 typedef struct arguments {
     enum { UNDEFINED_MODE, INDEXING_MODE, SEARCH_MODE, PAYLOAD_MODE, INFO_MODE } mode;
     const char *input_file;
@@ -35,7 +43,7 @@ typedef struct arguments {
 arguments_t default_arguments()
 ;
 
-/* Uninitialize argument list. 
+/* Uninitialize argument list.
  * Call this to free some interal string buffer.*/
 void clear_arguments(
  arguments_t *p_arguments)
@@ -44,7 +52,7 @@ void clear_arguments(
 /* Normalization rules:
  * - [begin, end)-pairs both -1 or both != -1
  * - [begin, end)-pairs sorted.
- * - Unset values replaced by -1 
+ * - Unset values replaced by -1
  * - Unset strings replaced by NULL pointer.
 */
 void normalize_args(
