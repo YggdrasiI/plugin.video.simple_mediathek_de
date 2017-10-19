@@ -1434,7 +1434,9 @@ int _search_by_title_partial_(
                         _all_arguments_fulfilled(p_s_ws, p_pattern, p_el) == 0 )
                 {
                     output_add_id(&p_s_ws->output, p_el->id);
-                    if( *p_found >= found_max ){
+                    if( *p_found >= found_max
+                            && p_s_ws->output.reversed_flag == 0
+                      ){
                         p_pattern->current_id = p_el->id + 1;
                         // ( + 1 because variable stores first unhandled.)
 
@@ -1711,7 +1713,8 @@ int search_do_search_partial(
 
     index_node_t *p_el = linked_list_get_node(p_list, id);
 
-    while( *p_found < found_max ){
+    const int r = p_s_ws->output.reversed_flag;
+    while( r || ( *p_found < found_max )){
         while( num_matched < K ){
             // Check if current element fulfill next releation
             k2 = (k + 1) % K;

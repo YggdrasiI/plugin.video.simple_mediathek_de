@@ -23,8 +23,8 @@ LD_LIBRARY_PATH=${BIN_PATH}/../lib:../root/${MACH}/lib:${LD_LIBRARY_PATH}
 export LD_LIBRARY_PATH
 
 INDEX_FILE_FOLDER="/dev/shm/"  # Overwritten by --folder arg
-VERBOSE=0
-DEBUG=0
+VERBOSE=${VERBOSE:-0}
+DEBUG=${DEBUG:-0}
 
 # Old source for XML files
 # XML_SOURCE="http://zdfmediathk.sourceforge.net/akt.xml"
@@ -162,7 +162,7 @@ else{
 just_print_link()
 {
   # Print link for manually download..
-  DEBUG=0
+  # DEBUG=0
   setup "$1"
   echo "${XZ_URL}"
 }

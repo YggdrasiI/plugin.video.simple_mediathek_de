@@ -144,15 +144,20 @@ copy_lib_to_armv6l: $(BROTLI_DEP)
 _LD_LIBRARY_PATH=$(shell echo "LD_LIBRARY_PATH=.:../root/${MACH}/lib:${LD_LIBRARY_PATH}")
 
 TEST_ARGS=--info
+ARGS ?= $(TEST_ARGS)
+
+# Use 'ARGS='...' make run|nemiver|valgrind|leak' to propagate variables
+run:
+	$(_LD_LIBRARY_PATH) ./$(SCRIPT_NAME) ${ARGS}
 
 nemiver:
-	$(_LD_LIBRARY_PATH) nemiver ./$(PROG_NAME) $(TEST_ARGS)
+	$(_LD_LIBRARY_PATH) nemiver ./$(PROG_NAME) $(ARGS)
 
 valgrind:
-	$(_LD_LIBRARY_PATH) valgrind ./$(PROG_NAME) $(TEST_ARGS)
+	$(_LD_LIBRARY_PATH) valgrind ./$(PROG_NAME) $(ARGS)
 
 leak:
-	$(_LD_LIBRARY_PATH) valgrind  --leak-check=full ./$(PROG_NAME) $(TEST_ARGS)
+	$(_LD_LIBRARY_PATH) valgrind  --leak-check=full ./$(PROG_NAME) $(ARGS)
 
 index: $(FILMLISTE_AKT_JSON)
 	./$(SCRIPT_NAME) -a -i "$(FILMLISTE_AKT_JSON)"
@@ -169,8 +174,8 @@ info:
 payload:
 	./$(SCRIPT_NAME) --payload 0
 
-tests: test1 test2 test3 test4 test5
-	@echo "Tests finished. Delete $(TEST_PREFIX).test1, etc to re-enable skipped tests."
+tests: test_indexing test1 test2 test3 test4 test5
+	@echo "Tests finished. Delete $(TEST_PREFIX).test* to re-enable skipped tests."
 
 test_indexing:
 	@$(TEST_BEFORE_CMD)\
@@ -202,7 +207,18 @@ test5:
 		./$(SCRIPT_NAME) --payload=0 \
 		$(TEST_AFTER_CMD)
 
-test_templatec:
+_SEARCH=--search -t "heute-show" --durationMin 30m --dayMax 21
+#	@echo "Compare\n  -r $(_SEARCH) with\n     $(_SEARCH)" 
+test_reversed:
+	@$(TEST_BEFORE_CMD)\
+		( ./$(SCRIPT_NAME) $(_SEARCH) 2>/dev/null \
+		| grep '"id":' > $(TEST_PREFIX).test_reversedA ) && \
+		( ./$(SCRIPT_NAME) -r $(_SEARCH) 2>/dev/null \
+		| grep '"id":' | tac > $(TEST_PREFIX).test_reversedB ) && \
+		diff "$(TEST_PREFIX).test_reversedA" "$(TEST_PREFIX).test_reversedB" \
+		$(TEST_AFTER_CMD)
+
+test_template:
 	$(TEST_BEFORE_CMD) echo "Template" $(TEST_AFTER_CMD)
 
 
@@ -224,6 +240,7 @@ $(FILMLISTE_DIFF_XZ):
 download:
 	./$(SCRIPT_NAME).local download 0 "$(FILMLISTE_AKT_JSON)" ||\
 		./$(SCRIPT_NAME) download 0 "$(FILMLISTE_AKT_JSON)"
+	@echo "\n$(FILMLISTE_AKT_JSON) saved" 
 
 # Extract json from local copy
 $(FILMLISTE_AKT_JSON): $(DATA_DIR) $(FILMLISTE_AKT_XZ)
@@ -236,3 +253,4 @@ $(FILMLISTE_AKT_JSON): $(DATA_DIR) $(FILMLISTE_AKT_XZ)
 
 clean:
 		rm -f $(ODIR)*/*.o *~ $(PROG_NAME)
+		rm $(TEST_PREFIX)/.test*
