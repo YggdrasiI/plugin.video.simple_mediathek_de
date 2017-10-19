@@ -119,7 +119,7 @@ search_pair_t *search_pair_create()
 ;
 
 void search_pair_destroy(
-        search_pair_t **p_sp)
+        search_pair_t **pp_sp)
 ;
 
 void search_pair_reset(
@@ -227,7 +227,7 @@ int search_pair_search(
 int parser_search(
         const char_buffer_t *p_buf,
         size_t buf_start, size_t *p_buf_stop,
-        search_pair_t **pairs, size_t pair_start, size_t *p_pair_stop )
+        search_pair_t **pp_pairs, size_t pair_start, size_t *p_pair_stop )
 ;
 
 /* Create array of search pattern (of type search_pair*), followed by NULL.
@@ -286,5 +286,5 @@ search_pair_t **pattern_filmliste_head()
 ;
 
 // Deconstructor of pattern_*_create
-void pattern_destroy( search_pair_t ***p_pairs)
+void pattern_destroy( search_pair_t ***ppp_pairs)
 ;

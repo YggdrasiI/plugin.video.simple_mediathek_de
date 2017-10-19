@@ -202,6 +202,7 @@ size_t transform_search_title(
 {
     if( p_in == NULL ){
         assert(0);
+        *pp_out = NULL;
         return 0;
     }
 
@@ -658,20 +659,20 @@ char *char_buffer_malloc(
 }
 
 void charcpy(
-        char **p_dest,
+        char **pp_dest,
         size_t *p_dest_len, /* >= strlen(dest) */
-        const char * const source,
+        const char * const p_source,
         const size_t source_len)
 {
-    char *dest = *p_dest;
+    char *dest = *pp_dest;
     if( source_len > *p_dest_len ){
         free(dest);
         *p_dest_len = source_len + 16;  // A few more bytes to avoid reallocations later; optional.
         dest = char_buffer_malloc(*p_dest_len);
-        *p_dest = dest;
+        *pp_dest = dest;
     }
     if( dest ){
-        memcpy(dest, source, source_len);
+        memcpy(dest, p_source, source_len);
         dest[source_len] = '\0';
     }
 }

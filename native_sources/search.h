@@ -333,8 +333,8 @@ int split_pattern(
 int get_title_and_topic(
         search_workspace_t *p_s_ws,
         uint32_t id,
-        const char **p_title,
-        const char **p_topic
+        const char **pp_title,
+        const char **pp_topic
         )
 ;
 
@@ -343,5 +343,5 @@ int get_topic(
         search_workspace_t *p_s_ws,
         size_t iChunk_of_entry,
         searchable_strings_prelude_t *p_entry,
-        const char **  p_topic)
+        const char **pp_topic)
 ;

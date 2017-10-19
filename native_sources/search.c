@@ -1847,8 +1847,8 @@ int split_pattern(
 int get_title_and_topic(
         search_workspace_t *p_s_ws,
         uint32_t id,
-        const char **p_title,
-        const char **p_topic
+        const char **pp_title,
+        const char **pp_topic
         )
 {
     searchable_strings_prelude_t *p_entry;
@@ -1856,10 +1856,10 @@ int get_title_and_topic(
     iChunk = title_entry(p_s_ws, id, &p_entry);
 
     const char * const title = (const char *)(p_entry+1);
-    *p_title = title;
+    *pp_title = title;
 
     return get_topic(p_s_ws, iChunk, p_entry,
-            p_topic);
+            pp_topic);
 
     return 0;
 }
@@ -1868,7 +1868,7 @@ int get_topic(
         search_workspace_t *p_s_ws,
         size_t iChunk_of_entry,
         searchable_strings_prelude_t *p_entry,
-        const char **  p_topic)
+        const char **pp_topic)
 {
     title_chunks_t *p_chunks = &p_s_ws->chunks;
 
@@ -1890,11 +1890,11 @@ int get_topic(
         /* Note: prev_topic.target already holds the pointer
          * for the next chunk. prev_topic._copy holds the value for this iteration.
          */
-        //*p_topic = p_s_ws->prev_topic.target;
-        *p_topic = p_s_ws->prev_topic._copy;
+        //*pp_topic = p_s_ws->prev_topic.target;
+        *pp_topic = p_s_ws->prev_topic._copy;
         return 3;
     }else if( topic_candidate < buf_stop){
-        *p_topic = topic_candidate;
+        *pp_topic = topic_candidate;
         if( topic_candidate > p_s_ws->prev_topic.target && 0){
             // TODO: Remove this Auswahl des Targets nicht hinreichend, da o.B.d.A nicht letzte Gruppe eines Chunks
             p_s_ws->prev_topic.target = topic_candidate;
@@ -1912,7 +1912,7 @@ int get_topic(
         if( p_current_chunk <= p_chunks->bufs){
             // Already in first chunk. Offset to high!
             assert(topic_candidate < buf_stop);
-            *p_topic = NULL;
+            *pp_topic = NULL;
             return -1;
         }
 
@@ -1927,13 +1927,13 @@ int get_topic(
     }
 
     if( topic_candidate < buf_stop){
-        *p_topic = topic_candidate;
+        *pp_topic = topic_candidate;
         return p_entry->topic_string_offset<0?1:0;
     }
 #endif
     assert(topic_candidate < buf_stop);
     // Offset to high!
-    *p_topic = NULL;
+    *pp_topic = NULL;
     return -1;
 }
 

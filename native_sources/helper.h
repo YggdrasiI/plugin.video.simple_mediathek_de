@@ -67,13 +67,16 @@ size_t parse_dauer(
  * content of title_*.index file. Function
  * made following transformations: (TODO)
  * 1. Lower case string
- * 2. Normalize empty strings to space char
- * //3. Remove characters expect [A-z0-9]
- * 3. Remove some characters like "/'
+ * 2. Remove some characters like "/'
+ * 3. Normalize or remove several multibyte utf-8 chars.
+ *
  *
  * Return value: length of *pp_out
- * - Note: Utf-8 strings supported.
- * - Note: Function creates new string. Free it after usage. */
+ * Notes:
+ *   - Utf-8 strings supported.
+ *   - Function creates new string. Free it after usage.
+ *   - Set *pp_out to NULL if input is NULL.
+ * */
 size_t transform_search_title(
         const char *p_in,
         char **pp_out)
@@ -88,8 +91,8 @@ char *char_buffer_malloc(
 
 /* Memcpy with resize of destination if required. */
 void charcpy(
-        char **p_dest,
+        char **pp_dest,
         size_t *p_dest_len, /* >= strlen(dest) */
-        const char * const source,
+        const char * const p_source,
         const size_t source_len)
 ;

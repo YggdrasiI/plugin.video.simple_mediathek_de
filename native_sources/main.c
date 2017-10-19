@@ -50,11 +50,11 @@ int indexing(
 
     /* Gen list of search patterns.
     */
-    //search_pair_t **pairs = pattern_1_create();
-    search_pair_t **pairs = pattern_filmliste_flexibel_create();
+    //search_pair_t **pp_pairs = pattern_1_create();
+    search_pair_t **pp_pairs = pattern_filmliste_flexibel_create();
 
     // Pattern for second line to grab creation date of list.
-    search_pair_t **pairs_header = pattern_filmliste_head();
+    search_pair_t **pp_pairs_header = pattern_filmliste_head();
 
     // Initial of further variables
     char *_buf_in = (char *)malloc( (MY_BUFSIZ + 1) * sizeof(char) );
@@ -110,14 +110,14 @@ int indexing(
 #if 1
     // Search header informations
     ret_search = parser_search(&buf_in, buf_start, &buf_stop,
-            pairs_header, pair_start, &pair_stop);
+            pp_pairs_header, pair_start, &pair_stop);
     if( ret_search == SEARCH_MATCH_PAIRS ){
         const char *key, *date1, *date2;
         size_t len[3];
         // Detect substring positions but not add '\0' after them
-        len[0] = search_pair_get_chars(&buf_in, *(pairs_header+0), &key, NULL, 0);
-        len[1] = search_pair_get_chars(&buf_in, *(pairs_header+1), &date1, NULL, 0);
-        len[2] = search_pair_get_chars(&buf_in, *(pairs_header+2), &date2, NULL, 0);
+        len[0] = search_pair_get_chars(&buf_in, *(pp_pairs_header+0), &key, NULL, 0);
+        len[1] = search_pair_get_chars(&buf_in, *(pp_pairs_header+1), &date1, NULL, 0);
+        len[2] = search_pair_get_chars(&buf_in, *(pp_pairs_header+2), &date2, NULL, 0);
 
         const char keyw[] = "Filmliste";
         if( len[0] != sizeof(keyw)-1 ||
@@ -141,7 +141,7 @@ int indexing(
             fl_ws.list_creation_time = tdate1;
         }
 
-        search_pair_reset_array(pairs_header, pairs + pair_stop);
+        search_pair_reset_array(pp_pairs_header, pp_pairs + pair_stop);
     }else{
         // Header of file not parseable
         assert( ret_search == SEARCH_MATCH_PAIRS);
@@ -179,7 +179,7 @@ int indexing(
         // Search for group of tuples
 #if 1
         ret_search = parser_search(&buf_in, buf_start, &buf_stop,
-                pairs, pair_start, &pair_stop);
+                pp_pairs, pair_start, &pair_stop);
 #else
         buf_stop = buf_in.used;
         ret_search = SEARCH_FAILED_END_OF_BUFFER;
@@ -188,24 +188,24 @@ int indexing(
         if( ret_search == SEARCH_MATCH_PAIRS){
             // Propagate data and restart
 #if 0
-            //search_array_dprintf(1, pairs, pairs+pair_stop);
+            //search_array_dprintf(1, pp_pairs, pp_pairs+pair_stop);
             //dprintf(1, "\n");
 
-            //search_array_write(1, pairs, pairs+pair_stop);
+            //search_array_write(1, pp_pairs, pp_pairs+pair_stop);
             search_array_write_cached(fdout, &buf_out,
-                    (const search_pair_t **) pairs,
-                    (const search_pair_t **) pairs+pair_stop);
+                    (const search_pair_t **) pp_pairs,
+                    (const search_pair_t **) pp_pairs+pair_stop);
 #else
             filmliste_handle(/*fl_ws.searchable_strings.fd,*/
                     &buf_in,
                     &fl_ws,
-                    pairs, pairs + pair_stop,
+                    pp_pairs, pp_pairs + pair_stop,
                     &buf_out);
 #endif
 
 
             // Next search should start with first pair again.
-            search_pair_reset_array(pairs, pairs + pair_stop);
+            search_pair_reset_array(pp_pairs, pp_pairs + pair_stop);
             pair_start = 0;
 
         }else if( ret_search == SEARCH_FAILED_DUE_ABORT_CHAR ){
@@ -216,7 +216,7 @@ int indexing(
             ++buf_stop;
 
             // Next search should start with first pair again.
-            search_pair_reset_array(pairs, pairs + pair_stop);
+            search_pair_reset_array(pp_pairs, pp_pairs + pair_stop);
             pair_start = 0;
 
         }else if( ret_search == SEARCH_FAILED_END_OF_BUFFER ){
@@ -238,7 +238,7 @@ int indexing(
             }
 
             if( buf_stop >= buf_in.used ){
-                search_pair_t *latest_pair = *(pairs+pair_stop);
+                search_pair_t *latest_pair = *(pp_pairs+pair_stop);
                 if( latest_pair != NULL && latest_pair->buf.used > 0){
                     /* buf.used > 0 indicate that the beginning pattern
                      * was hit, but the end pattern not. Moreover, buf_stop
@@ -291,7 +291,7 @@ int indexing(
 
     info_print2(fdout, &fl_ws);
 
-    pattern_destroy( &pairs);
+    pattern_destroy( &pp_pairs);
     filmliste_ws_destroy(&fl_ws);
 
     free(_buf_in);

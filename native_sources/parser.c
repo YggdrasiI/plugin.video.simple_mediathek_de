@@ -28,11 +28,11 @@ search_pair_t *search_pair_create(){
 }
 
 void search_pair_destroy(
-        search_pair_t **p_sp)
+        search_pair_t **pp_sp)
 {
-    free((*p_sp)->buf.p);
-    free(*p_sp);
-    *p_sp = NULL;
+    free((*pp_sp)->buf.p);
+    free(*pp_sp);
+    *pp_sp = NULL;
 }
 
 void search_pair_reset(
@@ -413,12 +413,12 @@ int search_pair_search(
 int parser_search(
         const char_buffer_t *p_buf,
         size_t buf_start, size_t *p_buf_stop,
-        search_pair_t **pairs, size_t pair_start, size_t *p_pair_stop )
+        search_pair_t **pp_pairs, size_t pair_start, size_t *p_pair_stop )
 {
     size_t cur_buf_offset = buf_start;
     //size_t next_buf_offset;
     int status;
-    search_pair_t **cur_pair = pairs + pair_start;
+    search_pair_t **cur_pair = pp_pairs + pair_start;
 
     while( *cur_pair != NULL ){
         status = search_pair_search(
@@ -429,7 +429,7 @@ int parser_search(
         if( status == SEARCH_FAILED_DUE_ABORT_CHAR ){
             // current search failed
             *p_buf_stop = cur_buf_offset;
-            *p_pair_stop = (cur_pair - pairs);
+            *p_pair_stop = (cur_pair - pp_pairs);
             return status;
         }
 
@@ -438,11 +438,11 @@ int parser_search(
         {
             // We need more input data to continue.
             search_pair_cache_array(p_buf,
-                    pairs + pair_start, (cur_pair+1));
+                    pp_pairs + pair_start, (cur_pair+1));
 
             // Not all pairs found
             *p_buf_stop = cur_buf_offset;
-            *p_pair_stop = (cur_pair - pairs);
+            *p_pair_stop = (cur_pair - pp_pairs);
             return status;
         }
 
@@ -457,7 +457,7 @@ int parser_search(
 
     // All pairs found
     *p_buf_stop = cur_buf_offset;
-    *p_pair_stop = (cur_pair - pairs);
+    *p_pair_stop = (cur_pair - pp_pairs);
     return SEARCH_MATCH_PAIRS;
 }
 
@@ -466,21 +466,21 @@ search_pair_t **pattern_1_create()
     const int NP = 1;
     int i;
 
-    search_pair_t **pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
-    pairs[NP] = NULL;
+    search_pair_t **pp_pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
+    pp_pairs[NP] = NULL;
     for( i=0; i<NP; ++i){
-        pairs[i] = search_pair_create();
+        pp_pairs[i] = search_pair_create();
     }
 
     // "..."-Pair
-    pairs[0]->begin.pattern.c = '"';
-    pairs[0]->begin.mask = '\\';
-    pairs[0]->begin.abort = '\n';
-    pairs[0]->end.pattern.c = '"';
-    pairs[0]->end.mask = '\\';
-    //pairs[0]->end.abort = '\n';
+    pp_pairs[0]->begin.pattern.c = '"';
+    pp_pairs[0]->begin.mask = '\\';
+    pp_pairs[0]->begin.abort = '\n';
+    pp_pairs[0]->end.pattern.c = '"';
+    pp_pairs[0]->end.mask = '\\';
+    //pp_pairs[0]->end.abort = '\n';
 
-    return pairs;
+    return pp_pairs;
 }
 
 search_pair_t **pattern_filmliste_flexibel_create()
@@ -488,29 +488,29 @@ search_pair_t **pattern_filmliste_flexibel_create()
     const int NP = 21;
     int i;
 
-    search_pair_t **pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
-    pairs[NP] = NULL;
+    search_pair_t **pp_pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
+    pp_pairs[NP] = NULL;
 
-    pairs[0] = search_pair_create();
+    pp_pairs[0] = search_pair_create();
     // "..."-Pair
-    pairs[0]->begin.pattern.c = '"';
-    pairs[0]->begin.mask = '\\';
-    pairs[0]->begin.abort = ']';
-    pairs[0]->end.pattern.c = '"';
-    pairs[0]->end.mask = '\\';
-    pairs[0]->end.abort = '\n';
-    pairs[0]->clip_begin = 1;
-    pairs[0]->clip_end = 1;
+    pp_pairs[0]->begin.pattern.c = '"';
+    pp_pairs[0]->begin.mask = '\\';
+    pp_pairs[0]->begin.abort = ']';
+    pp_pairs[0]->end.pattern.c = '"';
+    pp_pairs[0]->end.mask = '\\';
+    pp_pairs[0]->end.abort = '\n';
+    pp_pairs[0]->clip_begin = 1;
+    pp_pairs[0]->clip_end = 1;
 
     for( i=1; i<NP; ++i){
-        pairs[i] = search_pair_create();
-        memcpy(pairs[i], pairs[0], sizeof(search_pair_t));
+        pp_pairs[i] = search_pair_create();
+        memcpy(pp_pairs[i], pp_pairs[0], sizeof(search_pair_t));
     }
-    pairs[0]->begin.abort = ':';
-    pairs[0]->end.abort = ':';
-    pairs[NP-1]->end.pattern.c = ']';
+    pp_pairs[0]->begin.abort = ':';
+    pp_pairs[0]->end.abort = ':';
+    pp_pairs[NP-1]->end.pattern.c = ']';
 
-    return pairs;
+    return pp_pairs;
 }
 
 search_pair_t **pattern_filmliste_head()
@@ -519,37 +519,37 @@ search_pair_t **pattern_filmliste_head()
     const int NP = 3;
     int i;
 
-    search_pair_t **pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
-    pairs[NP] = NULL;
+    search_pair_t **pp_pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
+    pp_pairs[NP] = NULL;
 
-    pairs[0] = search_pair_create();
+    pp_pairs[0] = search_pair_create();
     // "..."-Pair
-    pairs[0]->begin.pattern.c = '"';
-    pairs[0]->begin.mask = '\\';
-    pairs[0]->begin.abort = ']'; //not '\n' to search over multiple lines
-    pairs[0]->end.pattern.c = '"';
-    pairs[0]->end.mask = '\\';
-    pairs[0]->end.abort = '\n';
-    pairs[0]->clip_begin = 1;
-    pairs[0]->clip_end = 1;
+    pp_pairs[0]->begin.pattern.c = '"';
+    pp_pairs[0]->begin.mask = '\\';
+    pp_pairs[0]->begin.abort = ']'; //not '\n' to search over multiple lines
+    pp_pairs[0]->end.pattern.c = '"';
+    pp_pairs[0]->end.mask = '\\';
+    pp_pairs[0]->end.abort = '\n';
+    pp_pairs[0]->clip_begin = 1;
+    pp_pairs[0]->clip_end = 1;
 
     for( i=1; i<NP; ++i){
-        pairs[i] = search_pair_create();
-        memcpy(pairs[i], pairs[0], sizeof(search_pair_t));
+        pp_pairs[i] = search_pair_create();
+        memcpy(pp_pairs[i], pp_pairs[0], sizeof(search_pair_t));
     }
 
-    return pairs;
+    return pp_pairs;
 }
 
-void pattern_destroy( search_pair_t ***p_pairs)
+void pattern_destroy( search_pair_t ***ppp_pairs)
 {
-    search_pair_t **pairs = *p_pairs;
-    while( *pairs != NULL ){
-        search_pair_destroy(pairs);
-        ++pairs;
+    search_pair_t **pp_pairs = *ppp_pairs;
+    while( *pp_pairs != NULL ){
+        search_pair_destroy(pp_pairs);
+        ++pp_pairs;
     }
-    free(*p_pairs);
-    *p_pairs = NULL;
+    free(*ppp_pairs);
+    *ppp_pairs = NULL;
 }
 
 // ============================================

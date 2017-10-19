@@ -41,7 +41,7 @@
 /* To save memory the file with the title strings will read part by
  * part during the search.
  */
-//#define READ_TITLE_FILE_PARTIAL
+#define READ_TITLE_FILE_PARTIAL
 
 /* Replace é with e and similar (over 300 cases...).
  */
