@@ -200,15 +200,19 @@ size_t transform_search_title(
         const char *p_in,
         char **pp_out)
 {
+    Free(*pp_out);
+
     if( p_in == NULL ){
-        assert(0);
         *pp_out = NULL;
         return 0;
     }
 
     size_t len_in = strlen(p_in);
+    if( len_in == 0 ){
+        *pp_out = NULL;
+        return 0;
+    }
 
-    Free(*pp_out);
     /*uint8_t * const*/
     unsigned char * const p_out =  (unsigned char *) malloc( (1 + len_in) * sizeof(unsigned char) );
     *(p_out + len_in) = '\0';

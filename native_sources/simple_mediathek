@@ -198,7 +198,9 @@ download()
 {
   setup "$1"
 
-  if [ "${DIFF}" = "1" ] ; then
+  if [ "$2" != "" ] ; then
+    FILENAME="$2"
+  elif [ "${DIFF}" = "1" ] ; then
     FILENAME="${INDEX_FILE_FOLDER}Filmliste-diff.json"
   else
     FILENAME="${INDEX_FILE_FOLDER}Filmliste-akt.json"
@@ -242,7 +244,7 @@ if [ "$1" = "update" ] ; then
 elif [ "$1" = "link" ] ; then
   just_print_link "$2"
 elif [ "$1" = "download" ] ; then
-  download "$2"
+  download "$2" "$3"
 else
   check_if_folder_arg_given $@
   echo_verbose "${BIN_PATH}/${BIN_NAME} $@"

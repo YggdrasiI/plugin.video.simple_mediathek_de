@@ -78,6 +78,13 @@ TEST_AFTER_CMD= >"$(TEST_OUTPUT)" 2>&1 \
 								&& touch "$(TEST_PREFIX).$@" && echo "Test '$@' success") \
 								|| (echo "Test '$@' failed\tSee $(TEST_OUTPUT) for output" && exit 1)
 
+## Variables for local hosting of input files
+DATA_DIR=../data
+FILMLISTE_AKT_XZ=$(DATA_DIR)/Filmliste-akt.xz
+FILMLISTE_DIFF_XZ=$(DATA_DIR)/Filmliste-diff.xz
+
+## Variables for indexing of local file
+FILMLISTE_AKT_JSON=/dev/shm/Filmliste-akt.json
 ############################################################
 
 main: $(BROTLI_DEP) $(ODIR) $(PROG_NAME)
@@ -108,7 +115,7 @@ $(ODIR):
 $(BROTLI_DEP): brotli_install.sh
 	@echo -e "Clone Git repository of broli library...\nWill be installed into $(BROTLI_ROOT)"
 	./brotli_install.sh "$(MACH)" "$(CFLAGS_RPI)"
-		
+
 # Note: depedency $(PROG_NAME) removed to avoid
 # recompilation with wrong flags. (i.e. after 'make rpi' )
 install: $(SCRIPT_NAME) $(COPY_TO_ARMV6L)
@@ -129,20 +136,14 @@ copy_to_armv6l:
 copy_lib_to_armv6l: $(BROTLI_DEP)
 	@# cp -r "../root/$(MACH)/" "../root/armv6l/"
 	test -d ../root/armv6l || ln -s "../root/$(MACH)" "../root/armv6l"
-	
+
 
 
 ####################### Testing ############################
 
 _LD_LIBRARY_PATH=$(shell echo "LD_LIBRARY_PATH=.:../root/${MACH}/lib:${LD_LIBRARY_PATH}")
-# Test args for indexing...
-# TEST_ARGS=--index -i /dev/shm/Filmliste-akt.json
-# Test args for searching...
-TEST_ARGS=-s --dayMin 0 --dayMax 7 --title="\"extra 3\""
 
-
-# Test args for payload fetch...
-# TEST_ARGS=--payload 0
+TEST_ARGS=--info
 
 nemiver:
 	$(_LD_LIBRARY_PATH) nemiver ./$(PROG_NAME) $(TEST_ARGS)
@@ -153,11 +154,8 @@ valgrind:
 leak:
 	$(_LD_LIBRARY_PATH) valgrind  --leak-check=full ./$(PROG_NAME) $(TEST_ARGS)
 
-download:
-	./$(SCRIPT_NAME) download
-
-index:
-	./$(SCRIPT_NAME) -a -i /dev/shm/Filmliste-akt.json
+index: $(FILMLISTE_AKT_JSON)
+	./$(SCRIPT_NAME) -a -i "$(FILMLISTE_AKT_JSON)"
 
 search:
 	./$(SCRIPT_NAME) -s --title="Livestream" -n 50 --durationMax 0 --beginMax 121m
@@ -171,8 +169,8 @@ info:
 payload:
 	./$(SCRIPT_NAME) --payload 0
 
-test: test1 test2 test3 test4 test5
-	./$(SCRIPT_NAME) $(TEST_ARGS)
+tests: test1 test2 test3 test4 test5
+	@echo "Tests finished. Delete $(TEST_PREFIX).test1, etc to re-enable skipped tests."
 
 test_indexing:
 	@$(TEST_BEFORE_CMD)\
@@ -207,6 +205,30 @@ test5:
 test_templatec:
 	$(TEST_BEFORE_CMD) echo "Template" $(TEST_AFTER_CMD)
 
+
+############################################################
+
+server: $(DATA_DIR) $(FILMLISTE_AKT_XZ) $(FILMLISTE_DIFF_XZ)
+	cd ../data && python3 -m http.server
+
+$(DATA_DIR):
+	@test -d "$(DATA_DIR)" || mkdir "$(DATA_DIR)"
+
+$(FILMLISTE_AKT_XZ):
+	wget -O "$@" $(shell ./$(SCRIPT_NAME) link 2>/dev/null )
+
+$(FILMLISTE_DIFF_XZ):
+	wget -O "$@" $(shell ./$(SCRIPT_NAME) link 1 2>/dev/null )
+
+# Download and extract the json file
+download:
+	./$(SCRIPT_NAME).local download 0 "$(FILMLISTE_AKT_JSON)" ||\
+		./$(SCRIPT_NAME) download 0 "$(FILMLISTE_AKT_JSON)"
+
+# Extract json from local copy
+$(FILMLISTE_AKT_JSON): $(DATA_DIR) $(FILMLISTE_AKT_XZ)
+	./$(SCRIPT_NAME).local download 0 "$@" || \
+		./$(SCRIPT_NAME) download 0 "$@"
 
 ############################################################
 

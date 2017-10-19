@@ -69,7 +69,7 @@ size_t parse_dauer(
  * 1. Lower case string
  * 2. Remove some characters like "/'
  * 3. Normalize or remove several multibyte utf-8 chars.
- *
+ * 4. Return NULL pointer for empty input strings.
  *
  * Return value: length of *pp_out
  * Notes:

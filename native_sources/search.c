@@ -811,7 +811,9 @@ int search_do_search(
 #else
     transform_search_title(p_arguments->title, &pattern.title_pattern);
 #endif
-    split_pattern(&pattern, '*');
+    if( pattern.title_pattern ){
+      split_pattern(&pattern, '*');
+    }
     DEBUG( fprintf(stderr, "Search pattern: '%s'\n", pattern.title_pattern) );
 
     //p_s_ws->search_result.match_found = 0;
@@ -1480,7 +1482,9 @@ int search_gen_patterns_for_partial(
 #else
     transform_search_title(p_arguments->title, &first_pattern.title_pattern);
 #endif
-    split_pattern(&first_pattern, '*');
+    if( first_pattern.title_pattern ){
+      split_pattern(&first_pattern, '*');
+    }
 
     // 0. Eval (or over-estimate) number of pattern and init first entry
     int len_results = 1;
