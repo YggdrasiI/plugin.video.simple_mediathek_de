@@ -8,6 +8,8 @@ BROTLI=1
 # Binaries will insatlled in $INSTALL_PREFIX/$MACH
 INSTALL_PREFIX=../root
 MACH=$(shell uname -m)
+GIT_COMMIT_VERSION=$(shell git log --oneline --max-count=1 | head --bytes=7)
+VERSION='MediathekView data parser 0.4 ($(GIT_COMMIT_VERSION))'
 
 ############################################################
 
@@ -42,6 +44,8 @@ CFLAGS+= -g
 ODIR=obj_debug
 #PROG_NAME=$(PROG_NAME)_debug
 endif
+
+CFLAGS+= -DVERSION=\"$(VERSION)\"
 
 ############################################################
 

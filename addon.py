@@ -829,7 +829,7 @@ def listing_add_livestreams(listing, state):
 
 def listing_add_search_results(listing, state, results):
     """ Example line:
-        {"id": 154344, "title": "...",
+        {"id": 154344, "topic": "...", "title": "...",
                         "ibegin": 1486244700, "begin": "04. Feb. 2017 22:45",
                         "iduration": 816, "ichannel": 19,
                         "channel": "zdf", "anchor": 51792695},
@@ -837,9 +837,10 @@ def listing_add_search_results(listing, state, results):
     """
     i = 0
     for f in results:  # .get("found", []):
-        name = "%s | %s | %s" % (
+        hasBegin = (int(f.get("ibegin", -1)) > 8000)
+        name = "%s %s | %s" % (
             f.get("channel").upper(),
-            f.get("begin"),
+            "| " + f.get("begin") if hasBegin else "",
             f.get("title", "???"),
         )
 
@@ -1409,7 +1410,7 @@ with SimpleMediathek() as mediathek:
 
             listing.append((url, li, is_folder))
 
-        listing_add_test(listing, state_diff)
+        # listing_add_test(listing, state_diff)
         listing_add_livestreams(listing, state_diff)
 
         listing_add_search(listing, mediathek, state_diff)

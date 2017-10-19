@@ -10,8 +10,12 @@
 
 #define SEARCH_NUM_MAX_MATCHES 0x20
 
+#ifndef VERSION
+#define VERSION "unknown version"
+#endif
+
 /* Begin of argp setup */
-const char *argp_program_version = "MediathekView data parser 0.1";
+const char *argp_program_version = VERSION;
 const char *argp_program_bug_address = "<funwithkinect@googlemail.com>";
 static char doc[] = "Strip and indexing json files will low memory footprint.";
 static char args_doc[] = "--index [-i FILE NAME] [-f FOLDER]" \
