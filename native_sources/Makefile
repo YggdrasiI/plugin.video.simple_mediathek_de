@@ -67,6 +67,17 @@ endif
 #_OBJ = $(patsubst %.c, %.o, $(FILES))
 OBJ = $(FILES:%.c=$(ODIR)/%.o)
 
+## Variables for testing targets
+TEST_PREFIX=/dev/shm/
+TEST_OUTPUT=$(TEST_PREFIX)$(SCRIPT_NAME).out
+# Test command chain should be
+# $(TEST_BEFORE_CMD) you_commands $(TEST_AFTER_CMD)
+TEST_BEFORE_CMD=(test -f $(TEST_PREFIX).$@ && echo "Test '$@' skipped") \
+								|| (echo "Start '$@'" &&
+TEST_AFTER_CMD= >"$(TEST_OUTPUT)" 2>&1 \
+								&& touch "$(TEST_PREFIX).$@" && echo "Test '$@' success") \
+								|| (echo "Test '$@' failed\tSee $(TEST_OUTPUT) for output" && exit 1)
+
 ############################################################
 
 main: $(BROTLI_DEP) $(ODIR) $(PROG_NAME)
@@ -127,18 +138,11 @@ _LD_LIBRARY_PATH=$(shell echo "LD_LIBRARY_PATH=.:../root/${MACH}/lib:${LD_LIBRAR
 # Test args for indexing...
 # TEST_ARGS=--index -i /dev/shm/Filmliste-akt.json
 # Test args for searching...
-# TEST_ARGS=-s --dayMin 0 --dayMax 7 --title="\"extra 3\""
-# TEST_ARGS=--search -t "Tagesschau" -n 2,0 -r --dayMax 10 -C "ARD" --durationMin "14m"
-# TEST_ARGS=-s -t "tagesschau" --dayMax 0 --dayMin 0
-TEST_ARGS=--search -t "Die Tatort-Leiche"
-TEST_ARGS2=--search -t "Die Tatort-Leiche" --dayMin 0
+TEST_ARGS=-s --dayMin 0 --dayMax 7 --title="\"extra 3\""
 
 
 # Test args for payload fetch...
 # TEST_ARGS=--payload 0
-
-test:
-	./$(SCRIPT_NAME) $(TEST_ARGS)
 
 nemiver:
 	$(_LD_LIBRARY_PATH) nemiver ./$(PROG_NAME) $(TEST_ARGS)
@@ -166,6 +170,42 @@ info:
 
 payload:
 	./$(SCRIPT_NAME) --payload 0
+
+test: test1 test2 test3 test4 test5
+	./$(SCRIPT_NAME) $(TEST_ARGS)
+
+test_indexing:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) update \
+		$(TEST_AFTER_CMD)
+
+test1:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) --search -t "Tagesschau" -n 2,0 -r --dayMax 10 -C "ARD" --durationMin "14m" \
+		$(TEST_AFTER_CMD)
+
+test2:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) --search -t "tagesschau" --dayMax 0 --dayMin 0 \
+		$(TEST_AFTER_CMD)
+
+test3:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) --search --dayMax 0 --dayMin 16 -n 1000,10000 \
+		$(TEST_AFTER_CMD)
+
+test4:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) --info \
+		$(TEST_AFTER_CMD)
+
+test5:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) --payload=0 \
+		$(TEST_AFTER_CMD)
+
+test_templatec:
+	$(TEST_BEFORE_CMD) echo "Template" $(TEST_AFTER_CMD)
 
 
 ############################################################
