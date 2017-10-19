@@ -17,24 +17,31 @@
 #define OUT_CACHESIZ (3000000)
 #endif
 
-/* Lower bound where old compressed payload file 
+/* Lower bound where old compressed payload file
  * will be closed and new one begins.
  *
  * Note that high values of OUT_CACHESIZ affects
- * the final sizes of the compressed files. 
+ * the final sizes of the compressed files.
  * The compression starts if (raw) output buffer
- * is full. 
+ * is full.
  * (If we would distribute the output buffer
  * on multiple compressed files the indexes had to be updated.
  * Thus, we won't do that.)
  */
 #define PAYLOAD_MAX_FILE_SIZE (1024 * 1024)
 
-/* To save memory the file with the 
- * title strings will read part by 
+/* Convert 'title|topic'-string at indexing time into lower case and
+ * remove subset of special characters like -,_,|,\,".
+ *
+ * Moreover, the original title will added to the title_XXXX.br files
+ * which increased its size (currently from 3.3MB to 4.5MB)
+ */
+#define NORMALIZED_STRINGS 1
+
+/* To save memory the file with the title strings will read part by
  * part during the search.
  */
-#define READ_TITLE_FILE_PARTIAL 
+//#define READ_TITLE_FILE_PARTIAL
 
 /* Replace é with e and similar (over 300 cases...).
  */
@@ -53,7 +60,7 @@
 // ==
 #define NUM_SUM (NUM_DURATIONS + NUM_TIME + NUM_REALTIVE_DATE + NUM_CHANNELS)
 
-/* Array with length NUM_DURATIONS which contain the biggest value of 
+/* Array with length NUM_DURATIONS which contain the biggest value of
  * each interval. Use INT_MAX in last entry
  *                      10 Min 30 Min 60 Min 90 Min 2h      >2h */
 #define DURATION_ARRAY {10*60, 30*60, 60*60, 90*60, 120*60, INT_MAX}
@@ -61,34 +68,30 @@
 /* Array with length NUM_TIME. Use INT_MAX in last entry
  *                0-10 Uhr  10-16 Uhr  16-20 Uhr     Nach 20 Uhr */
 //#define TIME_ARRAY {10*3600-1, 16*3600-1, 20*3600-1, INT_MAX}
-//Shift by 2 Minutes 
+//Shift by 2 Minutes
 #define TIME_ARRAY {10*3600-121, 16*3600-121, 20*3600-121, INT_MAX}
 
 
 // Disable channel as search criteria
-#define NO_CHANNEL -1 
+#define NO_CHANNEL -1
 
 /* For all entries without given channel / for empty channel string */
-#define UNKNOWN_CHANNEL 0 
+#define UNKNOWN_CHANNEL 0
 
 /* Separator between title and topic string.
  * The splitted strings should not contain this character.
  */
-#define SPLIT_CHAR '|'
+//#define SPLIT_CHAR '|'
+#define SPLIT_CHAR 0x0B  // VT
 
-/* Highest byte value used to mark that prefetecd length information 
+/* Highest byte value used to mark that prefetecd length information
  * of a short_string_t is invalid. Use len(...), etc to get length info.
  */
 #define UNDEFINED_TITLE_LENGTH (0xFF);
 #define MAXIMAL_TITLE_LENGTH (UNDEFINED_TITLE_LENGTH - 1);
 
-/* Constant to inform that topic string of previous entry should be used.
- * ( "title|\t" or  "title\t" expands to "title|previous_topic"
- */
-#define BACKTRACK_CHAR '\t'
-
 #ifdef NDEBUG
-#define DEBUG(X) 
+#define DEBUG(X)
 #else
 #define DEBUG(X) X;
 #endif
@@ -127,7 +130,7 @@ typedef struct {
 #if 0
 #include <string.h>
 void *memcpy(void *dest, const void *src, size_t n);
-#ifdef _POSIX_C_SOURCE 
+#ifdef _POSIX_C_SOURCE
 void *memcpy(void *dest, const void *src, size_t n){
     int b, L=n;
     char *t=(char *)(dest);

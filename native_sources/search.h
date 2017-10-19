@@ -325,8 +325,9 @@ int split_pattern(
  *
  * Return value:
  *   0 - Topic appends title string.
- *   1 - Previous topic string pointer returned.
- *   2 - Cached previous topic string pointer returned.
+ *   1 - Topic appends previous title string, but same chunk.
+ *   2 - Topic appends previous title string, but different chunk.
+ *   3 - Cached previous topic string pointer returned.
  *  -1 - Can not evaluate topic pointer.
  */
 int get_title_and_topic(
@@ -335,4 +336,12 @@ int get_title_and_topic(
         const char **p_title,
         const char **p_topic
         )
+;
+
+/* Same return codes as get_title_and_topic. */
+int get_topic(
+        search_workspace_t *p_s_ws,
+        size_t iChunk_of_entry,
+        searchable_strings_prelude_t *p_entry,
+        const char **  p_topic)
 ;

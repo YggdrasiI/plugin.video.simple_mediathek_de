@@ -503,7 +503,7 @@ int _search_compare_title_(
     /*
      * Structure of above byte array: "{TITLE}{SPLIT_CHAR}[{TOPIC}]"
      * where:
-     * TITLE : Title string followed by |
+     * TITLE : Title string followed by SPLIT_CHAR
      * TOPIC : Topic string followed by \0. Only set if topic differs from
      *         previous entry.
      * SPLIT_CHAR: Defined in settings.h)
@@ -521,7 +521,7 @@ int _search_compare_title_(
 #endif
 
     /* Loop through sub pattern...
-     * Firstly , string_to_search maps on the title|topic string.
+     * Firstly , string_to_search maps on the titleSPLIT_CHARtopic string.
      * Secondly it maps to the prev_topic string.
      *
      * Return 0 if all subpattern could be found.
@@ -656,14 +656,14 @@ int _search_do_search_(
             uint32_t next_id_isub = (p_el->nexts.subgroup_ids[used_indizes[k2]]);
             if( LINKED_LIST_SUBGROUP(next_id_isub) == p_pattern->groups.indizes[used_indizes[k2]] )
             {
-                // Yes, relation match
+                // Yes -> relation match
                 ++num_matched;
                 k = k2;
 
             }else{
-                // No, relation is wrong
+                // No -> relation is wrong
                 // Go to next element in currenty selected (by used_indizes[k]) releation.
-                // TODO: Tippelschritte...
+                // Note: Tippelschritte...
                 id2 = linked_list_next_in_subgroup_by_id(p_list, id, used_indizes[k]);
                 if( id2 == 0 ){
                     return ((*p_found > found_before)?0:-1);
@@ -750,11 +750,11 @@ void print_search_result(
     const char *title;
     title = (const char *)(p_entry+1);
 
-    /* Restrict on characters before '|' to cut of 'topic' substring*/
+    /* Restrict on characters before SPLIT_CHAR to cut of 'topic' substring*/
 #ifdef _GNU_SOURCE
-    title_len = strchrnul(title, '|') - title;
+    title_len = strchrnul(title, SPLIT_CHAR) - title;
 #else
-    char *sep = strchr(title, '|');
+    char *sep = strchr(title, SPLIT_CHAR);
     if( sep ){ title_len = sep - title; }
 #endif
 #endif
@@ -916,7 +916,6 @@ int search_do_search(
     const search_pattern_t pattern_first = pattern;
     while( 1 ){
         _search_do_search_(p_s_ws, &pattern);
-
         if( p_s_ws->output.found >= p_s_ws->output.M
                 && p_s_ws->output.reversed_flag == 0
                 ){
@@ -1235,7 +1234,7 @@ void search_read_title_file(
     title_norm = ((const char *)p_entry) + sizeof(searchable_strings_prelude_t);
     //title = title_norm + p_entry->length  + 1; // Original title
     title = title_norm + strlen(title_norm) + 1; // Original title
-    if( title < title_norm || (title_norm - title) > 4096){ // p_entry->length wrong?
+    if( title < title_norm || (title_norm - title) > 4096 ){ // p_entry->length wrong?
         assert(0);
         title = title_norm + strlen(title_norm) + 1;
     }
@@ -1246,6 +1245,31 @@ void search_read_title_file(
 #endif
 }
 
+void _save_latest_topic_string(
+        search_workspace_t *p_s_ws)
+{
+#ifdef READ_TITLE_FILE_PARTIAL
+    // Get latest id of current chunk and fetch its topic string
+    buf_string_copy_t *p_topic = &p_s_ws->prev_topic;
+    uint32_t chunk_latest_id = p_s_ws->chunks.start_ids[
+        p_s_ws->chunks.partial_i + 1] - 1;
+    const char *p_title_str, *p_topic_str;
+    get_title_and_topic( p_s_ws, chunk_latest_id, &p_title_str, &p_topic_str);
+    p_topic->target = p_topic_str;
+
+    // Create copy of target string if required
+    if( p_topic->target && p_topic->target != p_topic->_copy){
+        charcpy(&p_topic->_copy, &p_topic->_copy_size,
+                //p_topic->target, p_topic->target_len);
+            p_topic->target, strlen(p_topic->target));
+        p_topic->target = p_topic->_copy;
+    }
+#else
+    // Nothing to do because source data will be hold until program terminates.
+    // Moreover partial_i is not proper defined.
+#endif
+
+}
 
 // ############## Begin of function with partial file loading
 
@@ -1269,13 +1293,7 @@ int search_read_title_file_partial(
     if( p_chunks->len > 0 ){
 
         // Save latest topic string.
-        buf_string_copy_t *p_topic = &p_s_ws->prev_topic;
-        if( p_topic->target && p_topic->target != p_topic->_copy){
-            charcpy(&p_topic->_copy, &p_topic->_copy_size,
-                    //p_topic->target, p_topic->target_len);
-                    p_topic->target, strlen(p_topic->target));
-            p_topic->target = p_topic->_copy;
-        }
+        _save_latest_topic_string(p_s_ws);
 
         // Clear chunks of previous run.
         int i;
@@ -1826,7 +1844,6 @@ int split_pattern(
     return (pp_cur-array);
 }
 
-
 int get_title_and_topic(
         search_workspace_t *p_s_ws,
         uint32_t id,
@@ -1838,38 +1855,85 @@ int get_title_and_topic(
     size_t iChunk;
     iChunk = title_entry(p_s_ws, id, &p_entry);
 
-    // Limits
-    title_chunks_t *p_chunks = &p_s_ws->chunks;
-#ifdef READ_TITLE_FILE_PARTIAL
-    assert(iChunk == p_chunks->partial_i);
-    //char_buffer_t *p_current_chunk = &p_chunks->bufs[p_chunks->partial_i];
-    char_buffer_t *p_current_chunk = &p_chunks->bufs[iChunk];
-#else
-    char_buffer_t *p_current_chunk = &p_chunks->bufs[iChunk];
-#endif
-    char * const buf_start = p_current_chunk->p;
-    char * const buf_stop = buf_start + p_current_chunk->len;
-
     const char * const title = (const char *)(p_entry+1);
-    assert(title+strlen(title) < buf_stop);
     *p_title = title;
 
-    const char * const topic_candidate = title + p_entry->topic_string_offset;
-    if( topic_candidate < buf_start ){
-        *p_topic = p_s_ws->prev_topic.target;
-        return 2;
-    }else if( topic_candidate < buf_stop){
-        *p_topic = topic_candidate;
-        p_s_ws->prev_topic.target = topic_candidate;
-        //p_s_ws->prev_topic.target_len = strlen(topic_candidate); // Unused
-
-        return p_entry->topic_string_offset<0?1:0;
-    }else{
-        assert(topic_candidate < buf_stop);
-        // Offset to high!
-        *p_topic = NULL;
-        return -1;
-    }
+    return get_topic(p_s_ws, iChunk, p_entry,
+            p_topic);
 
     return 0;
 }
+
+int get_topic(
+        search_workspace_t *p_s_ws,
+        size_t iChunk_of_entry,
+        searchable_strings_prelude_t *p_entry,
+        const char **  p_topic)
+{
+    title_chunks_t *p_chunks = &p_s_ws->chunks;
+
+#ifdef READ_TITLE_FILE_PARTIAL
+    assert(iChunk_of_entry == p_chunks->partial_i);
+#endif
+
+    char_buffer_t *p_current_chunk = &p_chunks->bufs[iChunk_of_entry];
+    char * buf_start = p_current_chunk->p;
+    char * buf_stop = buf_start + p_current_chunk->len;
+
+    const char * const title = (const char *)(p_entry+1);
+    assert(title+strlen(title) < buf_stop);
+
+#ifdef READ_TITLE_FILE_PARTIAL
+    const char * const topic_candidate = title + p_entry->topic_string_offset;
+
+    if( topic_candidate < buf_start ){
+        /* Note: prev_topic.target already holds the pointer
+         * for the next chunk. prev_topic._copy holds the value for this iteration.
+         */
+        //*p_topic = p_s_ws->prev_topic.target;
+        *p_topic = p_s_ws->prev_topic._copy;
+        return 3;
+    }else if( topic_candidate < buf_stop){
+        *p_topic = topic_candidate;
+        if( topic_candidate > p_s_ws->prev_topic.target && 0){
+            // TODO: Remove this Auswahl des Targets nicht hinreichend, da o.B.d.A nicht letzte Gruppe eines Chunks
+            p_s_ws->prev_topic.target = topic_candidate;
+        }
+        //p_s_ws->prev_topic.target_len = strlen(topic_candidate); // Unused
+        return p_entry->topic_string_offset<0?1:0;
+    }
+
+#else
+    int32_t offset = p_entry->topic_string_offset;
+    const char * anchor = title;
+    const char * topic_candidate = anchor + offset;
+    while( topic_candidate < buf_start ){
+
+        if( p_current_chunk <= p_chunks->bufs){
+            // Already in first chunk. Offset to high!
+            assert(topic_candidate < buf_stop);
+            *p_topic = NULL;
+            return -1;
+        }
+
+        // Reduce (negative) offset given by this chunk
+        offset += (anchor - buf_start);
+        // Switch to previous chunk
+        --p_current_chunk;
+        buf_start = p_current_chunk->p;
+        buf_stop = buf_start + p_current_chunk->len;
+        anchor = buf_start + p_current_chunk->len;
+        topic_candidate = anchor + offset;
+    }
+
+    if( topic_candidate < buf_stop){
+        *p_topic = topic_candidate;
+        return p_entry->topic_string_offset<0?1:0;
+    }
+#endif
+    assert(topic_candidate < buf_stop);
+    // Offset to high!
+    *p_topic = NULL;
+    return -1;
+}
+

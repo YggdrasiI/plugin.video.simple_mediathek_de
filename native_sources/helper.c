@@ -245,6 +245,9 @@ size_t transform_search_title(
             case 0x002D: // char '-'
             case 0x005F: // char '_'
             case 0x007C: // char '|'
+#if SPLIT_CHAR != '|'
+            case SPLIT_CHAR:
+#endif
                 // Trim space
                 if( p_cur_out == p_out || *(p_cur_out-1) != ' '){
                     *p_cur_out++ = ' ';

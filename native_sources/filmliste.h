@@ -13,14 +13,6 @@
 #include "brotli.h"
 #endif
 
-/* Convert 'title|topic'-string at indexing time into lower case and
- * remove subset of special characters like -,_,|,\,".
- *
- * Moreover, the original title will added to the title_XXXX.br files
- * which increased its size (currently from 3.3MB to 4.5MB)
- */
-#define NORMALIZED_STRINGS 1
-
 
 /* Current indices of input. (Index 0 is "X"-key of json-dict) */
 #define INDEX_KEY 0
@@ -115,7 +107,7 @@ typedef struct {
      * - Handling of offsets which can not be represended within 16 bits:
      *     Force inserting of topic string.
      * - All entries between 'this' entry and the 'offset entry' share
-     *   the same topic string. Thus at buffer flushing only one string 
+     *   the same topic string. Thus at buffer flushing only one string
      *   had to be cached...
      * */
     int16_t topic_string_offset;

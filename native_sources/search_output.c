@@ -113,7 +113,6 @@ void output_flush(
     }
     while( p < i ){
         // Handle [0, pos_i-1]
-        //
         uint32_t id = p_output->p_ids[p];
         output_fill(p_s_ws, p_output->p_to_print+p, id);
         p = (p+1);
@@ -155,18 +154,8 @@ void output_fill(
     searchable_strings_prelude_t *p_entry;
     size_t iChunk = title_entry(p_s_ws, id, &p_entry);
 
-    title_chunks_t *p_chunks = &p_s_ws->chunks;
-#ifdef READ_TITLE_FILE_PARTIAL 
-    assert(iChunk == p_chunks->partial_i);
-    char_buffer_t *p_current_chunk = &p_chunks->bufs[p_chunks->partial_i];
-#else
-    char_buffer_t *p_current_chunk = &p_chunks->bufs[iChunk];
-#endif
-    char * const buf_start = p_current_chunk->p;
-    char * const buf_stop = buf_start + p_current_chunk->len;
-
     //int title_len = p_entry->length; //followed by \0
-    const char *title, *topic, *topic_candidate;
+    const char *title, *topic;
     uint32_t title_len;
 #if NORMALIZED_STRINGS > 0
     const char *title_norm;
@@ -175,13 +164,10 @@ void output_fill(
     title_norm_len = strlen(title_norm); //followed by \0
     title = title_norm + title_norm_len + 1; // Original title
     title_len = strlen(title);
-
-    topic_candidate = title_norm + p_entry->topic_string_offset;
 #else
     title = (const char *)(p_entry+1);
-    topic_candidate = title + p_entry->topic_string_offset;
 
-    /* Restrict on characters before '|' to cut of 'topic' substring*/
+    /* Restrict on characters before SPLIT_CHAR to cut of 'topic' substring*/
 #ifdef _GNU_SOURCE
     title_len = strchrnul(title, SPLIT_CHAR) - title;
 #else
@@ -195,17 +181,16 @@ void output_fill(
     assert(title_len < -10000U); // Underflow check
 #endif
 
-    // Use cached topic string if value not stored in current buffer.
-    if( topic_candidate < buf_start ){
-        topic = p_s_ws->prev_topic.target;
-    }else if( topic_candidate < buf_stop){
-        topic = topic_candidate;
-    }else{
-        assert(topic_candidate < buf_stop);
-        // Offset to high!
+    if( 0 > get_topic(p_s_ws, iChunk, p_entry, &topic) ){
+        fprintf( stderr,
+                "Error: Unable to evaluate topic string for id=%i, title=%s)\n",
+                id, title);
         topic = NULL;
-    }
-    if( *topic == '\0'){
+
+    }else if( *topic == '\0'){
+        fprintf( stderr,
+                "Warning: Empty topic string for id=%i, title=%s)\n",
+                id, title);
         assert(0);
     }
 
@@ -232,7 +217,8 @@ void output_fill(
     for(retry=0; retry<2; ++retry){
         int len_needed = snprintf(p_out->p, p_out->len,
                 _format, id,
-                topic, title_len, title,
+                topic, // p_entry->topic_string_offset,
+                title_len, title,
                 (uint32_t) absolute_day_begin, absolute_day_str,
                 (uint32_t) p_entry->duration,
                 channel, channel_str,
