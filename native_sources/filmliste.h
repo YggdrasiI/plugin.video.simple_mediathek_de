@@ -150,6 +150,9 @@ typedef struct filmliste_workspace_s {
     // Seek position of topic string MINUS sizeof(start_dur_len)
     // (The adding of sizeof(...) was stripped out.)
     uint32_t prev_topic_seek;
+    // Some caches to avoid mallocs for each element.
+    char_buffer_t _title_cache;
+    char_buffer_t _topic_cache;
 #ifdef COMPRESS_BROTLI
     brotli_encoder_workspace_t brotli_title;
     brotli_encoder_workspace_t brotli_payload;

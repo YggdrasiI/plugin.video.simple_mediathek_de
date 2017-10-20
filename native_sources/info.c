@@ -138,6 +138,7 @@ void _info_print(
 
     // Closing
     dprintf(fd, "\n}");
+    Free(names);
 }
 
 void info_print(

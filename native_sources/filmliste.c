@@ -40,6 +40,8 @@ filmliste_workspace_t filmliste_ws_create(
         -1, // index_fd
         NULL, // index_folder
         {0, NULL, 0, NULL}, 0, // prev_topic and prev_topic_seek
+        {0, 0, NULL}, //_title_cache
+        {0, 0, NULL}, //_topic_cache
 #ifdef COMPRESS_BROTLI
         brotli_encoder_ws_create(BROTLI_COMPRESS_QUALITY),
         brotli_encoder_ws_create(BROTLI_COMPRESS_QUALITY),
@@ -81,9 +83,13 @@ void filmliste_ws_destroy(
     free(p_fl_ws->_buf);
     p_fl_ws->_buf = NULL;
 
-    Free(p_fl_ws->prev_topic._copy);
-    //free(p_fl_ws->tmp);
-    //p_fl_ws->tmp = NULL;
+    if( p_fl_ws->prev_topic._copy != p_fl_ws->_topic_cache.p){ //Avoid double freeing
+        Free(p_fl_ws->prev_topic._copy);
+    }
+    Free(p_fl_ws->_title_cache.p);
+    Free(p_fl_ws->_topic_cache.p);
+
+    //Free(p_fl_ws->tmp);
 
     channels_ws_destroy(&p_fl_ws->channels);
     //index_data_destroy(&p_fl_ws->index);
@@ -419,12 +425,15 @@ void filmliste_handle(
 
 #if NORMALIZED_STRINGS > 0
     // Normalize title and topic string
-    char *title_str_norm = NULL;
-    title_len = transform_search_title(title_str, &title_str_norm);
+    //char *title_str_norm = NULL;
+    //title_len = transform_search_title(title_str, &title_str_norm);
+    title_len = transform_search_title2(title_str, &p_fl_ws->_title_cache);
     if( topic_len > 0 ){
-        p_fl_ws->prev_topic.target_len = transform_search_title(topic_str, &p_fl_ws->prev_topic._copy); // Free+Malloc of _copy
+        //p_fl_ws->prev_topic.target_len = transform_search_title(topic_str, &p_fl_ws->prev_topic._copy); // Free+Malloc of _copy
+        p_fl_ws->prev_topic.target_len = transform_search_title2(topic_str, &p_fl_ws->_topic_cache);
+        p_fl_ws->prev_topic._copy = p_fl_ws->_topic_cache.p;
         p_fl_ws->prev_topic.target = p_fl_ws->prev_topic._copy;
-        p_fl_ws->prev_topic._copy_size = p_fl_ws->prev_topic.target_len; // TODO: Remove above Mallocs
+        p_fl_ws->prev_topic._copy_size = p_fl_ws->prev_topic.target_len;
 
         p_fl_ws->prev_topic_seek = (p_fl_ws->searchable_strings.seek /*+ sizeof(start_dur_len)*/
                 + title_len + 1);
@@ -512,7 +521,7 @@ void filmliste_handle(
 #endif
 #if NORMALIZED_STRINGS > 0
                 "%s%c%s%c%s%c",
-                title_str_norm, SPLIT_CHAR,
+                p_fl_ws->_title_cache.p /*title_str_norm*/, SPLIT_CHAR,
                 topic_str, '\0',
                 //p_fl_ws->prev_topic.target, '\0',
                 title_str, '\0'
@@ -525,7 +534,7 @@ void filmliste_handle(
     }
 
 #if NORMALIZED_STRINGS > 0
-    Free(title_str_norm);
+    //Free(title_str_norm);
     //Free(topic_str_norm);
 #endif
 

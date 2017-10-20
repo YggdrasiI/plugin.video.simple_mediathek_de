@@ -138,7 +138,13 @@ void search_pair_cache(
             sp->buf.p = (char*) realloc((void *)sp->buf.p, sp->buf.len + 1); /* + 1 for '\0' */
         }else{
             free(sp->buf.p);
+            // exccedes the written string in some cases.
             sp->buf.p = (char*) malloc(sp->buf.len + 1); /* + 1 for '\0' */
+            // Made valgrind happy. Utf-8 lib reads 4 words wide, which
+            *((uint32_t*)(sp->buf.p + sp->buf.len - 8)) = 0;
+            *((uint32_t*)(sp->buf.p + sp->buf.len - 4)) = 0;
+            // or
+            //sp->buf.p = (char*) calloc(sp->buf.len + 1, sizeof(char));
         }
     }
 

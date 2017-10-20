@@ -292,6 +292,7 @@ int indexing(
     info_print2(fdout, &fl_ws);
 
     pattern_destroy( &pp_pairs);
+    pattern_destroy( &pp_pairs_header);
     filmliste_ws_destroy(&fl_ws);
 
     free(_buf_in);

@@ -200,23 +200,52 @@ size_t transform_search_title(
         const char *p_in,
         char **pp_out)
 {
-    Free(*pp_out);
+    // Embed pointer into char buffer with length 0
+    // this forces transform_search_title2 to free+allocate
+    // a new buffer for the output.
+    char_buffer_t tmp = {0, 0, *pp_out};
+    size_t len_tmp = transform_search_title2(p_in, &tmp);
 
-    if( p_in == NULL ){
+    if( len_tmp == 0 ){
+        // convert pointer to empty string into NULL
+        free(*pp_out);
         *pp_out = NULL;
+        return 0;
+    }
+
+    *pp_out = tmp.p;
+    assert( len_tmp == tmp.used );
+    return len_tmp;
+}
+
+size_t transform_search_title2(
+        const char *p_in,
+        char_buffer_t *p_buf_out)
+{
+    if( p_in == NULL ){
+        p_buf_out->used = 0;
         return 0;
     }
 
     size_t len_in = strlen(p_in);
     if( len_in == 0 ){
-        *pp_out = NULL;
+        p_buf_out->used = 0;
         return 0;
     }
 
-    /*uint8_t * const*/
-    unsigned char * const p_out =  (unsigned char *) malloc( (1 + len_in) * sizeof(unsigned char) );
+    unsigned char * p_out;  // unsigned!
+    if( len_in > p_buf_out->len ){
+        Free(p_buf_out->p);
+        p_buf_out->used = 0;
+        p_buf_out->len = len_in + 20;
+        p_out =  (unsigned char *) malloc(
+                (1 + p_buf_out->len) * sizeof(unsigned char) );
+        p_buf_out->p = (char *)p_out;
+    }else{
+        p_out = (unsigned char *) p_buf_out->p;
+    }
+
     *(p_out + len_in) = '\0';
-    *pp_out = (char *)p_out;
 
     const char *p_cur_in = p_in; // current char
     unsigned char *p_cur_out = p_out; // current output position
@@ -649,7 +678,8 @@ size_t transform_search_title(
     // close (probably shorten) string
     *p_cur_out = '\0';
 
-    return (p_cur_out - p_out); // = sizeof(p_out)
+    p_buf_out->used = (p_cur_out - p_out);
+    return p_buf_out->used;
 }
 
 char *char_buffer_malloc(

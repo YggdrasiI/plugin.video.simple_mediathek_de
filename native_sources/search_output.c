@@ -160,7 +160,7 @@ void output_fill(
 #if NORMALIZED_STRINGS > 0
     const char *title_norm;
     uint32_t title_norm_len;
-    title_norm = (const char *)(p_entry+1);  // Normalized title + topic string...
+    title_norm = (const char *)(p_entry+1);  // Normalized 'title + topic' string...
     title_norm_len = strlen(title_norm); //followed by \0
     title = title_norm + title_norm_len + 1; // Original title
     title_len = strlen(title);

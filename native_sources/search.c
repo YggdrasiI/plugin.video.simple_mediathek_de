@@ -528,6 +528,7 @@ int _search_compare_title_(
      */
     const char **sub_pat = (const char **)p_pattern->title_sub_pattern;
     while( *sub_pat != NULL ){
+
 #if NORMALIZED_STRINGS > 0
         const char *hit = strstr(string_to_search, *sub_pat);
 #else
@@ -1902,11 +1903,6 @@ int get_topic(
         return 3;
     }else if( topic_candidate < buf_stop){
         *pp_topic = topic_candidate;
-        if( topic_candidate > p_s_ws->prev_topic.target && 0){
-            // TODO: Remove this Auswahl des Targets nicht hinreichend, da o.B.d.A nicht letzte Gruppe eines Chunks
-            p_s_ws->prev_topic.target = topic_candidate;
-        }
-        //p_s_ws->prev_topic.target_len = strlen(topic_candidate); // Unused
         return p_entry->topic_string_offset<0?1:0;
     }
 

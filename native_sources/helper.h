@@ -82,6 +82,16 @@ size_t transform_search_title(
         char **pp_out)
 ;
 
+/* Like transform_search_title, but function just
+ * set the number of used chars downwards for short input(s).
+ * Thus, p_buf_out->p is never returned as NULL.
+ *
+ */
+size_t transform_search_title2(
+        const char *p_in,
+        char_buffer_t *p_buf_out)
+;
+
 #define transform_channel_name transform_search_title
 
 /* Malloc with extra char for '\0' */

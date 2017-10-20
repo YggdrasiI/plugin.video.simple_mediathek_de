@@ -257,4 +257,4 @@ $(FILMLISTE_AKT_JSON): $(DATA_DIR) $(FILMLISTE_AKT_XZ)
 
 clean:
 		rm -f $(ODIR)*/*.o *~ $(PROG_NAME)
-		rm $(TEST_PREFIX)/.test*
+		@test ! -f $(TEST_PREFIX)/.test* || rm $(TEST_PREFIX)/.test*
