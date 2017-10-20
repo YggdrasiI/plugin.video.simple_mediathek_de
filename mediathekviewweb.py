@@ -1,5 +1,5 @@
 from socketIO_client import SocketIO, BaseNamespace
-from datetime import date
+from datetime import datetime
 
 pattern =  {"iduration_dir": 1, "iday": 4, "iduration": 1,
             "title": "Die Anstalt",
@@ -50,14 +50,14 @@ def convert_results(tResult):
         x = {
             "topic": r.get("topic"),
             "title": r.get("title"),
-            # "ibegin": int(r.get("timestamp")), # 0:00 Uhr
-            "ibegin": int(r.get("filmlisteTimestamp")),
+            "ibegin": int(r.get("timestamp")), # or?
+            # "ibegin": int(r.get("filmlisteTimestamp")),
             "iduration": r.get("duration"),
             "channel": r.get("channel").lower(),
             "ichannel": -1,  # Different enummeration
         }
         # Parse ibegin
-        d = date.fromtimestamp(x.get("ibegin", 0))
+        d = datetime.fromtimestamp(x.get("ibegin", 0))
         x["begin"] = d.strftime("%d. %b. %Y %R")
 
         # Add urls in same order as simple_mediathek --payload returns.

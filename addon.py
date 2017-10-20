@@ -167,6 +167,22 @@ class SimpleMediathek:
             if not b_update_changed_flag:
                 self.state.changed = flag_backup
 
+    def is_mvw_outdated(self):
+        ctime_wmv = self.state.get("ilast_mvw_update", -1)
+        now = int(time.time())
+        if (now - ctime_wmv) > 2 * 86400:
+            return True
+        return False
+
+    def update_mvw(self):
+        if self.get_channel_list() is None and b_mvweb:
+            from channel_list import channels
+            self.update_state(channels, True)
+            #xbmcgui.Dialog().notification(
+            #    addon_name, "Init channel list",
+            #    xbmcgui.NOTIFICATION_ERROR, 5000)
+            return True
+
     def update_channel_list(self):
         (exit_code, data) = call_binary(["--info"])
         if exit_code == 0:
@@ -192,7 +208,7 @@ class SimpleMediathek:
         ctime = self.state.get("ilistcreation", -1)
         return (ctime, cstr)
 
-    def is_index_outtated(self):
+    def is_index_outdated(self):
         ctime_index = self.state.get("icreation", -1)
         ctime_list = self.state.get("ilistcreation", -1)
         if ctime_index == -1 or ctime_list == -1:
@@ -213,7 +229,8 @@ class SimpleMediathek:
 
     def get_channel_list(self):
         # Note value is a dict, not a list
-        return self.state.get("channels", {})
+        channels = self.state.get("channels")
+        return channels
 
     def add_to_history(self, search_pattern):
         if b_livestream:
@@ -618,7 +635,7 @@ def is_searchable(pattern):
 def gen_search_categories(mediathek):
     pattern = mediathek.get_current_pattern()
     last_update = mediathek.get_last_update_time()
-    allow_update = mediathek.is_index_outtated()
+    allow_update = mediathek.is_index_outdated()
     if last_update[0] == -1:
         update_str = ""
     else:
@@ -1437,15 +1454,15 @@ with SimpleMediathek() as mediathek:
         #  Top level page of plugin
         search_categories = gen_search_categories(mediathek)
 
-        if mode is None and mediathek.is_index_outtated():
-            # --info call to check if data was externally updated
-            mediathek.update_channel_list()
-            # To omit multiple calls of above line raise time stamp
-            state_diff["icreation"] = int(time.time())
-            # xbmcgui.Dialog().notification(
-            #    addon_name, "Kanalliste aktualisiert %i" %(
-            # len(mediathek.get_channel_list())),
-            #    xbmcgui.NOTIFICATION_INFO, 5000)
+        if mode is None:
+            if b_mvweb and mediathek.is_mvw_outdated():
+                mediathek.update_mvw()
+                state_diff["ilast_mvw_update"] = int(time.time())
+            elif mediathek.is_index_outdated():
+                # --info call to check if data was externally updated
+                mediathek.update_channel_list()
+                # Update creation timestamp to omit multiple updates.
+                state_diff["icreation"] = int(time.time())
 
         listing = []
         for cat in search_categories:

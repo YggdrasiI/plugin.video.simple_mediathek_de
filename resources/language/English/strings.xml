@@ -7,13 +7,13 @@
   <string id="32103">MediathekViewWeb.de</string>
 
   <!-- Settings -->
-  <string id="32040">Video quality</string>
-	<string id="32102">Ask</string>
-	<string id="32103">Highest available</string>
-	<string id="32104">Lowest available</string>
-	<string id="32105">Low</string>
-	<string id="32106">Middle</string>
-	<string id="32107">High</string>
+  <string id="32240">Video quality</string>
+	<string id="32202">Ask</string>
+	<string id="32203">Highest available</string>
+	<string id="32204">Lowest available</string>
+	<string id="32205">Low</string>
+	<string id="32206">Middle</string>
+	<string id="32207">High</string>
 	<string id="32208">Automatic update</string>
 	<string id="32209">Length of history</string>
 	<string id="32210">Update list of files</string>

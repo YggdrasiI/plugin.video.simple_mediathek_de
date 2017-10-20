@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
   <category label="32101">
-		<setting id="use_mediathekviewweb" type="bool" label="32212" default="false"/>
-		<setting id="video_quality" type="enum" label="32040"
-			lvalues="32102|32104|32103|32105|32106|32107" default="0"/>
-		 <setting id="history_length" label="32209" type="number" default="20"/>
+		<setting label="32212" id="use_mediathekviewweb" type="bool" default="false"/>
+		<setting label="32240" id="video_quality" type="enum"
+			lvalues="32202|32204|32203|32205|32206|32207" default="0"/>
+		<setting label="32209" id="history_length" type="number" default="20"/>
 		<setting label="32211" type="action" action="RunScript(plugin.video.simple_mediathek_de, delete_local_data)"/>
   </category>
   <category label="32102">

@@ -28,10 +28,6 @@ addon: clean
 clean:
 	test \! -f ../$(PROJECT).zip || mv ../$(PROJECT).zip ../$(PROJECT).old.zip
 
-
 update:
 	cp *.py $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
-	cp -r resources/ $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/resources/.
-
-update2:
-	cp -r socketIO_client *.py $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
+	cp -r resources/* $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/resources/.

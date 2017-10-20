@@ -7,16 +7,16 @@
   <string id="32103">MediathekViewWeb.de</string>
 
   <!-- Settings -->
-  <string id="32040">Videoqualität</string>
-	<string id="32102">Nachfragen</string>
-	<string id="32103">Beste verfügbare</string>
-	<string id="32104">Geringste verfügbare</string>
-	<string id="32105">Niedrig</string>
-	<string id="32106">Mittel</string>
-	<string id="32107">Hoch</string>
-	<string id="32208">Automatisches Update</string>
-	<string id="32209">Länge der History</string>
-	<string id="32210">Filmliste jetzt im Hintergrund aktualisieren</string>
-	<string id="32211">Alle lokalen Daten des Addons löschen</string>
-	<string id="32212">Suche per MediathekviewWeb.de</string>
+  <string id="32240">Videoqualität</string>
+  <string id="32202">Nachfragen</string>
+  <string id="32203">Beste verfügbare</string>
+  <string id="32204">Geringste verfügbare</string>
+  <string id="32205">Niedrig</string>
+  <string id="32206">Mittel</string>
+  <string id="32207">Hoch</string>
+  <string id="32208">Automatisches Update</string>
+  <string id="32209">Länge der History</string>
+  <string id="32210">Filmliste jetzt im Hintergrund aktualisieren</string>
+  <string id="32211">Alle lokalen Daten des Addons löschen</string>
+  <string id="32212">Suche per MediathekviewWeb.de</string>
 </strings>
