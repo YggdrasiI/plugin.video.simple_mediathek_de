@@ -3,6 +3,8 @@
   <!-- Plugin name -->
   <string id="32000">Deutsche Mediatheken</string>
   <string id="32101">Allgemein</string>
+  <string id="32102">Lokale DB-Suche</string>
+  <string id="32103">MediathekViewWeb.de</string>
 
   <!-- Settings -->
   <string id="32040">Videoqualität</string>
@@ -16,4 +18,5 @@
 	<string id="32209">Länge der History</string>
 	<string id="32210">Filmliste jetzt im Hintergrund aktualisieren</string>
 	<string id="32211">Alle lokalen Daten des Addons löschen</string>
+	<string id="32212">Suche per MediathekviewWeb.de</string>
 </strings>

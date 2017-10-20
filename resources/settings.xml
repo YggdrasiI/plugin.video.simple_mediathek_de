@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
   <category label="32101">
+		<setting id="use_mediathekviewweb" type="bool" label="32212" default="false"/>
 		<setting id="video_quality" type="enum" label="32040"
 			lvalues="32102|32104|32103|32105|32106|32107" default="0"/>
-		<setting label="32210" type="action" action="RunScript(plugin.video.simple_mediathek_de, update_db)"/>
-		<!--<setting label="32210" type="action" action="plugin://plugin.video.simple_mediathek_de?mode=update_db)"/>-->
-		<!--<setting id="automatic_update" type="bool" label="32208" default="false"/>-->
-		 <setting label="32209" type="number" id="history_length" default="20"/>
+		 <setting id="history_length" label="32209" type="number" default="20"/>
 		<setting label="32211" type="action" action="RunScript(plugin.video.simple_mediathek_de, delete_local_data)"/>
+  </category>
+  <category label="32102">
+		<setting label="32210" type="action" action="RunScript(plugin.video.simple_mediathek_de, update_db)"/>
+		<!--<setting id="automatic_update" type="bool" label="32208" default="false"/>-->
+  </category>
+  <category label="32103">
   </category>
 </settings>

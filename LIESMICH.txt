@@ -2,20 +2,28 @@
 
 
 Generelle Informationen:
-  Plugin zum Herunterladen und lokalen Durchsuchen des MediathekView-Datensatzes.
+  Plugin zum Abfragen der öffentlichen deutschen Mediatheken. 
+  Dafür werden entweder einzelne Abfragen an MediathekViewWeb.de gesendet (Variante A)
+  oder der MediathekView-Datensatz komplett heruntergeladen 
+  und lokal durchsucht (Variante B).
+
   Zielstellungen waren 
   • eine zügige Bedienbarkeit per Fernbedienung,
-  • Autarkitizität (Es wird nur der Datensatz benötigt. Restliche Arbeit wird lokal erledigt.)
+  • Autarkizität (Es wird nur der Datensatz benötigt. Restliche Arbeit wird lokal erledigt.)
   • Ein so geringer Ressourcenverbrauch, dass das Programm auch auf dem RaspberryPi 1 
-    genutzt werden kann. 
+    genutzt werden kann. (Die Erstellung des kompletten Indexes dauert dort allerdings 1-2 Minuten.)
 
-  Aufgrund des letzten Punktes werden die Hauptaufgaben des Plugins im Hintergrund durch ein 
-  natives CLI-Programm ausgeführt. (D.h. das Plugin muss im unterschied zu den meisten anderen
-  Kodi-Plugins für das Zielsystem kompiliert werden!)
+  Aufgrund des letzten Punktes werden die Hauptaufgaben (bei Variante B) im Hintergrund
+  durch ein natives CLI-Programm ausgeführt. 
+  D.h. das Plugin muss im Unterschied zu den meisten anderen Kodi-Plugins für 
+  das Zielsystem kompiliert werden!
   Der Speicherverbrauch liegt während des Updates des Datensatzes
   ungefähr bei 25MB (zzgl. Overhead von wget und xz)
 
   Binaries für x86_64 und armv6l (für RPi1 bis RPi3) liegen vorkompiliert dabei.
+
+  Sofern nur die Variante A genutzt werden soll, kann auf das Kompilieren des Plugins
+  verzichtet werden.
 
 
 Abhängigkeiten:

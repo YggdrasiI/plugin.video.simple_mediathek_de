@@ -1,0 +1,22 @@
+Das (einsehbare) Interface unterstützt keine Filterung nach
+A)  Der Dauer einer Sendung
+B) Dem Zeitpunkt einer Sendung
+C) Dem Tag der Ausstrahung.
+
+Dafür extra  aber 
+D) Description
+
+
+D.h. wenn ich es in den Einstellungen auf die Webabfrage umstelle 
+sollten ein paar Menüpunkte ausgeblendet werden und dafür eine Zeile für die
+Beschreibungstexte.
+
+Evtl. Dann noch knöfe für zukünfte und überall ? 
+Ach, das eine immer an, das andere immer aus...
+
+Dafür vllt. noch ne Option um die Sortierfolge zu wählen!
+
+
+Auf die Sender-Namen kann ich nur zugreifen, wenn ich mit 
+der Standardmethode einmal den Index aufgebaut habe :gruebel:
+-> Da bräuchte ich also nen Request für die Channelliste.

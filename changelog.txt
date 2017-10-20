@@ -1,3 +1,8 @@
+v0.4.0 (2017-10-20)
+- Add Livestream entry on main menu.
+- Add Request to MediathekView.de page.
+- Fix several issues on indexing of files.
+
 v0.3.1 (2017-03-29)
 - Reflect changes of input data format in parser.
 

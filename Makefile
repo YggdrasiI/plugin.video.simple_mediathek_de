@@ -30,4 +30,8 @@ clean:
 
 
 update:
-	cp addon.py $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
+	cp *.py $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
+	cp -r resources/ $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/resources/.
+
+update2:
+	cp -r socketIO_client *.py $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
