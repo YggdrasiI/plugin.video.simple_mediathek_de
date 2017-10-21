@@ -1185,10 +1185,12 @@ with SimpleMediathek() as mediathek:
     if mode == u"select_day":
         names = search_ranges_str[u"day"]
         i_sel = mediathek.get_current_pattern().get(u"iday", -1)
+        b_day_range = u"iday_range" in mediathek.get_current_pattern()
         listing = []
         listing_add_list_names(listing, expanded_state, u"iday", names, i_sel)
-        listing_add_calendar_entry(listing, expanded_state, i_sel == len(names))
-        listing_add_remove_entry(listing, mediathek.state, u"iday")
+        listing_add_calendar_entry(listing, expanded_state, b_day_range)
+        listing_add_remove_entry(listing, mediathek.state,
+                                 "iday_range" if b_day_range else u"iday")
         listing_add_back_entry(listing, expanded_state)
         xbmcplugin.addDirectoryItems(addon_handle, listing, len(listing))
         xbmcplugin.endOfDirectory(
