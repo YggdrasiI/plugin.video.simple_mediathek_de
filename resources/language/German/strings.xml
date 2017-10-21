@@ -19,4 +19,7 @@
   <string id="32210">Filmliste jetzt im Hintergrund aktualisieren</string>
   <string id="32211">Alle lokalen Daten des Addons löschen</string>
   <string id="32212">Suche per MediathekviewWeb.de</string>
+  <string id="32213">History-Eintrag bei jeder Suche erstellen</string>
+  <string id="32214">(Debug) Speichere Ausgabe des Binary in /dev/shm/</string>
+  <string id="32215">Erzwinge Ansicht als 'Große Liste'</string>
 </strings>

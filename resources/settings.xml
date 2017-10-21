@@ -4,12 +4,15 @@
 		<setting label="32212" id="use_mediathekviewweb" type="bool" default="false"/>
 		<setting label="32240" id="video_quality" type="enum"
 			lvalues="32202|32204|32203|32205|32206|32207" default="0"/>
+		<setting label="32215" id="force_wide_list" type="bool" default="false"/>
 		<setting label="32209" id="history_length" type="number" default="20"/>
+		<setting label="32213" id="early_history_update" type="bool" default="false"/>
 		<setting label="32211" type="action" action="RunScript(plugin.video.simple_mediathek_de, delete_local_data)"/>
   </category>
   <category label="32102">
 		<setting label="32210" type="action" action="RunScript(plugin.video.simple_mediathek_de, update_db)"/>
-		<!--<setting id="automatic_update" type="bool" label="32208" default="false"/>-->
+		<!--<setting label="32208" id="automatic_update" type="bool" default="false"/>-->
+		<setting label="32214" id="debug_binary" type="bool" default="false"/>
   </category>
   <category label="32103">
   </category>

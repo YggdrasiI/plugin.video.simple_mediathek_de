@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from socketIO_client import SocketIO, BaseNamespace
 from datetime import datetime
 

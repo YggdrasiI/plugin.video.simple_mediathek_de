@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Default list of channels
 # (only required until it is possible to fetch such list from MediathekViewWeb)
 channels = {"channels":
