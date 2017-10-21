@@ -2,11 +2,11 @@
 
 # Default list of channels
 # (only required until it is possible to fetch such list from MediathekViewWeb)
-channels = {"channels":
-            {"11": "orf", "10": "ndr", "13": "rbb", "12": "phoenix",
-             "15": "srf", "14": "sr", "17": "swr", "16": "srf.podcast",
-             "19": "zdf", "18": "wdr", "1": "3sat", "3": "arte.de",
-             "2": "ard", "5": "br", "4": "arte.fr", "7": "hr", "6": "dw",
-             "9": "mdr", "20": "zdf tivi", "8": "kika"
+channels = {u"channels":
+            {u"11": u"orf", u"10": u"ndr", u"13": u"rbb", u"12": u"phoenix",
+             u"15": u"srf", u"14": u"sr", u"17": u"swr", u"16": u"srf.podcast",
+             u"19": u"zdf", u"18": u"wdr", u"1": u"3sat", u"3": u"arte.de",
+             u"2": u"ard", u"5": u"br", u"4": u"arte.fr", u"7": u"hr",
+             u"6": u"dw", u"9": u"mdr", u"20": u"zdf tivi", u"8": u"kika"
              }
             }

@@ -14,6 +14,12 @@ import os.path
 import json
 import subprocess
 
+from __future__ import unicode_literals
+if sys.platform.startswith(u"win"):
+    file function with unicodes
+else:
+    file function with utf-8 encoded strings
+
 import keyboard
 
 # For mediathekviewweb
@@ -52,33 +58,33 @@ duration_separate_minmax = False
 directory_cache = False
 
 max_num_entries_per_page = 15
-SKINS_LIST = ['skin.confluence', 'skin.estuary', 'skin.estuary.480']
-SKINS_WIDE_LIST = ['skin.confluence.480']
+SKINS_LIST = [u"skin.confluenceu", u"skin.estuary", u"skin.estuary.480"]
+SKINS_WIDE_LIST = [u"skin.confluence.480"]
 
 base_url = sys.argv[0]
 
 # (Extra empty entries for list[-1]-access )
 search_ranges_str = {
-    "duration": ["10 min", "30 min", "60 min", "1,5 h",
-                 "2 h", ""],
-    "direction": [u"Höchstens", u"Mindestens"],
-    "direction_b": [u"Suche auf Maximallänge umstellen...",
-                    u"Suche auf Mindestlänge umstellen..."],
-    "time": ["0-10 Uhr", "10-16 Uhr", "16-20 Uhr", "20-24 Uhr", ""],
-    "day": ["Heute und gestern", "2 Tage", "5 Tage", "7 Tage", "14 Tage",
-            ""],  # "Kalender", ""],
-    "day_range": ["Kalender"],
-    "channel": ["Kanal %s"],
+    u"duration": [u"10 min", u"30 min", u"60 min", u"1,5 h",
+                  u"2 h", u""],
+    u"direction": [u"Höchstens", u"Mindestens"],
+    u"direction_b": [u"Suche auf Maximallänge umstellen...",
+                     u"Suche auf Mindestlänge umstellen..."],
+    u"time": [u"0-10 Uhr", u"10-16 Uhr", u"16-20 Uhr", u"20-24 Uhr", u""],
+    u"day": [u"Heute und gestern", u"2 Tage", u"5 Tage", u"7 Tage", u"14 Tage",
+             u""],  # u"Kalender", u""],
+    u"day_range": [u"Kalender"],
+    u"channel": [u"Kanal %s"],
 }
 """
 Matching arguments for the search program.
-search_ranges_str["duration"][i] corresponends with
-[search_range["duration"][i], search_range["duration"][i+1] - 1]
+search_ranges_str[u"duration"][i] corresponends with
+[search_range[u"duration"][i], search_range[u"duration"][i+1] - 1]
 """
 search_ranges = {
-    "duration": [0, 600, 1800, 3600, 5400, 7200, -1],
-    "time": [0, 36000, 57600, 72000, 86400, -1],
-    "day": [0, 1, 2, 5, 7, 14, -1, ],  # -1],
+    u"duration": [0, 600, 1800, 3600, 5400, 7200, -1],
+    u"time": [0, 36000, 57600, 72000, 86400, -1],
+    u"day": [0, 1, 2, 5, 7, 14, -1, ],  # -1],
 }
 
 
@@ -147,7 +153,7 @@ class SimpleMediathek:
         else:
             self.state.update(read_state_file())
 
-        if "current_pattern" not in self.state:
+        if u"current_pattern" not in self.state:
             self.add_default_pattern()
         self.state.changed = False
 
@@ -163,16 +169,16 @@ class SimpleMediathek:
             write_state_file(self.state)
 
     def add_default_pattern(self):
-        if "current_pattern" not in self.state:
-            self.update_state({"current_pattern": {}}, False)
+        if u"current_pattern" not in self.state:
+            self.update_state({u"current_pattern": {}}, False)
 
     def get_current_pattern(self):
-        return self.state.get("current_pattern", {})
+        return self.state.get(u"current_pattern", {})
 
     def get_livestream_pattern(self):
-        return {"title": "Livestream", "args": [
-            "--durationMax", "0",
-            "--beginMax", "7260",  # 1. Jan 1970, 1 Uhr, Winterzeit.
+        return {u"title": u"Livestream", u"args": [
+            u"--durationMax", u"0",
+            u"--beginMax", u"7260",  # 1. Jan 1970, 1 Uhr, Winterzeit.
         ]}
 
     def update_state(self, changes, b_update_changed_flag=False):
@@ -187,23 +193,23 @@ class SimpleMediathek:
             expanded_state.update(changes)
 
     def is_mvw_outdated(self):
-        ctime_wmv = self.state.get("ilast_mvw_update", -1)
+        ctime_wmv = self.state.get(u"ilast_mvw_update", -1)
         now = int(time.time())
         if (now - ctime_wmv) > 2 * 86400:
             return True
         return False
 
     def update_mvw(self):
-        if 0 == len(self.get_channel_list())  and b_mvweb:
+        if 0 == len(self.get_channel_list()) and b_mvweb:
             from channel_list import channels
             self.update_state(channels, True)
-            #xbmcgui.Dialog().notification(
-            #    addon_name, "Init channel list",
+            # xbmcgui.Dialog().notification(
+            #    addon_name, u"Init channel list",
             #    xbmcgui.NOTIFICATION_INFO, 5000)
             return True
 
     def update_channel_list(self):
-        (exit_code, data) = call_binary(["--info"])
+        (exit_code, data) = call_binary([u"--info"])
         if exit_code == 0:
             try:
                 js = json.loads(data)
@@ -211,7 +217,7 @@ class SimpleMediathek:
                 # Note: Above line could updates more keys
                 # as just channels. Alternative:
                 # self.update_state(
-                #    {"channels": js.get("channels", [])}, False)
+                #    {u"channels": js.get(u"channels", [])}, False)
             except:
                 # On error or without initial update
                 pass
@@ -220,13 +226,13 @@ class SimpleMediathek:
         return False
 
     def get_last_update_time(self):
-        cstr = self.state.get("listcreation", "")
-        ctime = self.state.get("ilistcreation", -1)
+        cstr = self.state.get(u"listcreation", u"")
+        ctime = self.state.get(u"ilistcreation", -1)
         return (ctime, cstr)
 
     def is_index_outdated(self):
-        ctime_index = self.state.get("icreation", -1)
-        ctime_list = self.state.get("ilistcreation", -1)
+        ctime_index = self.state.get(u"icreation", -1)
+        ctime_list = self.state.get(u"ilistcreation", -1)
         if ctime_index == -1 or ctime_list == -1:
             return True
         now = int(time.time())
@@ -237,7 +243,7 @@ class SimpleMediathek:
         return False
 
     def try_diff_update(self):
-        ctime_list = self.state.get("ilistcreation", -1)
+        ctime_list = self.state.get(u"ilistcreation", -1)
         now = int(time.time())
         if (now - ctime_list) < 86400:
             return True
@@ -245,13 +251,13 @@ class SimpleMediathek:
 
     def get_channel_list(self):
         # Note value is a dict, not a list
-        return self.state.get("channels", {})
+        return self.state.get(u"channels", {})
 
     def add_to_history(self, search_pattern):
         if b_livestream:
             return
-        hist = self.state.setdefault("history", [])
-        self.MAX_HIST_LEN = int(addon.getSetting("history_length"))
+        hist = self.state.setdefault(u"history", [])
+        self.MAX_HIST_LEN = int(addon.getSetting(u"history_length"))
         # Remove previous position
         try:
             hist.remove(search_pattern)
@@ -264,62 +270,62 @@ class SimpleMediathek:
         self.state.set_changed()
 
     def get_history(self):
-        # if "history" not in self.state:
-        #     self.update_state({"history": []}, False)
-        return self.state.get("history", [])
+        # if u"history" not in self.state:
+        #     self.update_state({u"history": []}, False)
+        return self.state.get(u"history", [])
 
     def get_search_results(self):
         # Available after search, only.
         # Note: Could be outdated
-        return self.state.get("latest_search", {})
+        return self.state.get(u"latest_search", {})
 
     def get_pattern_title(self, pattern):
-        return pattern.get("title", "")
+        return pattern.get(u"title", u"")
 
     def get_pattern_desc(self, pattern):
-        return pattern.get("description", "")
+        return pattern.get(u"description", u"")
 
     def get_pattern_date(self, pattern):
-        if "iday_range" in pattern:
-            days = pattern["iday_range"]
+        if u"iday_range" in pattern:
+            days = pattern[u"iday_range"]
             date0 = datetime.date.fromtimestamp(min(days))
             date1 = datetime.date.fromtimestamp(max(days))
             if date1 != date0:
                 day_range = u"%s–%s" % (
-                    date0.strftime("%d.%b"),
-                    date1.strftime("%d.%b"),
+                    date0.strftime(u"%d.%b"),
+                    date1.strftime(u"%d.%b"),
                 )
             else:
-                day_range = u"%s" % (date0.strftime("%d.%b"),)
+                day_range = u"%s" % (date0.strftime(u"%d.%b"),)
 
             return day_range
 
-        return search_ranges_str["day"][pattern.get("iday", -1)]
+        return search_ranges_str[u"day"][pattern.get(u"iday", -1)]
 
     def get_pattern_time(self, pattern):
-        return search_ranges_str["time"][pattern.get("itime", -1)]
+        return search_ranges_str[u"time"][pattern.get(u"itime", -1)]
 
     def get_pattern_duration(self, pattern):
         s_duration = search_ranges_str[
-            "duration"][pattern.get("iduration", -1)]
+            u"duration"][pattern.get(u"iduration", -1)]
         s_direction = search_ranges_str[
-            "direction"][pattern.get("iduration_dir", 0)]
+            u"direction"][pattern.get(u"iduration_dir", 0)]
         if len(s_duration) == 0:
-            return ""
+            return u""
 
         return u"%s %s" % (s_direction, s_duration)
 
     def get_pattern_channel(self, pattern):
-        c = pattern.get("channel", None)  # str, not int
-        channels = self.state.get("channels", {})
+        c = pattern.get(u"channel", None)  # str, not int
+        channels = self.state.get(u"channels", {})
         if c in channels.viewvalues():
             return str(c)
         else:
-            return ""
-        # return channels.get(pattern.get("ichannel", -1), "").upper()
+            return u""
+        # return channels.get(pattern.get(u"ichannel", -1), u"").upper()
 
     def get_channel_number(self, channel_name):
-        channels = self.state.get("channels", {})
+        channels = self.state.get(u"channels", {})
         for (k, v) in channels.viewitems():
             if v == channel_name:
                 return int(k)
@@ -328,7 +334,7 @@ class SimpleMediathek:
     def get_channel_index(self, channel_name):
         # Just differs from get_channel_number
         # if channels_dict.viewkeys() != [1, len(channel_dict)]
-        channels = self.state.get("channels", {})
+        channels = self.state.get(u"channels", {})
         try:
             return int(channels.viewvalues().index(channel_name))
         except ValueError:
@@ -342,26 +348,26 @@ class SimpleMediathek:
         if b_mvweb:
             desc = self.get_pattern_desc(pattern)
             s = u"%s%s%s" % (
-                (title + " | ") if len(title) else "",
-                (desc + " | ") if len(desc) else "",
-                (u' (%s)' % (channel)) if len(channel) else "",
+                (title + u" | ") if len(title) else u"",
+                (desc + u" | ") if len(desc) else u"",
+                (u" (%s)" % (channel)) if len(channel) else u"",
             )
         else:
             sday = self.get_pattern_date(pattern)
             sduration = self.get_pattern_duration(pattern)
             stime = self.get_pattern_time(pattern)
-            s = ("" + str(type(title)) +
+            s = (u"" + str(type(title)) +
                  str(type(sday)) +
                  str(type(stime)) +
                  str(type(sduration)) +
                  str(type(channel))
                  )
             s = u"%s%s%s%s%s" % (
-                (title + " | ") if len(title) else "",
-                (sday + " | ") if len(sday) else "",
-                (stime + ", ") if len(stime) else "",
-                (sduration + " ") if len(sduration) else "",
-                (u' (%s)' % (channel,)) if len(channel) else "",
+                (title + u" | ") if len(title) else u"",
+                (sday + u" | ") if len(sday) else u"",
+                (stime + u", ") if len(stime) else u"",
+                (sduration + u" ") if len(sduration) else u"",
+                (u" (%s)" % (channel,)) if len(channel) else u"",
             )
 
         return s
@@ -370,70 +376,70 @@ class SimpleMediathek:
         if pattern is None:
             pattern = self.get_current_pattern()
 
-        largs = ["--search"]
-        if len(pattern.get("title", "")) > 0:
-            largs.append("--title")
-            largs.append("%s" % (pattern["title"],))
+        largs = [u"--search"]
+        if len(pattern.get(u"title", u"")) > 0:
+            largs.append(u"--title")
+            largs.append(u"%s" % (pattern[u"title"],))
 
         chan_name = self.get_pattern_channel(pattern)
         if chan_name:
-            largs.append("-C")
-            largs.append("%s" % (chan_name,))
+            largs.append(u"-C")
+            largs.append(u"%s" % (chan_name,))
 
-        if pattern.get("iday_range"):
-            days = pattern.get("iday_range")
+        if pattern.get(u"iday_range"):
+            days = pattern.get(u"iday_range")
             date0 = datetime.date.fromtimestamp(min(days))
             date1 = datetime.date.fromtimestamp(max(days))
             today = datetime.date.today()
-            largs.append("--dayMin")
-            largs.append("%i" % ((today-date0).days,))
-            largs.append("--dayMax")
-            largs.append("%i" % ((today-date1).days,))
-        elif pattern.get("iday", -1) > -1:
+            largs.append(u"--dayMin")
+            largs.append(u"%i" % ((today-date0).days,))
+            largs.append(u"--dayMax")
+            largs.append(u"%i" % ((today-date1).days,))
+        elif pattern.get(u"iday", -1) > -1:
             # Here, iday is index of day number
-            largs.append("--dayMax")
-            largs.append("%i" % (search_ranges["day"][pattern["iday"]+1],))
+            largs.append(u"--dayMax")
+            largs.append(u"%i" % (search_ranges[u"day"][pattern[u"iday"]+1],))
 
-        if pattern.get("iduration", -1) > -1:
-            d = pattern.get("iduration", -1)
+        if pattern.get(u"iduration", -1) > -1:
+            d = pattern.get(u"iduration", -1)
             """
-            d0 = search_ranges["duration"][d]
-            d1 = search_ranges["duration"][d+1]-1
+            d0 = search_ranges[u"duration"][d]
+            d1 = search_ranges[u"duration"][d+1]-1
             """
-            d_dir = pattern.get("iduration_dir", 0)
+            d_dir = pattern.get(u"iduration_dir", 0)
             if d_dir:
                 # [X-1, infty)
-                d0 = search_ranges["duration"][d+1]-1
-                d1 = search_ranges["duration"][-2]
+                d0 = search_ranges[u"duration"][d+1]-1
+                d1 = search_ranges[u"duration"][-2]
             else:
                 # [0, X]
-                d0 = search_ranges["duration"][0]
-                d1 = search_ranges["duration"][d+1]
+                d0 = search_ranges[u"duration"][0]
+                d1 = search_ranges[u"duration"][d+1]
 
-            largs.append("--durationMin")
-            largs.append("%i" % (d0,))
-            largs.append("--durationMax")
-            largs.append("%i" % (d1,))
+            largs.append(u"--durationMin")
+            largs.append(u"%i" % (d0,))
+            largs.append(u"--durationMax")
+            largs.append(u"%i" % (d1,))
 
-        if pattern.get("itime", -1) > -1:
-            d = pattern.get("itime", -1)
-            d0 = search_ranges["time"][d]
-            d1 = search_ranges["time"][d+1]
-            largs.append("--beginMin")
-            largs.append("%i" % (d0,))
-            largs.append("--beginMax")
-            largs.append("%i" % (d1,))
+        if pattern.get(u"itime", -1) > -1:
+            d = pattern.get(u"itime", -1)
+            d0 = search_ranges[u"time"][d]
+            d1 = search_ranges[u"time"][d+1]
+            largs.append(u"--beginMin")
+            largs.append(u"%i" % (d0,))
+            largs.append(u"--beginMax")
+            largs.append(u"%i" % (d1,))
 
-        for other_arg in pattern.get("args", []):
+        for other_arg in pattern.get(u"args", []):
             largs.append(other_arg)
 
         return largs
 
     def update_db(self, bForceFullUpdate=False):
-        largs = ["update"]
+        largs = [u"update"]
         diff = mediathek.try_diff_update() and not bForceFullUpdate
         if diff:
-            largs.append("diff")
+            largs.append(u"diff")
 
         starttime = datetime.datetime.today()
         (exit_code, data) = call_binary(largs)
@@ -462,13 +468,13 @@ def store_volatile_state(state):
     s_state = json.dumps(state)
     wirts_id = 10025  # WINDOW_VIDEO_NAV, xbmcgui.getCurrentWindowId()
     wirt = xbmcgui.Window(wirts_id)
-    wirt.setProperty("simple_mediathek_de_state", s_state)
+    wirt.setProperty(u"simple_mediathek_de_state", s_state)
 
 
 def load_volatile_state():
     wirts_id = 10025  # WINDOW_VIDEO_NAV, xbmcgui.getCurrentWindowId()
     wirt = xbmcgui.Window(wirts_id)
-    s_state = str(wirt.getProperty("simple_mediathek_de_state"))
+    s_state = str(wirt.getProperty(u"simple_mediathek_de_state"))
     if len(s_state) < 2:
         return {}
     return json.loads(s_state)
@@ -476,16 +482,16 @@ def load_volatile_state():
 
 def build_url(query, state=None):
     if save_state_in_url and state:
-        query.update({"state": state})
+        query.update({u"state": state})
 
-    query["prev_mode"] = str(mode)
-    sj = {"j": json.dumps(query)}  # easier to decode
-    return base_url + "?" + urllib.urlencode(sj)
+    query[u"prev_mode"] = str(mode)
+    sj = {u"j": json.dumps(query)}  # easier to decode
+    return base_url + u"?" + urllib.urlencode(sj)
 
 
 def unpack_url(squery):
     dsj = urlparse.parse_qs(squery)
-    sj = dsj.get("j", ["{}"])[0]
+    sj = dsj.get(u"j", [u"{}"])[0]
     return json.loads(sj)
 
 
@@ -494,7 +500,7 @@ def create_addon_data_folder(path):
         if not os.path.isdir(path):
             os.mkdir(path)
     except OSError:
-        err = 'Can\'t create folder for addon data.'
+        err = u"Can't create folder for addon data."
         xbmcgui.Dialog().notification(
             addon_name, err,
             xbmcgui.NOTIFICATION_ERROR, 5000)
@@ -504,8 +510,8 @@ def get_history_file_path():
     """ Return (path, filename) """
     # .kodi/userdata/addon_data/[addon name]
     path = xbmc.translatePath(
-        addon.getAddonInfo("profile")).decode("utf-8")
-    name = "search_history.json"
+        addon.getAddonInfo(u"profile")).decode('utf-8')
+    name = u"search_history.json"
 
     create_addon_data_folder(path)
     return (path, name)
@@ -535,7 +541,7 @@ def write_state_file(state):
         json.dump(state, fout)
         fout.close()
         # xbmcgui.Dialog().notification(
-        #    addon_name, "Datei geschrieben", xbmcgui.NOTIFICATION_INFO)
+        #    addon_name, u"Datei geschrieben", xbmcgui.NOTIFICATION_INFO)
     except IOError as e:
         raise e
         return False
@@ -548,11 +554,11 @@ def call_binary(largs):
 
     # Add folder for results
     (path, name) = get_history_file_path()
-    largs.append("--folder")
+    largs.append(u"--folder")
     largs.append(path)
 
-    path = addon.getAddonInfo("path").decode("utf-8")
-    script = os.path.join(path, "root", "bin", "simple_mediathek")
+    path = addon.getAddonInfo(u"path").decode('utf-8')
+    script = os.path.join(path, u"root", u"bin", u"simple_mediathek")
     largs.insert(0, script)
 
     # Convert args into unicode strings
@@ -563,9 +569,9 @@ def call_binary(largs):
             largs_uni.append(l)
         else:
             try:
-                largs_uni.append(l.decode("utf-8"))
+                largs_uni.append(l.decode('utf-8'))
             except UnicodeDecodeError:
-                largs_uni.append(l.decode("latin1"))
+                largs_uni.append(l.decode(u"latin1"))
     largs = largs_uni
 
     try:
@@ -583,12 +589,12 @@ def call_binary(largs):
         str_stdout = str(stdout)
 
         # Debug, store stderr stuff
-        if 'true' == addon.getSetting("debug_binary"):
+        if u"true" == addon.getSetting(u"debug_binary"):
             import random
             x = int(10000*random.random())
-            fout = file("/dev/shm/addon.stderr.%i" % (x,), "w")
-            fout.write(str(stderr))  # .encode("utf-8"))
-            fout.write(str(stdout))  # .encode("utf-8"))
+            fout = file(u"/dev/shm/addon.stderr.%i" % (x,), "w")
+            fout.write(str(stderr))  # .encode('utf-8'))
+            fout.write(str(stdout))  # .encode('utf-8'))
             fout.close()
 
         ret = p.wait()
@@ -597,7 +603,7 @@ def call_binary(largs):
     except ValueError:
         pass
 
-    return (-1, "")
+    return (-1, u"")
 
 
 def call_binary_v1(largs):
@@ -607,49 +613,49 @@ def call_binary_v1(largs):
 
     # Add folder for results
     (path, name) = get_history_file_path()
-    largs.append("--folder")
+    largs.append(u"--folder")
     largs.append(path)
 
-    path = addon.getAddonInfo("path").decode("utf-8")
+    path = addon.getAddonInfo(u"path").decode('utf-8')
     script = os.path.join(path, "root", "bin", "simple_mediathek")
     largs.insert(0, script)
     try:
-        (c_stdin, c_stdout, c_stderr) = os.popen3(" ".join(largs), "r")
+        (c_stdin, c_stdout, c_stderr) = os.popen3(str(" ".join(largs)), "r")
         out = c_stdout.read()
         c_stdin.close()
         c_stdout.close()
         c_stderr.close()
 
-        return (0, out)
+        return (0, out.decode('utf-8'))  # Or ascii?
     except ValueError:
         pass
 
-    return (-1, "")
+    return (-1, u"")
 
 
 def check_addon_status():
     # Made bash script executable
     # (After fresh addon installation in Krypthon 17.1 required.)
     if not b_mvweb:
-        path = addon.getAddonInfo("path").decode("utf-8")
+        path = addon.getAddonInfo(u"path").decode('utf-8')
         binary_setup(path)
 
 
 def is_searchable(pattern):
     i_crit_used = 0
-    if len(pattern.get("title", "")) > 0:
+    if len(pattern.get(u"title", u"")) > 0:
         i_crit_used += 1
 
-    if len(pattern.get("channel", "")) > 0:
+    if len(pattern.get(u"channel", u"")) > 0:
         i_crit_used += 1
 
-    if pattern.get("iduration", -1) > -1:
+    if pattern.get(u"iduration", -1) > -1:
         i_crit_used += 1
 
-    if (pattern.get("iday_range") or pattern.get("iday", -1) > -1):
+    if (pattern.get(u"iday_range") or pattern.get(u"iday", -1) > -1):
         i_crit_used += 1
 
-    if pattern.get("ibegin", -1) > -1:
+    if pattern.get(u"ibegin", -1) > -1:
         i_crit_used += 1
 
     return (i_crit_used > 0)
@@ -660,84 +666,84 @@ def gen_search_categories(mediathek):
     last_update = mediathek.get_last_update_time()
     allow_update = mediathek.is_index_outdated()
     if last_update[0] == -1:
-        update_str = ""
+        update_str = u""
     else:
-        update_str = "%s %s %s" % (
-            "| Stand", last_update[1], ("" if allow_update else ""))
+        update_str = u"%s %s %s" % (
+            u"| Stand", last_update[1], (u"" if allow_update else u""))
 
     categories = []
-    categories.append({"name": "Sender",
-                       "selection": mediathek.get_pattern_channel(
+    categories.append({u"name": u"Sender",
+                       u"selection": mediathek.get_pattern_channel(
                            pattern).upper(),
-                       "mode": "select_channel",
-                       # "thumbnail": item.findtext("thumbnail"),
-                       # "fanart": item.findtext("fanart"),
+                       u"mode": u"select_channel",
+                       # u"thumbnail": item.findtext(u"thumbnail"),
+                       # u"fanart": item.findtext(u"fanart"),
                        })
 
-    categories.append({"name": "Titel/Thema",
-                       "selection": mediathek.get_pattern_title(pattern),
-                       "mode": "select_title",
-                       "id": expanded_state.get("input_request_id", 0) + 1
+    categories.append({u"name": u"Titel/Thema",
+                       u"selection": mediathek.get_pattern_title(pattern),
+                       u"mode": u"select_title",
+                       u"id": expanded_state.get(u"input_request_id", 0) + 1
                        })
     if not b_mvweb:
-        categories.append({"name": "Datum",
-                           "selection": mediathek.get_pattern_date(pattern),
-                           "mode": "select_day",
+        categories.append({u"name": u"Datum",
+                           u"selection": mediathek.get_pattern_date(pattern),
+                           u"mode": u"select_day",
                            })
-        categories.append({"name": "Uhrzeit",
-                           "selection": mediathek.get_pattern_time(pattern),
-                           "mode": "select_time",
+        categories.append({u"name": u"Uhrzeit",
+                           u"selection": mediathek.get_pattern_time(pattern),
+                           u"mode": u"select_time",
                            })
         if duration_separate_minmax:
-            categories.append({"name": "Dauer",
-                               "selection":
+            categories.append({u"name": u"Dauer",
+                               u"selection":
                                mediathek.get_pattern_duration(pattern),
-                               "mode": "select_duration_dir",
+                               u"mode": u"select_duration_dir",
                                })
         else:
-            categories.append({"name": "Dauer",
-                               "selection":
+            categories.append({u"name": u"Dauer",
+                               u"selection":
                                mediathek.get_pattern_duration(pattern),
-                               "mode": "select_duration",
+                               u"mode": u"select_duration",
                                })
     else:
-        categories.append({"name": "Beschreibung",
-                           "selection": mediathek.get_pattern_desc(pattern),
-                           "mode": "select_desc",
-                           "id": expanded_state.get("input_request_id", 0) + 1
+        categories.append({u"name": u"Beschreibung",
+                           u"selection": mediathek.get_pattern_desc(pattern),
+                           u"mode": u"select_desc",
+                           u"id": expanded_state.get(u"input_request_id", 0) + 1
                            })
 
-    categories.append({"name": "Suchmuster leeren",
-                       "selection": "",
-                       "mode": "clear_pattern",
+    categories.append({u"name": u"Suchmuster leeren",
+                       u"selection": u"",
+                       u"mode": u"clear_pattern",
                        })
-#    categories.append({"name": "Suchmuster speichern",
-#                       "selection": "",
-#                       "mode": "main",
+#    categories.append({u"name": u"Suchmuster speichern",
+#                       u"selection": u"",
+#                       u"mode": u"main",
 #                       })
     if not b_mvweb:
-        categories.append({"name": "Filmliste aktualisieren",
-                        "selection": update_str,
-                        "mode": "update_db_over_gui",
-                        # "IsPlayable": allow_update,
-                        })
-    categories.append({"name": "Vorherige Suchen",
-                       "selection": "",
-                       "mode": "show_history",
+        categories.append({u"name": u"Filmliste aktualisieren",
+                           u"selection": update_str,
+                           u"mode": u"update_db_over_gui",
+                           # u"IsPlayable": allow_update,
+                           })
+    categories.append({u"name": u"Vorherige Suchen",
+                       u"selection": u"",
+                       u"mode": u"show_history",
                        })
 
     return categories
 
 
 def listing_add_list_names(listing, state, item, names, i_selected=-1):
-    for i in xrange(len(names)-1):  # Skip "" at list end
-        url = build_url({"mode": "update_pattern",
-                         "item": item, "value": i}, state)
-        li = xbmcgui.ListItem(names[i], iconImage="DefaultFolder.png")
-        li.setProperty("IsPlayable", "true")
+    for i in xrange(len(names)-1):  # Skip u"" at list end
+        url = build_url({u"mode": u"update_pattern",
+                         u"item": item, u"value": i}, state)
+        li = xbmcgui.ListItem(names[i], iconImage=u"DefaultFolder.png")
+        li.setProperty(u"IsPlayable", u"true")
         is_folder = True
         if i == i_selected:
-            li.setLabel2("(selected)")
+            li.setLabel2(u"(selected)")
             li.select(True)
         listing.append((url, li, is_folder))
 
@@ -756,52 +762,52 @@ def listing_add_dict_names(listing, state, item, names, v_selected=None):
     # for (k, name) in names.viewitems():
     for k in keys:
         name = names[k]
-        title = "%s %s" % (k, name.upper())
-        if name == "":
+        title = u"%s %s" % (k, name.upper())
+        if name == u"":
             continue
-        url = build_url({"mode": "update_pattern",
-                         "item": item, "value": name}, state)
-        li = xbmcgui.ListItem(title, iconImage="DefaultFolder.png")
-        li.setProperty("IsPlayable", "true")
+        url = build_url({u"mode": u"update_pattern",
+                         u"item": item, u"value": name}, state)
+        li = xbmcgui.ListItem(title, iconImage=u"DefaultFolder.png")
+        li.setProperty(u"IsPlayable", u"true")
         is_folder = True
         if name == v_selected:
-            li.setLabel2("(selected)")
+            li.setLabel2(u"(selected)")
             li.select(True)
         listing.append((url, li, is_folder))
 
 
 def listing_add_min_max_entries(listing, state, mode,  i_selected=-1):
     for i in [0, 1]:
-        name = search_ranges_str["direction"][i]
-        url = build_url({"mode": mode, "dir": i}, state)
-        li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-        li.setProperty("IsPlayable", "true")
+        name = search_ranges_str[u"direction"][i]
+        url = build_url({u"mode": mode, u"dir": i}, state)
+        li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+        li.setProperty(u"IsPlayable", u"true")
         is_folder = True
         if i_selected == i:
-            li.setLabel2("(selected)")
+            li.setLabel2(u"(selected)")
             li.select(True)
         listing.append((url, li, is_folder))
 
 
 def listing_direction_toggle(listing, state, mode):
-    i_other = 1 - mediathek.get_current_pattern().get("iduration_dir", 0)
-    other_dir_name = search_ranges_str["direction_b"][i_other]
-    url = build_url({"mode": mode, "dir": i_other}, state)
-    li = xbmcgui.ListItem(other_dir_name, iconImage="DefaultFolder.png")
-    li.setProperty("IsPlayable", "true")
+    i_other = 1 - mediathek.get_current_pattern().get(u"iduration_dir", 0)
+    other_dir_name = search_ranges_str[u"direction_b"][i_other]
+    url = build_url({u"mode": mode, u"dir": i_other}, state)
+    li = xbmcgui.ListItem(other_dir_name, iconImage=u"DefaultFolder.png")
+    li.setProperty(u"IsPlayable", u"true")
     is_folder = True
     listing.append((url, li, is_folder))
 
 
 def listing_add_calendar_entry(listing, state, b_selected=False):
-    name = search_ranges_str["day_range"][0]
-    url = build_url({"mode": "select_calendar"}, state)
-    # "item": "iday_range", "value": -1})
-    li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-    li.setProperty("IsPlayable", "true")
+    name = search_ranges_str[u"day_range"][0]
+    url = build_url({u"mode": u"select_calendar"}, state)
+    # u"item": u"iday_range", u"value": -1})
+    li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+    li.setProperty(u"IsPlayable", u"true")
     is_folder = True
     if b_selected:
-        li.setLabel2("(selected)")
+        li.setLabel2(u"(selected)")
         li.select(True)
     listing.append((url, li, is_folder))
 
@@ -810,32 +816,32 @@ def listing_add_calendar_entry(listing, state, b_selected=False):
 def listing_add_history(listing, state):
     history = mediathek.get_history()
     for h in history:
-        name = h.get("name", mediathek.sprint_search_pattern(h))
-        url = build_url({"mode": "select_history",
-                         "pattern": h}, state)
-        li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-        li.setProperty("IsPlayable", "true")
+        name = h.get(u"name", mediathek.sprint_search_pattern(h))
+        url = build_url({u"mode": u"select_history",
+                         u"pattern": h}, state)
+        li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+        li.setProperty(u"IsPlayable", u"true")
         is_folder = True
         listing.append((url, li, is_folder))
 
 
 def listing_add_remove_entry(listing, state, item):
-    if item not in state.get("current_pattern", {}):
+    if item not in state.get(u"current_pattern", {}):
         return
-    name = "Suchkriterum entfernen"
-    url = build_url({"mode": "update_pattern",
-                     "item": item}, state)
-    li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-    li.setProperty("IsPlayable", "true")
+    name = u"Suchkriterum entfernen"
+    url = build_url({u"mode": u"update_pattern",
+                     u"item": item}, state)
+    li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+    li.setProperty(u"IsPlayable", u"true")
     is_folder = True
     listing.append((url, li, is_folder))
 
 
 def listing_add_back_entry(listing, state):
-    name = "%-20s" % ("Zurück",)
-    url = build_url({"mode": "main"}, state)
-    li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-    li.setProperty("IsPlayable", "true")
+    name = u"%-20s" % (u"Zurück",)
+    url = build_url({u"mode": u"main"}, state)
+    li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+    li.setProperty(u"IsPlayable", u"true")
     is_folder = True
     listing.append((url, li, is_folder))
 
@@ -843,17 +849,17 @@ def listing_add_back_entry(listing, state):
 def listing_add_search(listing, mediathek, state):
     pattern = mediathek.get_current_pattern()
     if is_searchable(pattern):
-        name = "Suche starten"
-        url = build_url({"mode": "start_search"}, state)
-        li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-        li.setProperty("IsPlayable", "true")
+        name = u"Suche starten"
+        url = build_url({u"mode": u"start_search"}, state)
+        li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+        li.setProperty(u"IsPlayable", u"true")
         is_folder = True
         listing.append((url, li, is_folder))
     else:
-        name = "Suche starten    [Nur mit Suchkriterium möglich]"
-        url = build_url({"mode": "main"}, state)
-        li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-        li.setProperty("IsPlayable", "false")
+        name = u"Suche starten    [Nur mit Suchkriterium möglich]"
+        url = build_url({u"mode": u"main"}, state)
+        li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+        li.setProperty(u"IsPlayable", u"false")
         is_folder = False
         listing.append((url, li, is_folder))
 
@@ -861,32 +867,32 @@ def listing_add_search(listing, mediathek, state):
 def listing_add_test(listing, state):
     # foo = xbmcgui.getCurrentWindowId()  # 10025
     # wirt = xbmcgui.Window(foo)
-    # wirt.clearProperty("simple_mediathek_de_state")
-    # wirt.setProperty("test", "gespeichert %i" % (foo,))
-    # xbmc.executebuiltin("UpdateLocalAddons")
+    # wirt.clearProperty(u"simple_mediathek_de_state")
+    # wirt.setProperty(u"test", u"gespeichert %i" % (foo,))
+    # xbmc.executebuiltin(u"UpdateLocalAddons")
     """
     if mediathek.update_channel_list():
         xbmcgui.Dialog().notification(
-            addon_name, "ok %i %i" % (
+            addon_name, u"ok %i %i" % (
                 len(mediathek.get_channel_list()),
                     mediathek.state.changed),
             xbmcgui.NOTIFICATION_INFO, 5000)
     """
 
-    xxx = mediathek.get_search_results().get("found", [])
-    name = "%-20s %s %i" % ("Test", str(prev_mode), len(xxx))
-    url = build_url({"mode": "select_calendar"}, state)
-    li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-    li.setProperty("IsPlayable", "true")
+    xxx = mediathek.get_search_results().get(u"found", [])
+    name = u"%-20s %s %i" % (u"Test", str(prev_mode), len(xxx))
+    url = build_url({u"mode": u"select_calendar"}, state)
+    li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+    li.setProperty(u"IsPlayable", u"true")
     is_folder = True
     listing.append((url, li, is_folder))
 
 
 def listing_add_livestreams(listing, state):
-    name = "%s" % ("Livestreams")
-    url = build_url({"mode": "start_search_livestreams"}, state)
-    li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-    li.setProperty("IsPlayable", "true")
+    name = u"%s" % (u"Livestreams")
+    url = build_url({u"mode": u"start_search_livestreams"}, state)
+    li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+    li.setProperty(u"IsPlayable", u"true")
     is_folder = True
     listing.append((url, li, is_folder))
 
@@ -900,19 +906,19 @@ def listing_add_search_results(listing, state, results):
 
     """
     i = 0
-    for f in results:  # .get("found", []):
-        hasBegin = (int(f.get("ibegin", -1)) > 8000)
-        name = "%s %s | %s" % (
-            f.get("channel").upper(),
-            "| " + f.get("begin") if hasBegin else "",
-            f.get("title", "???"),
+    for f in results:  # .get(u"found", []):
+        hasBegin = (int(f.get(u"ibegin", -1)) > 8000)
+        name = u"%s %s | %s" % (
+            f.get(u"channel").upper(),
+            u"| " + f.get(u"begin") if hasBegin else u"",
+            f.get(u"title", u"???"),
         )
 
-        url = build_url({"mode": "select_result", "iresult": i}, state)
-        li = xbmcgui.ListItem(name, iconImage="DefaultVideo.png")
-        li.setProperty("IsPlayable", "true")
+        url = build_url({u"mode": u"select_result", u"iresult": i}, state)
+        li = xbmcgui.ListItem(name, iconImage=u"DefaultVideo.png")
+        li.setProperty(u"IsPlayable", u"true")
         # It is no folder if quality will be auto selected.
-        is_folder = (0 == int(addon.getSetting("video_quality")))
+        is_folder = (0 == int(addon.getSetting(u"video_quality")))
         listing.append((url, li, is_folder))
         i += 1
         if i >= max_num_entries_per_page:
@@ -922,19 +928,19 @@ def listing_add_search_results(listing, state, results):
 def listing_search_page_link(listing, state, results, ipage):
     if ipage < 0:
         ipage = -ipage - 1
-        name = "Vorherige Seite (%i)" % (ipage+1)
+        name = u"Vorherige Seite (%i)" % (ipage+1)
     else:
-        name = "Nächste Seite (%i)" % (ipage+1)
+        name = u"Nächste Seite (%i)" % (ipage+1)
 
     # pattern = mediathek.get_current_pattern()
         url = build_url(
             state)
     if True:  # is_searchable(pattern):
-        url = build_url({"mode": ("start_search_livestreams" if
-                                  b_livestream else "start_search"),
-                         "page": ipage}, state)
-        li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-        li.setProperty("IsPlayable", "true")
+        url = build_url({u"mode": (u"start_search_livestreams" if
+                                   b_livestream else u"start_search"),
+                         u"page": ipage}, state)
+        li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+        li.setProperty(u"IsPlayable", u"true")
         is_folder = True
         listing.append((url, li, is_folder))
 
@@ -953,26 +959,26 @@ def list_urls(state, urls, search_result):
         name = u"%-22s | %s... %s" % (
             squality[i][0], urls[i][:30], squality[i][1])
         """
-        url = build_url({"mode": "play_url",
-                         "video_url": urls[i]}, state)
+        url = build_url({u"mode": u"play_url",
+                         u"video_url": urls[i]}, state)
         """
         url = urls[i]  # Direct url seems more stable
-        li = xbmcgui.ListItem(name, iconImage="DefaultVideo.png")
-        li.setProperty("IsPlayable", "true")
-        li.setProperty("mimetype", "video")
+        li = xbmcgui.ListItem(name, iconImage=u"DefaultVideo.png")
+        li.setProperty(u"IsPlayable", u"true")
+        li.setProperty(u"mimetype", u"video")
         is_folder = False
-        li.setProperty("duration",
-                       str(int(search_result.get("iduration", 0)) / 60))
-        li.setProperty("title", search_result.get("title", ""))  # Deprecated?
-        li.setInfo('video', {'title': search_result.get("title", ""),
-                             'genre': "MediathekView"})
+        li.setProperty(u"duration",
+                       str(int(search_result.get(u"iduration", 0)) / 60))
+        li.setProperty(u"title", search_result.get(u"title", u""))  # Deprecated?
+        li.setInfo(u"video", {u"title": search_result.get(u"title", u""),
+                              u"genre": u"MediathekView"})
         listing.append((url, li, is_folder))
 
     # Entry to go back to list of search results. The state variable
     # still holds the array with the results.
-    url = build_url({"mode": "show_search_result"}, state)
-    li = xbmcgui.ListItem("Zurück", iconImage="DefaultFolder.png")
-    li.setProperty("IsPlayable", "true")
+    url = build_url({u"mode": u"show_search_result"}, state)
+    li = xbmcgui.ListItem(u"Zurück", iconImage=u"DefaultFolder.png")
+    li.setProperty(u"IsPlayable", u"true")
     is_folder = True
     listing.append((url, li, is_folder))
 
@@ -983,11 +989,11 @@ def list_urls(state, urls, search_result):
 
 
 def play_url(addon_handle, state, url, result=None, b_add_to_history=False):
-    # xbmc.Player().play(item=("%s" % (url,))) # more reliable?!
+    # xbmc.Player().play(item=(u"%s" % (url,))) # more reliable?!
     # or...
     item = xbmcgui.ListItem(path=url)
-    item.setInfo(type='Video', infoLabels={
-        'Title': url if result is None else result.get("title", "")})
+    item.setInfo(type=u"Video", infoLabels={
+        u"Title": url if result is None else result.get(u"title", u"")})
     xbmcplugin.setResolvedUrl(handle=addon_handle, succeeded=True,
                               listitem=item)
 
@@ -1001,7 +1007,7 @@ def blankScreen():
     (Disabled because the 40% were caused by the rotating
     update icon and this would still be displayed..
     """
-    # xbmc.executebuiltin("FullScreen")  # do not work
+    # xbmc.executebuiltin(u"FullScreen")  # do not work
     pass
 
 
@@ -1011,10 +1017,10 @@ def handle_update_side_effects(args):
     More complex relations could be placed here.
     Return True if the normal update of the key should be avoided.
     """
-    if args.get("item") == "iday":
+    if args.get(u"item") == u"iday":
         pattern = mediathek.get_current_pattern()
-        if "iday_range" in pattern:
-            pattern.pop("iday_range")
+        if u"iday_range" in pattern:
+            pattern.pop(u"iday_range")
 
     return False
 
@@ -1022,14 +1028,14 @@ def handle_update_side_effects(args):
 # Main code
 
 addon = xbmcaddon.Addon()
-addon_name = addon.getAddonInfo("name")
+addon_name = addon.getAddonInfo(u"name")
 
 with SimpleMediathek() as mediathek:
     # RunScript handling
-    if sys.argv[1] == "update_db":
-        mode = "background_script_call"
+    if sys.argv[1] == u"update_db":
+        mode = u"background_script_call"
         xbmcgui.Dialog().notification(
-            addon_name, "Update gestartet", xbmcgui.NOTIFICATION_INFO)
+            addon_name, u"Update gestartet", xbmcgui.NOTIFICATION_INFO)
         ok, tdiff = False, 0
         try:
             (ok, start, end, diff) = mediathek.update_db(bForceFullUpdate=True)
@@ -1040,14 +1046,14 @@ with SimpleMediathek() as mediathek:
         if ok:
             xbmcgui.Dialog().notification(
                 addon_name,
-                "Update erfolgreich. Dauer %is" % (tdiff),
+                u"Update erfolgreich. Dauer %is" % (tdiff),
                 xbmcgui.NOTIFICATION_INFO)
         else:
-            xbmcgui.Dialog().notification(addon_name, "Update fehlgeschlagen",
+            xbmcgui.Dialog().notification(addon_name, u"Update fehlgeschlagen",
                                           xbmcgui.NOTIFICATION_ERROR, 5000)
 
-    elif sys.argv[1] == "delete_local_data":
-        mode = "background_script_call"
+    elif sys.argv[1] == u"delete_local_data":
+        mode = u"background_script_call"
         try:
             import os
             (path, name) = get_history_file_path()
@@ -1064,45 +1070,45 @@ with SimpleMediathek() as mediathek:
             pass
 
         xbmcgui.Dialog().notification(
-            addon_name, "%i Dateien entfernt" % (len(rm_files)),
+            addon_name, u"%i Dateien entfernt" % (len(rm_files)),
             xbmcgui.NOTIFICATION_INFO, 5000)
 
-    elif sys.argv[1] == "XXX":
-        mode = "not used"
+    elif sys.argv[1] == u"XXX":
+        mode = u"not used"
     else:
         addon_handle = int(sys.argv[1])
-        xbmcplugin.setContent(addon_handle, "movies")
+        xbmcplugin.setContent(addon_handle, u"movies")
 
         # Set default view
         skin_used = xbmc.getSkinDir()
-        if( skin_used in SKINS_WIDE_LIST or
-           'true' == addon.getSetting("force_wide_list")):
-            xbmc.executebuiltin('Container.SetViewMode(51)')
+        if(skin_used in SKINS_WIDE_LIST or
+                u"true" == addon.getSetting(u"force_wide_list")):
+            xbmc.executebuiltin(u"Container.SetViewMode(51)")
         elif skin_used in SKINS_LIST:
-            xbmc.executebuiltin('Container.SetViewMode(50)')
+            xbmc.executebuiltin(u"Container.SetViewMode(50)")
         else:
             # View for other skins
-            xbmc.executebuiltin('Container.SetViewMode(50)')
+            xbmc.executebuiltin(u"Container.SetViewMode(50)")
 
         # args = urlparse.parse_qs(sys.argv[2][1:])
         args = unpack_url(sys.argv[2][1:])
-        mode = args.get("mode", None)
-        prev_mode = args.get("prev_mode", "None")  # str
-        same_folder = (prev_mode != "None")  # do NOT compare with 'is not'
+        mode = args.get(u"mode", None)
+        prev_mode = args.get(u"prev_mode", u"None")  # str
+        same_folder = (prev_mode != u"None")  # do NOT compare with 'is not'
         b_livestream = False
-        b_mvweb = ('true' == addon.getSetting("use_mediathekviewweb"))
+        b_mvweb = (u"true" == addon.getSetting(u"use_mediathekviewweb"))
 
         # Update with unsaved changes, but not force
         # write of changes at end of script
         if save_state_in_url:
-            expanded_state = args.get("state", {})
+            expanded_state = args.get(u"state", {})
         else:
             expanded_state = load_volatile_state()
 
         mediathek.update_state(expanded_state, False)
 
     # Handle modes
-    if mode == "update_db_over_gui":
+    if mode == u"update_db_over_gui":
         ok, tdiff = False, 0
         if True:  # or try...
             (ok, start, end, diff) = mediathek.update_db(
@@ -1114,113 +1120,112 @@ with SimpleMediathek() as mediathek:
         if ok:
             xbmcgui.Dialog().notification(
                 addon_name,
-                "Update erfolgreich. Dauer %is" % (tdiff),
+                u"Update erfolgreich. Dauer %is" % (tdiff),
                 xbmcgui.NOTIFICATION_INFO)
         else:
-            xbmcgui.Dialog().notification(addon_name, "Update fehlgeschlagen",
+            xbmcgui.Dialog().notification(addon_name, u"Update fehlgeschlagen",
                                           xbmcgui.NOTIFICATION_ERROR, 5000)
 
-    if mode == "select_calendar":
+    if mode == u"select_calendar":
         # Not implemented
         dialog = xbmcgui.Dialog()
-        result1 = dialog.input('Erstes Datum eingeben',
+        result1 = dialog.input(u"Erstes Datum eingeben",
                                type=xbmcgui.INPUT_DATE)
         if len(result1) > 0:
-            # Split and check "DD/MM/YYYY" format. Extra spaces, i.e.
+            # Split and check u"DD/MM/YYYY" format. Extra spaces, i.e.
             # '22/ 1/2000' had to be free'd by the spaces.
-            result1 = result1.replace(" ", "")
+            result1 = result1.replace(u" ", u"")
             try:
-                # datetime1 = datetime.strptime(str(result1), '%d/%m/%Y') #miss
+                # datetime1 = datetime.strptime(str(result1), u"%d/%m/%Y") #miss
                 # sec1 = int(datetime1.ctime())
-                t = time.strptime(result1, '%d/%m/%Y')
-                sec1 = int(time.strftime("%s", t))
+                t = time.strptime(result1, u"%d/%m/%Y")
+                sec1 = int(time.strftime(u"%s", t))
 
-
-                result2 = dialog.input('Zweites Datum eingeben',
-                                      result1,
-                                      type=xbmcgui.INPUT_DATE)
+                result2 = dialog.input(u"Zweites Datum eingeben",
+                                       result1,
+                                       type=xbmcgui.INPUT_DATE)
                 if len(result2) > 0:
-                    result2 = result2.replace(" ", "")
-                    t = time.strptime(result2, '%d/%m/%Y')
-                    sec2 = int(time.strftime("%s", t))
+                    result2 = result2.replace(u" ", u"")
+                    t = time.strptime(result2, u"%d/%m/%Y")
+                    sec2 = int(time.strftime(u"%s", t))
                 else:
                     sec2 = sec1
 
                 iday_range = [sec1, sec2]
                 iday_range.sort()
                 pattern = mediathek.get_current_pattern()
-                if "iday" in pattern: pattern.pop("iday")
-                pattern.update({"iday_range": iday_range})
+                if u"iday" in pattern:
+                    pattern.pop(u"iday")
+                pattern.update({u"iday_range": iday_range})
 
-                changes = {"current_pattern": pattern}
+                changes = {u"current_pattern": pattern}
                 mediathek.update_state(changes, False)  # Unwritten update
                 expanded_state.update(changes)  # propagated by Uri
 
-                mode = "main"
+                mode = u"main"
             # except (ValueError, TypeError) as e:
             except (RuntimeError,) as e:
                 xbmcgui.Dialog().notification(
-                    addon_name, "Error during parsing of date strings.",
+                    addon_name, u"Error during parsing of date strings.",
                     xbmcgui.NOTIFICATION_ERROR, 5000)
-                mode = "select_day"
+                mode = u"select_day"
 
-
-    if mode == "select_day":
-        names = search_ranges_str["day"]
-        i_sel = mediathek.get_current_pattern().get("iday", -1)
+    if mode == u"select_day":
+        names = search_ranges_str[u"day"]
+        i_sel = mediathek.get_current_pattern().get(u"iday", -1)
         listing = []
-        listing_add_list_names(listing, expanded_state, "iday", names, i_sel)
+        listing_add_list_names(listing, expanded_state, u"iday", names, i_sel)
         listing_add_calendar_entry(listing, expanded_state, i_sel == len(names))
-        listing_add_remove_entry(listing, mediathek.state, "iday")
+        listing_add_remove_entry(listing, mediathek.state, u"iday")
         listing_add_back_entry(listing, expanded_state)
         xbmcplugin.addDirectoryItems(addon_handle, listing, len(listing))
         xbmcplugin.endOfDirectory(
             addon_handle, updateListing=same_folder,
             cacheToDisc=directory_cache)
 
-    if mode == "select_time":
-        names = search_ranges_str["time"]
-        i_sel = mediathek.get_current_pattern().get("itime", -1)
+    if mode == u"select_time":
+        names = search_ranges_str[u"time"]
+        i_sel = mediathek.get_current_pattern().get(u"itime", -1)
         listing = []
-        listing_add_list_names(listing, expanded_state, "itime", names, i_sel)
-        listing_add_remove_entry(listing, mediathek.state, "itime")
+        listing_add_list_names(listing, expanded_state, u"itime", names, i_sel)
+        listing_add_remove_entry(listing, mediathek.state, u"itime")
         listing_add_back_entry(listing, expanded_state)
         xbmcplugin.addDirectoryItems(addon_handle, listing, len(listing))
         xbmcplugin.endOfDirectory(
             addon_handle, updateListing=same_folder,
             cacheToDisc=directory_cache)
 
-    if mode == "select_duration_dir":
+    if mode == u"select_duration_dir":
         listing = []
-        i_sel = mediathek.get_current_pattern().get("iduration_dir", -1)
+        i_sel = mediathek.get_current_pattern().get(u"iduration_dir", -1)
         listing_add_min_max_entries(listing, expanded_state,
-                                    "select_duration", i_sel)
+                                    u"select_duration", i_sel)
         # listing_add_back_entry(listing, expanded_state)
         xbmcplugin.addDirectoryItems(addon_handle, listing, len(listing))
         xbmcplugin.endOfDirectory(
             addon_handle, updateListing=same_folder,
             cacheToDisc=directory_cache)
 
-    if mode == "select_duration":
+    if mode == u"select_duration":
         # 0. Handle return value of select_duration_dir step
-        if "dir" in args:
-            "iduration_dir"
+        if u"dir" in args:
+            u"iduration_dir"
             pattern = mediathek.get_current_pattern()
-            pattern.update({"iduration_dir": args["dir"]})
-            changes = {"current_pattern": pattern}
+            pattern.update({u"iduration_dir": args[u"dir"]})
+            changes = {u"current_pattern": pattern}
             mediathek.update_state(changes, False)  # Unwritten update
             expanded_state.update(changes)  # propagated by Uri
 
         # 1. Generate list
-        names = search_ranges_str["duration"]
-        i_sel = mediathek.get_current_pattern().get("iduration", -1)
+        names = search_ranges_str[u"duration"]
+        i_sel = mediathek.get_current_pattern().get(u"iduration", -1)
         listing = []
-        listing_add_list_names(listing, expanded_state, "iduration", names, i_sel)
-        listing_add_remove_entry(listing, mediathek.state, "iduration")
+        listing_add_list_names(listing, expanded_state, u"iduration", names, i_sel)
+        listing_add_remove_entry(listing, mediathek.state, u"iduration")
 
         # 0b. Add toggle for direction flag
         if not duration_separate_minmax:
-            listing_direction_toggle(listing, expanded_state, "select_duration")
+            listing_direction_toggle(listing, expanded_state, u"select_duration")
 
         listing_add_back_entry(listing, expanded_state)
         xbmcplugin.addDirectoryItems(addon_handle, listing, len(listing))
@@ -1228,35 +1233,35 @@ with SimpleMediathek() as mediathek:
             addon_handle, updateListing=same_folder,
             cacheToDisc=directory_cache)
 
-    if mode == "select_channel":
+    if mode == u"select_channel":
         channels = mediathek.get_channel_list()
         current_pattern = mediathek.get_current_pattern()
         listing = []
-        listing_add_dict_names(listing, expanded_state, "channel", channels,
-                               current_pattern.get("channel", ""))
-        listing_add_remove_entry(listing, mediathek.state, "channel")
+        listing_add_dict_names(listing, expanded_state, u"channel", channels,
+                               current_pattern.get(u"channel", u""))
+        listing_add_remove_entry(listing, mediathek.state, u"channel")
         listing_add_back_entry(listing, expanded_state)
         xbmcplugin.addDirectoryItems(addon_handle, listing, len(listing))
         xbmcplugin.endOfDirectory(
             addon_handle, updateListing=same_folder,
             cacheToDisc=directory_cache)
 
-    if mode == "select_history":
-        if "pattern" in args:
-            new_pattern = args.get("pattern")
+    if mode == u"select_history":
+        if u"pattern" in args:
+            new_pattern = args.get(u"pattern")
             # Clean up unset values. Note that this
             # made the state writing mandatory to prevent mixing of
             # old (readed state) and new (expanded_state) pattern.
             new_pattern = {k: v for k, v in new_pattern.viewitems()
-                           if v != -1 and v != ""}
-            changes = {"current_pattern": new_pattern}
+                           if v != -1 and v != u""}
+            changes = {u"current_pattern": new_pattern}
             mediathek.update_state(changes, True)  # Write update
             expanded_state.update(changes)
 
         # Value applied. Go back and show main menu
-        mode = "main"
+        mode = u"main"
 
-    if mode in ["select_title", "select_desc"]:
+    if mode in [u"select_title", u"select_desc"]:
         # Check if this url/mode was open again after leaving the
         # plugin. If yes, go to main page.
 
@@ -1266,51 +1271,50 @@ with SimpleMediathek() as mediathek:
                 header, mediathek.get_pattern_title(pattern)
             )
             if result:
-                pattern["title"] = query
-                changes = {"current_pattern": pattern}
+                pattern[u"title"] = query
+                changes = {u"current_pattern": pattern}
                 mediathek.update_state(changes, False)  # Unwritten update
                 expanded_state.update(changes)  # propagated by Uri
 
-        last = expanded_state.setdefault("input_request_id", -1)
-        arg_id = int(args.get("id", 0))
+        last = expanded_state.setdefault(u"input_request_id", -1)
+        arg_id = int(args.get(u"id", 0))
         if arg_id == last:
-            mode = "main"
+            mode = u"main"
         else:
-            if mode == "select_desc":
-                __foo__("description", "Beschreibung")
+            if mode == u"select_desc":
+                __foo__(u"description", u"Beschreibung")
             else:
-                __foo__("title", "Titel / Thema (No RegEx)")
+                __foo__(u"title", u"Titel / Thema (No RegEx)")
 
-            expanded_state["input_request_id"] = arg_id
-            mode = "main"
+            expanded_state[u"input_request_id"] = arg_id
+            mode = u"main"
 
-    if mode == "select_result":
-        results = mediathek.get_search_results().get("found", [])
+    if mode == u"select_result":
+        results = mediathek.get_search_results().get(u"found", [])
 
-        if 'true' != addon.getSetting("early_history_update"):
+        if u"true" != addon.getSetting(u"early_history_update"):
             pattern = mediathek.get_current_pattern()
             mediathek.add_to_history(pattern)
 
         try:
-            result = results[args.get("iresult", -1)]
-            # "Nachfragen", "Beste verfügbare", "Geringste verfügbare",
-            # "Niedrig", "Mittel", "Hoch"
-            quali = int(addon.getSetting("video_quality"))
+            result = results[args.get(u"iresult", -1)]
+            # u"Nachfragen", u"Beste verfügbare", u"Geringste verfügbare",
+            # u"Niedrig", u"Mittel", u"Hoch"
+            quali = int(addon.getSetting(u"video_quality"))
 
-            if result.get("payload"):
+            if result.get(u"payload"):
                 # Webrequest already contain the data
-                urls = result.get("payload")
+                urls = result.get(u"payload")
             else:
                 # Fetch urls
-                s_anchor = str(result["anchor"])
-                url_args = ["--payload", s_anchor]
+                s_anchor = str(result[u"anchor"])
+                url_args = [u"--payload", s_anchor]
                 (exit_code, data) = call_binary(url_args)
                 if exit_code == 0:
                     js = json.loads(data)
                     urls = js.get(s_anchor, [])
 
-
-            urls.extend(["", "", "", "", "", ""])  # len(urls) >= 6
+            urls.extend([u"", u"", u"", u"", u"", u""])  # len(urls) >= 6
             # Resort by video quality, 2xmid, 2xlow, 2xhigh
             qualities = [2, 3, 0, 1, 4, 5]
             urls = [urls[q] for q in qualities]
@@ -1318,7 +1322,7 @@ with SimpleMediathek() as mediathek:
             non_empty_urls = [u for u in urls if len(u) > 0]
             if len(non_empty_urls) == 0:
                 xbmcgui.Dialog().notification(
-                    addon_name, "Keine URL gefunden",
+                    addon_name, u"Keine URL gefunden",
                     xbmcgui.NOTIFICATION_ERROR, 5000)
             else:
                 if quali == 0:
@@ -1341,63 +1345,62 @@ with SimpleMediathek() as mediathek:
 
         except IndexError:
             # results incomplete...
-            mode = "main"
+            mode = u"main"
         except KeyError:
             # Args incomplete...
-            mode = "main"
+            mode = u"main"
         # else:
-        #     mode = "main"
+        #     mode = u"main"
 
-    if mode == "update_pattern":
-        if "item" in args:
+    if mode == u"update_pattern":
+        if u"item" in args:
             pattern = mediathek.get_current_pattern()
-            if "value" in args:
+            if u"value" in args:
                 try:
-                    value = int(args["value"])
+                    value = int(args[u"value"])
                     handle_update_side_effects(args)
                 except ValueError:
-                    value = args["value"]
+                    value = args[u"value"]
 
-                pattern.update({args["item"]: value})
-            elif args["item"] in pattern:
-                pattern.pop(args["item"])
+                pattern.update({args[u"item"]: value})
+            elif args[u"item"] in pattern:
+                pattern.pop(args[u"item"])
 
-            changes = {"current_pattern": pattern}
+            changes = {u"current_pattern": pattern}
             mediathek.update_state(changes, False)  # Unwritten update
             expanded_state.update(changes)  # propagated by Uri
 
         # Value applied. Go back and show main menu
-        mode = "main"
+        mode = u"main"
 
-    if mode == "clear_pattern":
+    if mode == u"clear_pattern":
         pattern = mediathek.get_current_pattern()
-        new_pattern = {"iduration_dir": pattern.get("iduration_dir", 0)}
-        changes = {"current_pattern": new_pattern}
+        new_pattern = {u"iduration_dir": pattern.get(u"iduration_dir", 0)}
+        changes = {u"current_pattern": new_pattern}
         mediathek.update_state(changes, False)  # Unwritten update
         expanded_state.update(changes)  # propagated by Uri
-        mode = "main"
+        mode = u"main"
 
-
-    if mode in ["start_search", "start_search_livestreams"]:
-        if mode == "start_search_livestreams":
+    if mode in [u"start_search", u"start_search_livestreams"]:
+        if mode == u"start_search_livestreams":
             pattern = mediathek.get_livestream_pattern()
             b_livestream = True
         else:
             pattern = mediathek.get_current_pattern()
 
-        results = {"pattern": pattern, "found": []}
+        results = {u"pattern": pattern, u"found": []}
         if b_mvweb:
-            (exit_code, data) = MVWeb.fetch(pattern, args.get("page", 0),
-                                max_num_entries_per_page + 1)
+            (exit_code, data) = MVWeb.fetch(pattern, args.get(u"page", 0),
+                                            max_num_entries_per_page + 1)
             if exit_code == 0:
                 js = MVWeb.convert_results(data)
         else:
             search_args = mediathek.create_search_params(pattern)
 
             # Add page flag
-            page = "%u,%u" % (max_num_entries_per_page + 1,
-                            args.get("page", 0)*max_num_entries_per_page)
-            search_args.append("--num")
+            page = u"%u,%u" % (max_num_entries_per_page + 1,
+                               args.get(u"page", 0)*max_num_entries_per_page)
+            search_args.append(u"--num")
             search_args.append(page)
 
             (exit_code, data) = call_binary(search_args)
@@ -1406,22 +1409,22 @@ with SimpleMediathek() as mediathek:
 
         if exit_code == 0:  # Continue for both above branches
             results.update(js)
-            if 'true' == addon.getSetting("early_history_update"):
+            if u"true" == addon.getSetting(u"early_history_update"):
                 mediathek.add_to_history(pattern)
         else:
-            xbmcgui.Dialog().notification(addon_name, "Suche fehlgeschlagen",
-                                        xbmcgui.NOTIFICATION_ERROR, 5000)
-            # mode = "main"
+            xbmcgui.Dialog().notification(addon_name, u"Suche fehlgeschlagen",
+                                          xbmcgui.NOTIFICATION_ERROR, 5000)
+            # mode = u"main"
 
-        changes = {"latest_search": results}
+        changes = {u"latest_search": results}
         expanded_state.update(changes)   # Held until kodi exits
-        mode = "show_search_result"
+        mode = u"show_search_result"
 
-    if mode == "show_search_result":
-        if "latest_search" in expanded_state:
-            results = expanded_state["latest_search"].get("found", [])
+    if mode == u"show_search_result":
+        if u"latest_search" in expanded_state:
+            results = expanded_state[u"latest_search"].get(u"found", [])
             listing = []
-            prev_page = args.get("page", 0) - 1
+            prev_page = args.get(u"page", 0) - 1
             next_page = (prev_page + 2) if (
                 len(results) > max_num_entries_per_page) else -1
 
@@ -1446,21 +1449,21 @@ with SimpleMediathek() as mediathek:
                     addon_handle, updateListing=same_folder,
                     cacheToDisc=directory_cache)
         else:
-            mode = "main"
+            mode = u"main"
 
-    if mode == "show_history":
+    if mode == u"show_history":
         listing = []
         listing_add_history(listing, expanded_state)
         listing_add_back_entry(listing, expanded_state)
         xbmcplugin.addDirectoryItems(addon_handle, listing, len(listing))
         xbmcplugin.endOfDirectory(addon_handle, updateListing=same_folder)
 
-    if mode == "play_url":
-        if "video_url" in args:
-            play_url(addon_handle, expanded_state, args["video_url"])
+    if mode == u"play_url":
+        if u"video_url" in args:
+            play_url(addon_handle, expanded_state, args[u"video_url"])
 
-    if mode is None or mode == "main":
-        xbmc.log(msg="Plugin|"+sys.argv[0]+sys.argv[2],
+    if mode is None or mode == u"main":
+        xbmc.log(msg=u"Plugin|"+sys.argv[0]+sys.argv[2],
                  level=xbmc.LOGERROR)
         check_addon_status()
 
@@ -1471,29 +1474,29 @@ with SimpleMediathek() as mediathek:
             if b_mvweb:
                 if mediathek.is_mvw_outdated():
                     mediathek.update_mvw()
-                    expanded_state["ilast_mvw_update"] = int(time.time())
+                    expanded_state[u"ilast_mvw_update"] = int(time.time())
             elif mediathek.is_index_outdated():
                 # --info call to check if data was externally updated
                 mediathek.update_channel_list()
                 # Update creation timestamp to omit multiple updates.
-                expanded_state["icreation"] = int(time.time())
+                expanded_state[u"icreation"] = int(time.time())
 
         listing = []
         for cat in search_categories:
-            name = "%-20s %s" % (
-                cat.get("name", "?"), cat.get("selection", "!"))
+            name = u"%-20s %s" % (
+                cat.get(u"name", u"?"), cat.get(u"selection", u"!"))
             # name += str(build_url({}, expanded_state))[45:]
-            new_args = {"mode": cat.get("mode")}
-            if "id" in cat:
-                new_args["id"] = cat["id"]
+            new_args = {u"mode": cat.get(u"mode")}
+            if u"id" in cat:
+                new_args[u"id"] = cat[u"id"]
 
             url = build_url(new_args, expanded_state)
-            li = xbmcgui.ListItem(name, iconImage="DefaultFolder.png")
-            if cat.get("IsPlayable", True):
-                li.setProperty("IsPlayable", "true")
+            li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
+            if cat.get(u"IsPlayable", True):
+                li.setProperty(u"IsPlayable", u"true")
                 is_folder = True
             else:
-                li.setProperty("IsPlayable", "false")
+                li.setProperty(u"IsPlayable", u"false")
                 is_folder = False
 
             listing.append((url, li, is_folder))

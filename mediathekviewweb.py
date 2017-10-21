@@ -3,14 +3,6 @@
 from socketIO_client import SocketIO, BaseNamespace
 from datetime import datetime
 
-pattern =  {"iduration_dir": 1, "iday": 4, "iduration": 1,
-            "title": "Die Anstalt",
-            "description": None,
-            "ichannel": -1,
-            "channel": "ZDF"}
-
-
-
 def convert_results(tResult):
     """
     Input data example
@@ -39,37 +31,37 @@ def convert_results(tResult):
     found = []
 
     if len(tResult) < 1:
-        print( "Error: Input is no 1-tuple as expected.")
-        return {"found": found}
+        print( u"Error: Input is no 1-tuple as expected.")
+        return {u"found": found}
 
     dResult = tResult[0]
-    if dResult.get("err"):
-        print( u"Error: %s\n" % dResult.get("err"))
-        return {"found": found}
+    if dResult.get(u"err"):
+        print( u"Error: %s\n" % dResult.get(u"err"))
+        return {u"found": found}
 
-    for r in dResult.get("result",{}).get("results",[]):
-        # print(u"%s - %s" % (r.get("topic"), r.get("title")))
+    for r in dResult.get(u"result",{}).get(u"results",[]):
+        # print(u"%s - %s" % (r.get(u"topic"), r.get(u"title")))
         x = {
-            "topic": r.get("topic"),
-            "title": r.get("title"),
-            "ibegin": int(r.get("timestamp")), # or?
-            # "ibegin": int(r.get("filmlisteTimestamp")),
-            "iduration": r.get("duration"),
-            "channel": r.get("channel").lower(),
-            "ichannel": -1,  # Different enummeration
+            u"topic": r.get(u"topic"),
+            u"title": r.get(u"title"),
+            u"ibegin": int(r.get(u"timestamp")), # or?
+            # u"ibegin": int(r.get(u"filmlisteTimestamp")),
+            u"iduration": r.get(u"duration"),
+            u"channel": r.get(u"channel").lower(),
+            u"ichannel": -1,  # Different enummeration
         }
         # Parse ibegin
-        d = datetime.fromtimestamp(x.get("ibegin", 0))
-        x["begin"] = d.strftime("%d. %b. %Y %R")
+        d = datetime.fromtimestamp(x.get(u"ibegin", 0))
+        x[u"begin"] = d.strftime("%d. %b. %Y %R").decode('utf-8')
 
         # Add urls in same order as simple_mediathek --payload returns.
-        x["payload"] = [r.get("url_video"), "",
-                        r.get("url_video_low"), "",
-                        r.get("url_video_hd"), ""]
+        x[u"payload"] = [r.get(u"url_video"), u"",
+                        r.get(u"url_video_low"), u"",
+                        r.get(u"url_video_hd"), u""]
 
         found.append(x)
 
-    return {"found": found}
+    return {u"found": found}
 
 def fetch(pattern, page=0, entries_per_page=10):
 
@@ -77,9 +69,9 @@ def fetch(pattern, page=0, entries_per_page=10):
         response = None
 
         """
-        def on_connect(self): print('[Connected]')
-        def on_reconnect(self): print('[Reconnected]')
-        def on_disconnect(self): print('[Disconnected]')
+        def on_connect(self): print("[Connected]")
+        def on_reconnect(self): print("[Reconnected]")
+        def on_disconnect(self): print("[Disconnected]")
 
         """
         def on_film_response(self, *args):
@@ -89,35 +81,35 @@ def fetch(pattern, page=0, entries_per_page=10):
     def get_string(d, key):
         # Just to avoid str-cast of None
         r = d.get(key)
-        return r.strip() if r else ""
+        return r.strip() if r else u""
 
     queries = []
-    title = get_string(pattern, "title")
+    title = get_string(pattern, u"title")
     if len(title):
-           queries.append({"fields": ["title", "topic"], "query": title})
+           queries.append({u"fields": [u"title", u"topic"], u"query": title})
 
-    description = get_string(pattern, "description")
+    description = get_string(pattern, u"description")
     if len(description):
-           queries.append({"fields": ["description"], "query": description})
+           queries.append({u"fields": [u"description"], u"query": description})
 
-    channel = get_string(pattern, "channel")
+    channel = get_string(pattern, u"channel")
     if len(channel):
-           queries.append({"fields": ["channel"], "query": channel})
+           queries.append({u"fields": [u"channel"], u"query": channel})
 
-    sortProps = pattern.get("sortBy", ("timestamp", "desc"))
-    queryObj = {"queries": queries,
-                "sortBy": sortProps[0],
-                "sortOrder": sortProps[1],
-                "future": True,
-                "offset": page*entries_per_page,
-                "size": entries_per_page
+    sortProps = pattern.get(u"sortBy", (u"timestamp", u"desc"))
+    queryObj = {u"queries": queries,
+                u"sortBy": sortProps[0],
+                u"sortOrder": sortProps[1],
+                u"future": True,
+                u"offset": page*entries_per_page,
+                u"size": entries_per_page
                }
 
     # Send query
-    with SocketIO("https://mediathekviewweb.de", 443, verify=False) as socketIO:
+    with SocketIO(u"https://mediathekviewweb.de", 443, verify=False) as socketIO:
 
         film_namespace = socketIO.define(FilmNamespace)
-        socketIO.emit('queryEntries', queryObj, film_namespace.on_film_response)
+        socketIO.emit(u"queryEntries", queryObj, film_namespace.on_film_response)
 
         try:
             #socketIO.wait(2.0)
