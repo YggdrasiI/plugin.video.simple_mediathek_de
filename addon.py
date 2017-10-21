@@ -70,10 +70,9 @@ search_ranges = {
     "day": [0, 1, 2, 5, 7, 14, -1, ],  # -1],
 }
 
-# Wrapper to track if dict entry was changed
-
 
 class Dict(dict):
+    "Wrapper to track if dict entry was changed."
     changed = False
     parent_Dict = None
 
@@ -1372,6 +1371,7 @@ with SimpleMediathek() as mediathek:
 
         mode = "show_search_result"
         state_diff["latest_search"] = results
+        mediathek.update_state({}, True)  # Write changed state to disk
 
     elif mode in ["start_search", "start_search_livestreams"]:
         if mode == "start_search_livestreams":

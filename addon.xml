@@ -8,11 +8,11 @@
     <provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
-    <summary lang="en_GB">TODO</summary>
-    <description lang="en_GB">TODO</description>
-    <disclaimer lang="en_GB">TODO</disclaimer>
+    <summary lang="en_GB">Access to German Public Broadcasting Media</summary>
+    <description lang="en_GB">Download and parses MediathekView data set or send request to MediathekViewWeb.de</description>
+    <disclaimer lang="en_GB"></disclaimer>
     <summary lang="de_DE">Zugriff auf die Mediatheken der öffentlich-rechtlichen Sender.</summary>
-		<description lang="de_DE">Plugin zum Herunterladen und lokalen Durchsuchen des MediathekView-Datensatzes mit Augenmerk auf eine zügige Bedienbarkeit per Fernbedienung, Autarkitizität, und ein so geringer Ressourcenverbrauch, dass das Programm auch auf dem RaspberryPi 1 genutzt werden kann.</description>
+		<description lang="de_DE">Plugin zum Herunterladen und lokalen Durchsuchen des MediathekView-Datensatzes mit Augenmerk auf eine zügige Bedienbarkeit per Fernbedienung. Dank eines geringen Ressourcenverbrauchs kann das Programm auch auf dem RaspberryPi 1 genutzt werden.</description>
     <disclaimer lang="de_DE"></disclaimer>
     <language>de</language>
     <platform>all</platform>

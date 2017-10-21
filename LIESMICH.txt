@@ -1,25 +1,24 @@
-====  Kodi plugin für MediathekView ====
+====  Kodi Plugin für MediathekView ====
 
 
 Generelle Informationen:
-  Plugin zum Abfragen der öffentlichen deutschen Mediatheken. 
+  Plugin zum Abfragen der öffentlichen deutschen Mediatheken.
   Dafür werden entweder einzelne Abfragen an MediathekViewWeb.de gesendet (Variante A)
-  oder der MediathekView-Datensatz komplett heruntergeladen 
+  oder der MediathekView-Datensatz komplett heruntergeladen
   und lokal durchsucht (Variante B).
 
-  Zielstellungen waren 
-  • eine zügige Bedienbarkeit per Fernbedienung,
-  • Autarkizität (Es wird nur der Datensatz benötigt. Restliche Arbeit wird lokal erledigt.)
-  • Ein so geringer Ressourcenverbrauch, dass das Programm auch auf dem RaspberryPi 1 
-    genutzt werden kann. (Die Erstellung des kompletten Indexes dauert dort allerdings 1-2 Minuten.)
+  Zielstellungen waren
+  • eine zügige Bedienbarkeit per Fernbedienung und
+  • ein so geringer Ressourcenverbrauch, dass es auch auf dem RaspberryPi 1
+    genutzt werden kann. (Die Erstellung des kompletten Indexes dauert dort ca. 1-2 Minuten.)
 
-  Aufgrund des letzten Punktes werden die Hauptaufgaben (bei Variante B) im Hintergrund
-  durch ein natives CLI-Programm ausgeführt. 
-  D.h. das Plugin muss im Unterschied zu den meisten anderen Kodi-Plugins für 
+  Aufgrund des letzten Punktes wird die meiste Arbeit bei Variante B durch
+	ein natives CLI-Programm (simple_mediathek) im Hintergrund ausgeführt.
+  D.h. das Plugin muss im Unterschied zu den meisten anderen Kodi-Plugins für
   das Zielsystem kompiliert werden!
+
   Der Speicherverbrauch liegt während des Updates des Datensatzes
   ungefähr bei 25MB (zzgl. Overhead von wget und xz)
-
   Binaries für x86_64 und armv6l (für RPi1 bis RPi3) liegen vorkompiliert dabei.
 
   Sofern nur die Variante A genutzt werden soll, kann auf das Kompilieren des Plugins
@@ -30,35 +29,35 @@ Abhängigkeiten:
   cmake, zip, gcc
 
 Kompilieren:
-  1. Dieses Repository lokal klonen und in einem Terminal in das Verzeichnis wechseln
-  2. Binary bauen mit 'make native'. Dabei wird neben dem Programm außerdem
-     die Kompressions-Bibliothek libbrotli kompiliert.
-  3. Erstelle Addon-Archiv mit 'make addon'
-     Danach sollte im übergeordnetem Verzeichnis 'plugin.video.simple_mediathek_de.zip'
-     erstellt worden sein.
+  1. Dieses Repository lokal klonen und in einem Terminal in das Verzeichnis wechseln.
+  2. Mit 'make native' das Binary kompilieren. Dabei wird neben dem Programm außerdem
+     die Kompressions-Bibliothek libbrotli erstellt..
+  3. Mit 'make addon' das Addon-Archiv erstellen.
+     Danach befindet sich im übergeordnetem Verzeichnis die Datei
+		 'plugin.video.simple_mediathek_de.zip', welche dann in Kodi installiert werden kann.
 
   Eine vorkompilierte Version kann gefunden werden auf:
   https://forum.mediathekview.de/topic/193/mediatheken-plugin-für-kodi/1
 
 Installation:
-  Variante A) Im Addon-Browser von Kodi kann das Addon über 'Aus ZIP-Datei installieren' 
+  Variante A) Im Addon-Browser von Kodi kann das Addon über 'Aus ZIP-Datei installieren'
               ausgewählt werden.
-              Bei neueren Kodi-Versionen (ab Krypton, 17.0) muss dazu allerdings erst 
+              Bei neueren Kodi-Versionen (ab Krypton, 17.0) muss dazu allerdings erst
               das Installieren von Addons aus unbekannten Quellen erlaubt werden.
               (Unter Einstellungen>System>Addons)
 
-  Variante B) Das Addon kann auch manuell ins Addon-Verzeichnis .kodi/addons entpackt 
-              werden. Danach muss die Addon-Liste aktualisiert (oder Kodi neu gestartet) werden.
+  Variante B) Das Addon kann auch manuell ins Addon-Verzeichnis .kodi/addons entpackt
+              werden. Danach muss die Addon-Liste aktualisiert, oder Kodi neu gestartet, werden.
 
               Die Position des .kodi-Verzeichnisses variiert.
               Standard-Pfad auf OpenELEC/LibreELEC: /storage/.kodi
               Standard-Pfad auf OSMC: /home/osmc/.kodi
 
-      Beispielablauf:.
-        cd $HOME/.kodi/addons
-        [...]
-        unzip plugin.video.simple_mediathek.zip
-        kodi-send -a "UpdateLocalAddons"
+					Beispielablauf:.
+						cd $HOME/.kodi/addons
+						[...]
+						unzip plugin.video.simple_mediathek.zip
+						kodi-send -a "UpdateLocalAddons"
 
 
 Getestet mit:
