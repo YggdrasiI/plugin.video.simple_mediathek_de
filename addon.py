@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import sys
 import xbmc
 import xbmcgui
@@ -14,12 +16,6 @@ import os.path
 import json
 import subprocess
 
-from __future__ import unicode_literals
-if sys.platform.startswith(u"win"):
-    file function with unicodes
-else:
-    file function with utf-8 encoded strings
-
 import keyboard
 
 # For mediathekviewweb
@@ -27,6 +23,10 @@ import socketIO_client as socketIO
 import mediathekviewweb as MVWeb
 
 from chmod_binaries import binary_setup
+
+# Old translation variant
+addon = xbmcaddon.Addon()
+getLocalizedString = addon.getLocalizedString
 
 """
 Kodi uses Python 2.7.1. It follows an incomplete list of changes
@@ -76,6 +76,17 @@ search_ranges_str = {
     u"day_range": [u"Kalender"],
     u"channel": [u"Kanal %s"],
 }
+
+# 323xx, 32300 is ""
+search_ranges_locale = {
+    u"duration": [32301, 32302, 32303, 32304, 32305, 32300],
+    u"direction": [32306, 32307],
+    u"direction_b": [32308, 32309],
+	u"time": [32310, 32311, 32312, 32313, 32300],
+    u"day": [32314, 32315, 32315, 32315, 32315, 32300],
+    u"day_range": [32316],
+	u"channel": [32317],
+}
 """
 Matching arguments for the search program.
 search_ranges_str[u"duration"][i] corresponends with
@@ -124,10 +135,6 @@ class Dict(dict):
             super(Dict, self).__setitem__(item, value)
             self.set_changed()
         """
-        if self.changed:
-            xbmcgui.Dialog().notification(
-                addon_name, "C:"+str(value),
-                xbmcgui.NOTIFICATION_INFO, 5000)
 
     """
     def update(self, udict):
@@ -500,9 +507,9 @@ def create_addon_data_folder(path):
         if not os.path.isdir(path):
             os.mkdir(path)
     except OSError:
-        err = u"Can't create folder for addon data."
         xbmcgui.Dialog().notification(
-            addon_name, err,
+            addon_name,  # u"Can't create folder for addon data.",
+            getLocalizedString(32340),
             xbmcgui.NOTIFICATION_ERROR, 5000)
 
 
@@ -540,8 +547,6 @@ def write_state_file(state):
         fout = open(os.path.join(path, name), "w")
         json.dump(state, fout)
         fout.close()
-        # xbmcgui.Dialog().notification(
-        #    addon_name, u"Datei geschrieben", xbmcgui.NOTIFICATION_INFO)
     except IOError as e:
         raise e
         return False
@@ -672,7 +677,7 @@ def gen_search_categories(mediathek):
             u"| Stand", last_update[1], (u"" if allow_update else u""))
 
     categories = []
-    categories.append({u"name": u"Sender",
+    categories.append({u"name": getLocalizedString(32341), # u"Sender",
                        u"selection": mediathek.get_pattern_channel(
                            pattern).upper(),
                        u"mode": u"select_channel",
@@ -680,54 +685,54 @@ def gen_search_categories(mediathek):
                        # u"fanart": item.findtext(u"fanart"),
                        })
 
-    categories.append({u"name": u"Titel/Thema",
+    categories.append({u"name": getLocalizedString(32342),  # u"Titel",
                        u"selection": mediathek.get_pattern_title(pattern),
                        u"mode": u"select_title",
                        u"id": expanded_state.get(u"input_request_id", 0) + 1
                        })
     if not b_mvweb:
-        categories.append({u"name": u"Datum",
+        categories.append({u"name": getLocalizedString(32343),  # u"Datum",
                            u"selection": mediathek.get_pattern_date(pattern),
                            u"mode": u"select_day",
                            })
-        categories.append({u"name": u"Uhrzeit",
+        categories.append({u"name": getLocalizedString(32344),  # u"Uhrzeit",
                            u"selection": mediathek.get_pattern_time(pattern),
                            u"mode": u"select_time",
                            })
         if duration_separate_minmax:
-            categories.append({u"name": u"Dauer",
+            categories.append({u"name": getLocalizedString(32345),  # u"Dauer",
                                u"selection":
                                mediathek.get_pattern_duration(pattern),
                                u"mode": u"select_duration_dir",
                                })
         else:
-            categories.append({u"name": u"Dauer",
+            categories.append({u"name": getLocalizedString(32345),  # u"Dauer",
                                u"selection":
                                mediathek.get_pattern_duration(pattern),
                                u"mode": u"select_duration",
                                })
     else:
-        categories.append({u"name": u"Beschreibung",
+        categories.append({u"name": getLocalizedString(32346),  # u"Beschreibung",
                            u"selection": mediathek.get_pattern_desc(pattern),
                            u"mode": u"select_desc",
                            u"id": expanded_state.get(u"input_request_id", 0) + 1
                            })
 
-    categories.append({u"name": u"Suchmuster leeren",
+    categories.append({u"name": getLocalizedString(32347),  # u"Suchmuster leeren",
                        u"selection": u"",
                        u"mode": u"clear_pattern",
                        })
-#    categories.append({u"name": u"Suchmuster speichern",
+#    categories.append({u"name": getLocalizedString(32348),  # u"Suchmuster speichern",
 #                       u"selection": u"",
 #                       u"mode": u"main",
 #                       })
     if not b_mvweb:
-        categories.append({u"name": u"Filmliste aktualisieren",
+        categories.append({u"name": getLocalizedString(32349),  # u"Filmliste aktualisieren",
                            u"selection": update_str,
                            u"mode": u"update_db_over_gui",
                            # u"IsPlayable": allow_update,
                            })
-    categories.append({u"name": u"Vorherige Suchen",
+    categories.append({u"name": getLocalizedString(32350),  # u"Vorherige Suchen",
                        u"selection": u"",
                        u"mode": u"show_history",
                        })
@@ -736,7 +741,7 @@ def gen_search_categories(mediathek):
 
 
 def listing_add_list_names(listing, state, item, names, i_selected=-1):
-    for i in xrange(len(names)-1):  # Skip u"" at list end
+    for i in xrange(len(names)-1):  # Skip "" at list end
         url = build_url({u"mode": u"update_pattern",
                          u"item": item, u"value": i}, state)
         li = xbmcgui.ListItem(names[i], iconImage=u"DefaultFolder.png")
@@ -828,7 +833,7 @@ def listing_add_history(listing, state):
 def listing_add_remove_entry(listing, state, item):
     if item not in state.get(u"current_pattern", {}):
         return
-    name = u"Suchkriterum entfernen"
+    name = getLocalizedString(32351)  # u"Suchkriterum entfernen"
     url = build_url({u"mode": u"update_pattern",
                      u"item": item}, state)
     li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
@@ -838,7 +843,7 @@ def listing_add_remove_entry(listing, state, item):
 
 
 def listing_add_back_entry(listing, state):
-    name = u"%-20s" % (u"Zurück",)
+    name = u"%-20s" % getLocalizedString(32318)  # (u"Zurück",)
     url = build_url({u"mode": u"main"}, state)
     li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
     li.setProperty(u"IsPlayable", u"true")
@@ -849,14 +854,16 @@ def listing_add_back_entry(listing, state):
 def listing_add_search(listing, mediathek, state):
     pattern = mediathek.get_current_pattern()
     if is_searchable(pattern):
-        name = u"Suche starten"
+        name = getLocalizedString(32352)  # u"Suche starten"
         url = build_url({u"mode": u"start_search"}, state)
         li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
         li.setProperty(u"IsPlayable", u"true")
         is_folder = True
         listing.append((url, li, is_folder))
     else:
-        name = u"Suche starten    [Nur mit Suchkriterium möglich]"
+        # name = u"Suche starten    [Nur mit Suchkriterium möglich]"
+        name = u"%s    [%s]" % (getLocalizedString(32352),
+                                getLocalizedString(32353))
         url = build_url({u"mode": u"main"}, state)
         li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
         li.setProperty(u"IsPlayable", u"false")
@@ -870,22 +877,7 @@ def listing_add_test(listing, state):
     # wirt.clearProperty(u"simple_mediathek_de_state")
     # wirt.setProperty(u"test", u"gespeichert %i" % (foo,))
     # xbmc.executebuiltin(u"UpdateLocalAddons")
-    """
-    if mediathek.update_channel_list():
-        xbmcgui.Dialog().notification(
-            addon_name, u"ok %i %i" % (
-                len(mediathek.get_channel_list()),
-                    mediathek.state.changed),
-            xbmcgui.NOTIFICATION_INFO, 5000)
-    """
-
-    xxx = mediathek.get_search_results().get(u"found", [])
-    name = u"%-20s %s %i" % (u"Test", str(prev_mode), len(xxx))
-    url = build_url({u"mode": u"select_calendar"}, state)
-    li = xbmcgui.ListItem(name, iconImage=u"DefaultFolder.png")
-    li.setProperty(u"IsPlayable", u"true")
-    is_folder = True
-    listing.append((url, li, is_folder))
+    pass
 
 
 def listing_add_livestreams(listing, state):
@@ -928,9 +920,11 @@ def listing_add_search_results(listing, state, results):
 def listing_search_page_link(listing, state, results, ipage):
     if ipage < 0:
         ipage = -ipage - 1
-        name = u"Vorherige Seite (%i)" % (ipage+1)
+        # name = u"Vorherige Seite (%i)" % (ipage+1)
+        name = u"%s (%i)" % (getLocalizedString(32354), ipage+1)
     else:
-        name = u"Nächste Seite (%i)" % (ipage+1)
+        # name = u"Nächste Seite (%i)" % (ipage+1)
+        name = u"%s (%i)" % (getLocalizedString(32355), ipage+1)
 
     # pattern = mediathek.get_current_pattern()
         url = build_url(
@@ -946,18 +940,27 @@ def listing_search_page_link(listing, state, results, ipage):
 
 
 def list_urls(state, urls, search_result):
+    """
     squality = [(u"Geringe Auflösung", u""),
                 (u"Geringe Auflösung", u"  (RTMP)"),
                 (u"Mittlere Auflösung", u""),
                 (u"Mittlere Auflösung", u"  (RTMP)"),
                 (u"Hohe Auflösung", u""),
                 (u"Hohe Auflösung", u"  (RTMP)")]
+    """
+    iquality = [(32357, 32300), (32357, 32356),
+                (32358, 32300), (32358, 32356),
+                (32359, 32300), (32359, 32356)]
     listing = []
     for i in xrange(6):
         if len(urls[i]) == 0:
             continue
         name = u"%-22s | %s... %s" % (
-            squality[i][0], urls[i][:30], squality[i][1])
+            # squality[i][0], urls[i][:30], squality[i][1]
+            getLocalizedString(iquality[i][0]),
+            urls[i][:30],
+            getLocalizedString(iquality[i][1]),
+        )
         """
         url = build_url({u"mode": u"play_url",
                          u"video_url": urls[i]}, state)
@@ -1027,7 +1030,6 @@ def handle_update_side_effects(args):
 # ==============================================
 # Main code
 
-addon = xbmcaddon.Addon()
 addon_name = addon.getAddonInfo(u"name")
 
 with SimpleMediathek() as mediathek:
@@ -1035,7 +1037,9 @@ with SimpleMediathek() as mediathek:
     if sys.argv[1] == u"update_db":
         mode = u"background_script_call"
         xbmcgui.Dialog().notification(
-            addon_name, u"Update gestartet", xbmcgui.NOTIFICATION_INFO)
+            addon_name,  # u"Update gestartet",
+            getLocalizedString(32369),
+            xbmcgui.NOTIFICATION_INFO)
         ok, tdiff = False, 0
         try:
             (ok, start, end, diff) = mediathek.update_db(bForceFullUpdate=True)
@@ -1045,12 +1049,14 @@ with SimpleMediathek() as mediathek:
 
         if ok:
             xbmcgui.Dialog().notification(
-                addon_name,
-                u"Update erfolgreich. Dauer %is" % (tdiff),
+                addon_name,  # u"Update erfolgreich. Dauer %is" % (tdiff),
+                getLocalizedString(32360).format(sec=tdiff),
                 xbmcgui.NOTIFICATION_INFO)
         else:
-            xbmcgui.Dialog().notification(addon_name, u"Update fehlgeschlagen",
-                                          xbmcgui.NOTIFICATION_ERROR, 5000)
+            xbmcgui.Dialog().notification(
+                addon_name,  # u"Update fehlgeschlagen",
+                getLocalizedString(32361),
+                xbmcgui.NOTIFICATION_ERROR, 5000)
 
     elif sys.argv[1] == u"delete_local_data":
         mode = u"background_script_call"
@@ -1070,7 +1076,8 @@ with SimpleMediathek() as mediathek:
             pass
 
         xbmcgui.Dialog().notification(
-            addon_name, u"%i Dateien entfernt" % (len(rm_files)),
+            addon_name,  # u"%i Dateien entfernt" % (len(rm_files)),
+            getLocalizedString(32362).format(num=len(rm_files)),
             xbmcgui.NOTIFICATION_INFO, 5000)
 
     elif sys.argv[1] == u"XXX":
@@ -1119,31 +1126,35 @@ with SimpleMediathek() as mediathek:
 
         if ok:
             xbmcgui.Dialog().notification(
-                addon_name,
-                u"Update erfolgreich. Dauer %is" % (tdiff),
+                addon_name,  # u"Update erfolgreich. Dauer %is" % (tdiff),
+                getLocalizedString(32360).format(sec=tdiff),
                 xbmcgui.NOTIFICATION_INFO)
         else:
-            xbmcgui.Dialog().notification(addon_name, u"Update fehlgeschlagen",
-                                          xbmcgui.NOTIFICATION_ERROR, 5000)
+            xbmcgui.Dialog().notification(
+                addon_name,  # u"Update fehlgeschlagen",
+                getLocalizedString(32361),
+                xbmcgui.NOTIFICATION_ERROR, 5000)
 
     if mode == u"select_calendar":
         # Not implemented
         dialog = xbmcgui.Dialog()
-        result1 = dialog.input(u"Erstes Datum eingeben",
-                               type=xbmcgui.INPUT_DATE)
+        result1 = dialog.input(
+            # u"Erstes Datum eingeben",
+            getLocalizedString(32363),
+            type=xbmcgui.INPUT_DATE)
         if len(result1) > 0:
             # Split and check u"DD/MM/YYYY" format. Extra spaces, i.e.
             # '22/ 1/2000' had to be free'd by the spaces.
             result1 = result1.replace(u" ", u"")
             try:
-                # datetime1 = datetime.strptime(str(result1), u"%d/%m/%Y") #miss
-                # sec1 = int(datetime1.ctime())
                 t = time.strptime(result1, u"%d/%m/%Y")
                 sec1 = int(time.strftime(u"%s", t))
 
-                result2 = dialog.input(u"Zweites Datum eingeben",
-                                       result1,
-                                       type=xbmcgui.INPUT_DATE)
+                result2 = dialog.input(
+                    # u"Zweites Datum eingeben",
+                    getLocalizedString(32370),
+                    result1,
+                    type=xbmcgui.INPUT_DATE)
                 if len(result2) > 0:
                     result2 = result2.replace(u" ", u"")
                     t = time.strptime(result2, u"%d/%m/%Y")
@@ -1166,7 +1177,8 @@ with SimpleMediathek() as mediathek:
             # except (ValueError, TypeError) as e:
             except (RuntimeError,) as e:
                 xbmcgui.Dialog().notification(
-                    addon_name, u"Error during parsing of date strings.",
+                    addon_name,  # u"Error during parsing of date strings.",
+                    getLocalizedString(32364),
                     xbmcgui.NOTIFICATION_ERROR, 5000)
                 mode = u"select_day"
 
@@ -1265,13 +1277,10 @@ with SimpleMediathek() as mediathek:
         # Check if this url/mode was open again after leaving the
         # plugin. If yes, go to main page.
 
-        def __foo__(key, header):
-            pattern = mediathek.get_current_pattern()
-            result, query = keyboard.keyboard_input(
-                header, mediathek.get_pattern_title(pattern)
-            )
+        def _get_string(key, header, pattern, start_text):
+            result, query = keyboard.keyboard_input( header, start_text)
             if result:
-                pattern[u"title"] = query
+                pattern[key] = query
                 changes = {u"current_pattern": pattern}
                 mediathek.update_state(changes, False)  # Unwritten update
                 expanded_state.update(changes)  # propagated by Uri
@@ -1281,10 +1290,17 @@ with SimpleMediathek() as mediathek:
         if arg_id == last:
             mode = u"main"
         else:
+            pattern = mediathek.get_current_pattern()
             if mode == u"select_desc":
-                __foo__(u"description", u"Beschreibung")
+                _get_string(u"description",  # u"Beschreibung")
+                            getLocalizedString(32346),
+                            pattern,
+                            mediathek.get_pattern_desc(pattern))
             else:
-                __foo__(u"title", u"Titel / Thema (No RegEx)")
+                _get_string(u"title",  # u"Titel / Thema (No RegEx)")
+                            getLocalizedString(32366),
+                            pattern,
+                            mediathek.get_pattern_title(pattern))
 
             expanded_state[u"input_request_id"] = arg_id
             mode = u"main"
@@ -1322,7 +1338,8 @@ with SimpleMediathek() as mediathek:
             non_empty_urls = [u for u in urls if len(u) > 0]
             if len(non_empty_urls) == 0:
                 xbmcgui.Dialog().notification(
-                    addon_name, u"Keine URL gefunden",
+                    addon_name,   # u"Keine URL gefunden",
+                    getLocalizedString(32367),
                     xbmcgui.NOTIFICATION_ERROR, 5000)
             else:
                 if quali == 0:
@@ -1412,8 +1429,10 @@ with SimpleMediathek() as mediathek:
             if u"true" == addon.getSetting(u"early_history_update"):
                 mediathek.add_to_history(pattern)
         else:
-            xbmcgui.Dialog().notification(addon_name, u"Suche fehlgeschlagen",
-                                          xbmcgui.NOTIFICATION_ERROR, 5000)
+            xbmcgui.Dialog().notification(
+                addon_name,  # u"Suche fehlgeschlagen",
+                getLocalizedString(32368),
+                xbmcgui.NOTIFICATION_ERROR, 5000)
             # mode = u"main"
 
         changes = {u"latest_search": results}
