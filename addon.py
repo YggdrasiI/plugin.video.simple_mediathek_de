@@ -16,17 +16,18 @@ import os.path
 import json
 import subprocess
 
-import keyboard
-
-# For mediathekviewweb
-import socketIO_client as socketIO
+sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 import mediathekviewweb as MVWeb
 
+import keyboard
 from chmod_binaries import binary_setup
 
 # Old translation variant
 addon = xbmcaddon.Addon()
 getLocalizedString = addon.getLocalizedString
+
+#def getLocalizedString(inum):
+#	return unicode(inum)
 
 """
 Kodi uses Python 2.7.1. It follows an incomplete list of changes
