@@ -34,6 +34,7 @@ else
     "${COMPILER_FLAGS}" \
     ..
 
+
   if [ "${FORCE}" = "1" ] ; then
     make clean
   fi

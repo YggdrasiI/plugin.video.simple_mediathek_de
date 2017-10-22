@@ -1117,12 +1117,10 @@ with SimpleMediathek() as mediathek:
     # Handle modes
     if mode == u"update_db_over_gui":
         ok, tdiff = False, 0
-        if True:  # or try...
-            (ok, start, end, diff) = mediathek.update_db(
-                bForceFullUpdate=False)
+        (ok, start, end, diff) = mediathek.update_db(
+            bForceFullUpdate=False)
+        if ok:
             tdiff = (end-start).seconds
-        else:
-            ok = False
 
         if ok:
             xbmcgui.Dialog().notification(
