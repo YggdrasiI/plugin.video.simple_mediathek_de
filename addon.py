@@ -59,8 +59,8 @@ duration_separate_minmax = False
 directory_cache = False
 
 max_num_entries_per_page = 15
-SKINS_LIST = [u"skin.confluenceu", u"skin.estuary", u"skin.estuary.480"]
-SKINS_WIDE_LIST = [u"skin.confluence.480"]
+# SKINS_LIST = [u"skin.confluenceu", u"skin.estuary", u"skin.estuary.480"]
+# SKINS_WIDE_LIST = [u"skin.confluence.480"]
 
 base_url = sys.argv[0]
 
@@ -1088,15 +1088,23 @@ with SimpleMediathek() as mediathek:
         xbmcplugin.setContent(addon_handle, u"movies")
 
         # Set default view
+        force_view = int(addon.getSetting(u"force_view"))
+        if force_view:
+            # 50 (List) or 51 (Wide List)
+            xbmc.executebuiltin(u"Container.SetViewMode(%i)" %
+                                (force_view + 49))
+        else:
+            # View for other skins
+            #xbmc.executebuiltin(u"Container.SetViewMode(50)")
+            pass
+
+        """
         skin_used = xbmc.getSkinDir()
-        if(skin_used in SKINS_WIDE_LIST or
-                u"true" == addon.getSetting(u"force_wide_list")):
+        if(skin_used in SKINS_WIDE_LIST
             xbmc.executebuiltin(u"Container.SetViewMode(51)")
         elif skin_used in SKINS_LIST:
             xbmc.executebuiltin(u"Container.SetViewMode(50)")
-        else:
-            # View for other skins
-            xbmc.executebuiltin(u"Container.SetViewMode(50)")
+        """
 
         # args = urlparse.parse_qs(sys.argv[2][1:])
         args = unpack_url(sys.argv[2][1:])

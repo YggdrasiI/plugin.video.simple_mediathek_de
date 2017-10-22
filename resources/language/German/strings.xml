@@ -21,7 +21,10 @@
   <string id="32212">Suche per MediathekviewWeb.de</string>
   <string id="32213">History-Eintrag bei jeder Suche erstellen</string>
   <string id="32214">(Debug) Speichere Ausgabe des Binary in /dev/shm/</string>
-  <string id="32215">Erzwinge Ansicht als 'Große Liste'</string>
+  <string id="32215">Ansicht erzwingen</string>
+  <string id="32216">Deaktiviert</string>
+  <string id="32217">Liste</string>
+  <string id="32218">Breite Liste</string>
 
   <!-- In addon.py referenced-->
   <string id="32300"></string> <!-- Empty -->

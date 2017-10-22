@@ -45,6 +45,6 @@ update:
 	cp *.py $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
 
 update_more:
-	cp *.py $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
-	cp -r resources $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/resources
-	cp -r lib $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/lib
+	cp *.py *.xml $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
+	cp -r resources/* $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/resources/.
+	cp -r lib/* $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/lib/.

@@ -4,7 +4,9 @@
 		<setting label="32212" id="use_mediathekviewweb" type="bool" default="false"/>
 		<setting label="32240" id="video_quality" type="enum"
 			lvalues="32202|32204|32203|32205|32206|32207" default="0"/>
-		<setting label="32215" id="force_wide_list" type="bool" default="false"/>
+		<!--<setting label="32215" id="force_wide_list" type="bool" default="false"/>-->
+		<setting label="32215" id="force_view" type="enum"
+			lvalues="32216|32217|32218" default="0"/>
 		<setting label="32209" id="history_length" type="number" default="20"/>
 		<setting label="32213" id="early_history_update" type="bool" default="false"/>
 		<setting label="32211" type="action" action="RunScript(plugin.video.simple_mediathek_de, delete_local_data)"/>

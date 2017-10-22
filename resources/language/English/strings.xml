@@ -21,7 +21,10 @@
   <string id="32212">Search by MediathekviewWeb.de</string>
   <string id="32213">Expand History at each search</string>
   <string id="32214">(Debug) Store output of Binary in /dev/shm</string>
-  <string id="32215">Force view as 'Big list'</string>
+  <string id="32215">Force view</string>
+  <string id="32216">None</string>
+  <string id="32217">List</string>
+  <string id="32218">Big List</string>
 
   <!-- In addon.py referenced-->
   <string id="32300"></string> <!-- Empty -->
