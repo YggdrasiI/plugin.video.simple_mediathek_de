@@ -59,7 +59,7 @@ DEPS=settings.h
 
 ifneq ($(BROTLI),0)
 BROTLI_ROOT=${INSTALL_PREFIX}/${MACH}
-BROTLI_DEP=$(BROTLI_ROOT)/lib/libbrotlidec.so
+BROTLI_DEP=$(BROTLI_ROOT)/lib/libbrotlidec.so.1.0.1
 # With Brotli
 CFLAGS+=-DCOMPRESS_BROTLI -I$(BROTLI_ROOT)/include  -L$(BROTLI_ROOT)/lib -lbrotlidec -lbrotlienc -lbrotlicommon
 #CFLAGS+=-DCOMPRESS_BROTLI $$(PKG_CONFIG_PATH=$(BROTLI_ROOT)/lib/pkgconfig/ pkg-config --libs --cflags brotli)

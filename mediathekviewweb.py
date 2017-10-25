@@ -106,7 +106,7 @@ def fetch(pattern, page=0, entries_per_page=10):
                }
 
     # Send query
-    with SocketIO(u"https://mediathekviewweb.de", 443, verify=False) as socketIO:
+    with SocketIO(u"https://mediathekviewweb.de", 443, verify=True) as socketIO:
 
         film_namespace = socketIO.define(FilmNamespace)
         socketIO.emit(u"queryEntries", queryObj, film_namespace.on_film_response)
