@@ -456,7 +456,7 @@ int u8_vprintf(char *fmt, va_list ap)
         sz = cnt + 1;
         goto try_print;
     }
-    wcs = (uint32_t*)alloca((cnt+1) * sizeof(uint32_t));
+    wcs = alloca((cnt+1) * sizeof(*wcs));
     cnt = u8_toucs(wcs, cnt+1, buf, cnt);
     printf("%ls", (wchar_t*)wcs);
     return cnt;

@@ -113,7 +113,7 @@ int create_index_file(
 
     //Currently, fixed name.
     size_t ts = strlen(p_fl_ws->index_folder) + sizeof(index_file_template) + 10;
-    char *tmp = (char *) malloc(ts * sizeof(char));
+    char *tmp =  malloc(ts * sizeof(*tmp));
     const int diff = p_fl_ws->p_arguments->diff_update;
     if( !tmp ) return -1;
 
@@ -152,7 +152,7 @@ void write_index_footer(
 {
     // Write seek position of title file after end (uncompressed file size).
     uint32_t seek = (uint32_t)p_fl_ws->searchable_strings.seek; //size_t -> uint32_t
-    ssize_t w = write( p_fl_ws->index_fd, &seek, sizeof(uint32_t));
+    ssize_t w = write( p_fl_ws->index_fd, &seek, sizeof(seek));
     assert( sizeof(seek) == w );
     _unused(w);
 
@@ -164,8 +164,8 @@ void write_index_footer(
     /* Write length of channel data, again.
      * Required to seek the channel list begin from the end of the file.
      */
-    ssize_t end = write( p_fl_ws->index_fd, &chan_data_length, sizeof(int32_t));
-    assert( (size_t)sizeof(int32_t) == end );
+    ssize_t end = write( p_fl_ws->index_fd, &chan_data_length, sizeof(chan_data_length));
+    assert( (size_t)sizeof(chan_data_length) == end );
     _unused(end);
 
 }
@@ -243,7 +243,7 @@ int init_next_payload_file(
     p_fl_ws->payload.id++;
     assert( p_fl_ws->index_folder != NULL);
     size_t ts = strlen(p_fl_ws->index_folder) + sizeof(payload_file_template) + 10;
-    char *tmp = (char *) malloc(ts * sizeof(char));
+    char *tmp = malloc(ts * sizeof(*tmp));
     const int diff = p_fl_ws->p_arguments->diff_update;
     assert( diff == 0 || p_fl_ws->payload.id >= FIRST_DIFF_INDEX );
     _unused(diff);
@@ -290,7 +290,7 @@ int init_next_searchable_file(
     assert( p_fl_ws->index_folder != NULL);
     assert( p_fl_ws->index_folder != NULL);
     size_t ts = strlen(p_fl_ws->index_folder) + sizeof(strings_file_template) + 10;
-    char *tmp = (char *) malloc(ts * sizeof(char));
+    char *tmp = malloc(ts * sizeof(*tmp));
     const int diff = p_fl_ws->p_arguments->diff_update;
     if( !tmp ){
         return -1;
@@ -665,7 +665,7 @@ int remove_old_diff_files(
 
     // 1. Delete index file
     size_t ts = strlen(folder) + sizeof(index_file_template) + 10;
-    char *tmp = (char *) malloc(ts * sizeof(char));
+    char *tmp = malloc(ts * sizeof(*tmp));
     if( !tmp ) return -1;
 
     snprintf(tmp, ts, index_file_template,
@@ -680,7 +680,7 @@ int remove_old_diff_files(
     // 2. Delete title file(s)
     di = FIRST_DIFF_INDEX;
     ts = strlen(folder) + sizeof(strings_file_template) + 10;
-    tmp = (char *) malloc(ts * sizeof(char));
+    tmp = malloc(ts * sizeof(*tmp));
     if( !tmp ) return -1;
     while(1){
         snprintf(tmp, ts, strings_file_template,
@@ -700,7 +700,7 @@ int remove_old_diff_files(
     // 3. Delete payload file(s)
     di = FIRST_DIFF_INDEX;
     ts = strlen(folder) + sizeof(payload_file_template) + 10;
-    tmp = (char *) malloc(ts * sizeof(char));
+    tmp = malloc(ts * sizeof(*tmp));
     if( !tmp ) return -1;
 
     while(1){

@@ -20,7 +20,7 @@ search_pair_t *search_pair_create(){
         {0, 0, NULL}, /* internal buffer */
         0, 0, /* Offsets */
     };
-    search_pair_t *ret = (search_pair_t *) malloc(sizeof(sp));
+    search_pair_t *ret = malloc(sizeof(*ret));
     if( ret ){
         memcpy(ret, &sp, sizeof(sp));
     }
@@ -144,7 +144,7 @@ void search_pair_cache(
             *((uint32_t*)(sp->buf.p + sp->buf.len - 8)) = 0;
             *((uint32_t*)(sp->buf.p + sp->buf.len - 4)) = 0;
             // or
-            //sp->buf.p = (char*) calloc(sp->buf.len + 1, sizeof(char));
+            //sp->buf.p = calloc(sp->buf.len + 1, sizeof(*sp->buf.p));  // char
         }
     }
 
@@ -472,7 +472,7 @@ search_pair_t **pattern_1_create()
     const int NP = 1;
     int i;
 
-    search_pair_t **pp_pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
+    search_pair_t **pp_pairs = (search_pair_t **) malloc((NP+1) * sizeof(search_pair_t*));
     pp_pairs[NP] = NULL;
     for( i=0; i<NP; ++i){
         pp_pairs[i] = search_pair_create();
@@ -494,7 +494,7 @@ search_pair_t **pattern_filmliste_flexibel_create()
     const int NP = 21;
     int i;
 
-    search_pair_t **pp_pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
+    search_pair_t **pp_pairs = (search_pair_t **) malloc((NP+1) * sizeof(search_pair_t*));
     pp_pairs[NP] = NULL;
 
     pp_pairs[0] = search_pair_create();
@@ -525,7 +525,7 @@ search_pair_t **pattern_filmliste_head()
     const int NP = 3;
     int i;
 
-    search_pair_t **pp_pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
+    search_pair_t **pp_pairs = (search_pair_t **) malloc((NP+1) * sizeof(search_pair_t*));
     pp_pairs[NP] = NULL;
 
     pp_pairs[0] = search_pair_create();

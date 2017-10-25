@@ -138,7 +138,9 @@ typedef struct {
 
   int first_comma_offset; // Shift for first entry to omit leading comma (+space)
   int reversed_flag;
+  int search_whole_index_flag; // If 0, programm stops after N+Nskip matches.
   int overlap_flag;
+  void (*sort_handler);
 } output_t;
 
 typedef struct search_workspace_s {

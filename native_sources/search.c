@@ -27,7 +27,8 @@ search_workspace_t search_ws_create(
             p_arguments->max_num_results,
             p_arguments->skiped_num_results,
             p_arguments->reversed_results,
-            2 /* offset for ",\n" */);
+            2 /* offset for ",\n" */,
+            NULL);
 
 
     search_workspace_t s_ws = {
@@ -99,13 +100,13 @@ void init_chunks(
     /* Second + 1 for carry during array index evaluation */
     p_chunks->len = 1 + 1 + p_s_ws->searchable_strings_len / SEARCH_TITLE_ARR_LEN;
 
-    p_chunks->bufs = (char_buffer_t *) calloc(
+    p_chunks->bufs = calloc(
             p_chunks->len, sizeof(char_buffer_t));
     /* Here, the last element is an copy of the previous, too.*/
-    p_chunks->start_seeks = (uint32_t *) calloc(
+    p_chunks->start_seeks = calloc(
             p_chunks->len, sizeof(uint32_t));
 
-    p_chunks->start_ids = (uint32_t *) calloc(
+    p_chunks->start_ids = calloc(
             p_chunks->len, sizeof(uint32_t));
     p_chunks->start_ids[0] = LINKED_LIST_FIRST_ID;
 }
@@ -178,7 +179,7 @@ int open_index_file(
 
     //Currently, fixed name.
     size_t ts = strlen(p_arguments->index_folder) + sizeof(index_file_template) + 10;
-    char *tmp = (char *) malloc(ts * sizeof(char));
+    char *tmp = malloc(ts * sizeof(*tmp));
     const int diff = p_s_ws->p_arguments->diff_update;
     if( !tmp ) return -1;
 
@@ -210,7 +211,7 @@ int open_title_file(
 
     //Currently, fixed name.
     size_t ts = strlen(p_arguments->index_folder) + sizeof(strings_file_template) + 10;
-    char *tmp = (char *) malloc(ts * sizeof(char));
+    char *tmp = malloc(ts * sizeof(*tmp));
     const int diff = p_s_ws->p_arguments->diff_update;
     if( !tmp ) return -1;
 
@@ -250,7 +251,7 @@ void read_index_footer(
 {
     uint32_t seek;
     ssize_t w = read( p_s_ws->index_fd, &seek,
-            sizeof(uint32_t));
+            sizeof(seek));
             //sizeof(p_s_ws->searchable_strings.seek));
     assert( (ssize_t)sizeof(seek) == w );
     _unused(w);
@@ -264,8 +265,8 @@ void read_index_footer(
      * (just to mirror write_index_footer() behavior)
      */
     int32_t bytes_was_read;
-    ssize_t n = read(p_s_ws->index_fd, &bytes_was_read, sizeof(int32_t));
-    assert( n == sizeof(int32_t));
+    ssize_t n = read(p_s_ws->index_fd, &bytes_was_read, sizeof(bytes_was_read));
+    assert( n == sizeof(bytes_was_read));
     assert( len_channel_data == bytes_was_read);
     _unused(n); _unused(len_channel_data);
 }
@@ -587,7 +588,7 @@ int _search_by_title_(
                 {
                     output_add_id(&p_s_ws->output, p_el->id);
                     if( *p_found >= found_max
-                            && p_s_ws->output.reversed_flag == 0
+                            && !p_s_ws->output.search_whole_index_flag
                       ){
                         return 0;
                     }
@@ -648,7 +649,7 @@ int _search_do_search_(
         return -1;
     }
     index_node_t *p_el = linked_list_get_node(p_list, id);
-    const int r = p_s_ws->output.reversed_flag;
+    const int r = p_s_ws->output.search_whole_index_flag;
     while( r || ( *p_found < found_max ))
     {
         while( num_matched < K ){
@@ -920,7 +921,7 @@ int search_do_search(
     while( 1 ){
         _search_do_search_(p_s_ws, &pattern);
         if( p_s_ws->output.found >= p_s_ws->output.M
-                && p_s_ws->output.reversed_flag == 0
+                && !p_s_ws->output.search_whole_index_flag
                 ){
             break;
         }
@@ -1155,8 +1156,8 @@ void search_read_title_file(
         p_current_chunk->len = (next_seek - current_seek);
         //DEBUG( fprintf(stderr, "Allocate buffer of len %zi for [%i, %i)\n",
         //            p_current_chunk->len, current_seek, next_seek) );
-        p_current_chunk->p = (char *)malloc(
-                p_current_chunk->len * sizeof(char));
+        p_current_chunk->p = malloc(
+                p_current_chunk->len * sizeof(*p_current_chunk->p));
         p_current_chunk->used = 0;
 
         // Fill buffer
@@ -1351,8 +1352,8 @@ int search_read_title_file_partial(
     p_current_chunk->len = (next_seek - current_seek);
     //DEBUG( fprintf(stderr, "Allocate buffer of len %zi for [%i, %i)\n",
     //            p_current_chunk->len, current_seek, next_seek) );
-    p_current_chunk->p = (char *)malloc(
-            p_current_chunk->len * sizeof(char));
+    p_current_chunk->p = malloc(
+            p_current_chunk->len * sizeof(*p_current_chunk->p));
     p_current_chunk->used = 0;
 
     // Fill buffer
@@ -1436,7 +1437,7 @@ int _search_by_title_partial_(
                 {
                     output_add_id(&p_s_ws->output, p_el->id);
                     if( *p_found >= found_max
-                            && p_s_ws->output.reversed_flag == 0
+                            && !p_s_ws->output.search_whole_index_flag
                       ){
                         p_pattern->current_id = p_el->id + 1;
                         // ( + 1 because variable stores first unhandled.)
@@ -1606,7 +1607,8 @@ int search_gen_patterns_for_partial(
         return 0;
     }
 
-    *pp_results = (search_pattern_t *) malloc( len_results * sizeof(search_pattern_t) );
+    *pp_results = /*(search_pattern_t *)*/ malloc(
+            len_results * sizeof(search_pattern_t) );
     search_pattern_t *first = *pp_results;
     search_pattern_t *cur = *pp_results;
     *cur = first_pattern;
@@ -1714,7 +1716,7 @@ int search_do_search_partial(
 
     index_node_t *p_el = linked_list_get_node(p_list, id);
 
-    const int r = p_s_ws->output.reversed_flag;
+    const int r = p_s_ws->output.search_whole_index_flag;
     while( r || ( *p_found < found_max )){
         while( num_matched < K ){
             // Check if current element fulfill next releation

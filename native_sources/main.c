@@ -57,12 +57,12 @@ int indexing(
     search_pair_t **pp_pairs_header = pattern_filmliste_head();
 
     // Initial of further variables
-    char *_buf_in = (char *)malloc( (MY_BUFSIZ + 1) * sizeof(char) );
+    char *_buf_in = malloc( (MY_BUFSIZ + 1) * sizeof(*_buf_in) );
     _buf_in[MY_BUFSIZ] = '\0';
     char_buffer_t buf_in = {MY_BUFSIZ, 0, _buf_in};
 
     //char _buf_out[OUT_CACHESIZ + 1];
-    char *_buf_out = (char *)malloc( (OUT_CACHESIZ + 1) * sizeof(char) );
+    char *_buf_out = malloc( (OUT_CACHESIZ + 1) * sizeof(*_buf_out) );
     _buf_out[OUT_CACHESIZ] = '\0';
     char_buffer_t buf_out = {OUT_CACHESIZ, 0, _buf_out};
 
@@ -125,7 +125,7 @@ int indexing(
                 strncmp(keyw, key, sizeof(keyw)-1) != 0 ){
             // Header of file not parseable
         }else{
-            char *tmp = (char *)malloc( (len[1]+1)*sizeof(char*) );
+            char *tmp = malloc( (len[1]+1)*sizeof(*tmp) );
             tmp[len[1]] = '\0';
             memcpy(tmp, date1, len[1]);
             struct tm tm;
@@ -150,8 +150,8 @@ int indexing(
     if( p_arguments->diff_update && fl_ws.list_creation_time > main_list_creation_time
             && (fl_ws.list_creation_time - main_list_creation_time ) > 86400 ){
 
-        char *main_day_str = (char *) malloc(40 * sizeof(char));
-        char *diff_day_str = (char *) malloc(40 * sizeof(char));
+        char *main_day_str = malloc(40 * sizeof(*main_day_str));
+        char *diff_day_str = malloc(40 * sizeof(*diff_day_str));
         struct tm * timeinfo;
 
         timeinfo = localtime (&main_list_creation_time);
@@ -364,7 +364,7 @@ int searching(
                 }
 
                 if( s_ws.output.found >= s_ws.output.M &&
-                        s_ws.output.reversed_flag == 0
+                        !s_ws.output.search_whole_index_flag
                   ){
                     output_flush(&s_ws, &s_ws.output);
                     goto break_both; // Enough data. break pattern, chunk and file loop.

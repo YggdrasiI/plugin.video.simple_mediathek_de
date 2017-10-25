@@ -72,7 +72,7 @@ int open_payload_file(
     // Construct file name
     assert( p_pay_ws->p_arguments->index_folder != NULL);
     size_t ts = strlen(p_pay_ws->p_arguments->index_folder) + sizeof(payload_file_template) + 10;
-    char *tmp = (char *) malloc(ts * sizeof(char));
+    char *tmp = malloc(ts * sizeof(*tmp));
     if( !tmp ){
         return -1;
     }
@@ -163,7 +163,7 @@ int payload_do_search(
     if( p_buf_in->p == NULL ){
         p_buf_in->len = OUT_CACHESIZ;
         p_buf_in->used = 0;
-        p_buf_in->p = char_buffer_malloc(p_buf_in->len * sizeof(char));
+        p_buf_in->p = char_buffer_malloc(p_buf_in->len * sizeof(*p_buf_in->p));
     }
     assert( 0 < p_buf_in->len );
     assert( NULL != p_buf_in->p );
@@ -441,7 +441,7 @@ search_pair_t **pattern_payload_file()
     const int NP = 6;
     int i; 
 
-    search_pair_t **pairs = (search_pair_t **) malloc(sizeof(search_pair_t*) * (NP+1));
+    search_pair_t **pairs = (search_pair_t **) malloc((NP+1) * sizeof(search_pair_t*));
     pairs[NP] = NULL;
 
     pairs[0] = search_pair_create();

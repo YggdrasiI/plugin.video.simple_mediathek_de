@@ -10,7 +10,8 @@ output_t output_init(
         uint32_t N,
         uint32_t Nskip,
         int reversed,
-        int comma_offset)
+        int comma_offset,
+        void (*sort_handler))
 {
     output_t o;
     o.N = N;
@@ -22,15 +23,17 @@ output_t output_init(
     o.first_comma_offset = comma_offset;
     o.reversed_flag = reversed;
     o.overlap_flag = 0;
+    o.sort_handler = sort_handler;
+    o.search_whole_index_flag = o.reversed_flag|(o.sort_handler != NULL);
 
-    o.p_ids = (uint32_t *) calloc(o.M, sizeof(uint32_t));
-    o.p_to_print = (output_str_t *) calloc(o.M, sizeof(output_str_t));
+    o.p_ids = calloc(o.M, sizeof(*o.p_ids)); // (uint32_t *)
+    o.p_to_print = calloc(o.M, sizeof(*o.p_to_print));
     if( o.p_ids == NULL || o.p_to_print == NULL || o.M == 0 ){
         Free(o.p_ids);
         Free(o.p_to_print);
         fprintf(stderr, "Allocation of mem for %u elements failed.\n", o.M);
         if( N != 1 || Nskip != 1 ){
-            return output_init(1, 1, reversed, comma_offset);
+            return output_init(1, 1, reversed, comma_offset, sort_handler);
         }
     }
 
@@ -93,7 +96,7 @@ void output_flush(
     }
     INC_MODULO(p, M);
 
-    if( p_output->reversed_flag == 0 ){
+    if( !p_output->search_whole_index_flag ){
         // Go fast-forward to last N entries because the other ones
         // would not be needed in any case.
         uint32_t d = dist(p, i, M);
@@ -134,7 +137,7 @@ void output_fill(
     if( p_out->p == NULL ){
         p_out->len = OUT_DEFAULT_LEN;
         p_out->used = 0;
-        p_out->p = (char *) malloc(p_out->len * sizeof(char));
+        p_out->p = malloc(p_out->len * sizeof(*p_out->p));  // (char *)
     }
 
     linked_list_t *p_list = &p_s_ws->index;
@@ -233,7 +236,7 @@ void output_fill(
         Free(p_out->p);
         p_out->len = len_needed;
         p_out->used = 0;
-        p_out->p = (char *) malloc(p_out->len * sizeof(char));
+        p_out->p = malloc(p_out->len * sizeof(*p_out->p));
     }
 }
 

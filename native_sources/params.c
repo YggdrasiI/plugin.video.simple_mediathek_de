@@ -257,7 +257,7 @@ void parseInts(
         return;
     }
 
-    uint32_t *new_anchors = (uint32_t *)calloc(len, sizeof(uint32_t));
+    uint32_t *new_anchors = calloc(len, sizeof(*new_anchors));
     size_t i = 0;
 
     // 2. Parse until error/end.

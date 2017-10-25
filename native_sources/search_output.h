@@ -15,7 +15,8 @@ output_t output_init(
         uint32_t N,
         uint32_t Nskip,
         int reversed,
-        int comma_offset)
+        int comma_offset,
+        void (*sort_handler))
 ;
 
 void output_uninit(
