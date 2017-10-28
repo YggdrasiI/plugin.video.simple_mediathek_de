@@ -23,13 +23,17 @@ search_workspace_t search_ws_create(
     size_t nlocalday = (tnow + clock_offset) / 86400;  // NDay relative to current time zone
     time_t tlocalday_begin = nlocalday * 86400 - clock_offset; // Begin of day in current time zone
 
+
+    sort_cmp_handler_t *sort_handler = NULL;
+    output_select_sorting_function(p_arguments->sort_by,
+            &p_arguments->reversed_results, &sort_handler);
+
     output_t output = output_init(
             p_arguments->max_num_results,
             p_arguments->skiped_num_results,
             p_arguments->reversed_results,
             2 /* offset for ",\n" */,
-            NULL);
-
+            sort_handler);
 
     search_workspace_t s_ws = {
         -1, // tcreation Will be overwritten after load of title file.(*)
@@ -586,7 +590,7 @@ int _search_by_title_(
                 if( _search_compare_title_(p_s_ws, p_pattern, p_el) == 0 &&
                     _all_arguments_fulfilled(p_s_ws, p_pattern, p_el) == 0 )
                 {
-                    output_add_id(&p_s_ws->output, p_el->id);
+                    output_add_id(p_s_ws, &p_s_ws->output, p_el->id);
                     if( *p_found >= found_max
                             && !p_s_ws->output.search_whole_index_flag
                       ){
@@ -683,7 +687,7 @@ int _search_do_search_(
                     _search_compare_title_(p_s_ws, p_pattern, p_el) == 0 ) &&
                 _all_arguments_fulfilled(p_s_ws, p_pattern, p_el) == 0 )
         {
-            output_add_id(&p_s_ws->output, id);
+            output_add_id(p_s_ws, &p_s_ws->output, id);
         }
 
         // Generate start-id for next round as biggest successor
@@ -706,10 +710,12 @@ int _search_do_search_(
 }
 
 void print_search_results(
+        int fd,
         search_workspace_t *p_s_ws)
 {
-    int fd = 1; //p_s_ws->?;
+    //int fd = 1; //p_s_ws->?;
 
+    //output_flush(p_s_ws, &p_s_ws->output, 1); // already done.
     output_print(fd, &p_s_ws->output);
 }
 
@@ -938,9 +944,7 @@ int search_do_search(
     }
 
     // Transfer data into output buffer
-    // (If reversed flag is not set, it doubles
-    // the required memcpy opereations...)
-    output_flush(p_s_ws, &p_s_ws->output);
+    output_flush(p_s_ws, &p_s_ws->output, 1);
     return 0;
 }
 
@@ -1435,7 +1439,7 @@ int _search_by_title_partial_(
                 if( _search_compare_title_(p_s_ws, p_pattern, p_el) == 0  &&
                         _all_arguments_fulfilled(p_s_ws, p_pattern, p_el) == 0 )
                 {
-                    output_add_id(&p_s_ws->output, p_el->id);
+                    output_add_id(p_s_ws, &p_s_ws->output, p_el->id);
                     if( *p_found >= found_max
                             && !p_s_ws->output.search_whole_index_flag
                       ){
@@ -1753,7 +1757,7 @@ int search_do_search_partial(
                     _search_compare_title_(p_s_ws, p_pattern, p_el) == 0 ) &&
                 _all_arguments_fulfilled(p_s_ws, p_pattern, p_el) == 0 )
         {
-            output_add_id(&p_s_ws->output, p_el->id);
+            output_add_id(p_s_ws, &p_s_ws->output, p_el->id);
         }
 
         // Generate start-id for next round as biggest successor

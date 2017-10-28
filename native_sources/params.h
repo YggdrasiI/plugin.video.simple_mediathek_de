@@ -37,6 +37,7 @@ typedef struct arguments {
     uint32_t skiped_num_results;
     int32_t reversed_results;
     int32_t diff_update;
+    const char *sort_by;
 } arguments_t;
 
 /* Initialize argument list */

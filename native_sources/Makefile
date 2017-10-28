@@ -163,6 +163,9 @@ valgrind:
 leak:
 	$(_LD_LIBRARY_PATH) valgrind  --leak-check=full ./$(PROG_NAME) $(ARGS)
 
+memory:
+	$(_LD_LIBRARY_PATH) ./val_mem.sh ./$(PROG_NAME) $(ARGS)
+
 index: $(FILMLISTE_AKT_JSON)
 	./$(SCRIPT_NAME) -a -i "$(FILMLISTE_AKT_JSON)"
 

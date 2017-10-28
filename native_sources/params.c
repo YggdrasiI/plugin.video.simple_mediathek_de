@@ -91,6 +91,9 @@ static struct argp_option options[] = {
     {"reverse", 'r', 0, OPTION_NO_USAGE,
         "For search mode. Invert order of entries in output",
         3},
+    {"sort", 'S', "ORDER", OPTION_NO_USAGE,
+        "For search mode. Allowed values: {date|begin|channel}[Desc]",
+        3},
     {"diff", 'x', 0, OPTION_NO_USAGE,
         "In combination with --index: The input will be processed as differential update. " \
             "Differential updates (hourly) updates to the (bigger) daily files.\n" \
@@ -129,6 +132,7 @@ arguments_t default_arguments()
     arguments.skiped_num_results = 0;
     arguments.reversed_results = 0;
     arguments.diff_update = 0;
+    arguments.sort_by = NULL;
 
     return arguments;
 }
@@ -191,7 +195,7 @@ void normalize_args(
 
     // Omit very high values for --num input because its sum
     // directy affects the size of an array.
-#define MAX_ALLOWED_NUMBER_OF_RESULTS 300000
+#define MAX_ALLOWED_NUMBER_OF_RESULTS 3000000
     if( p_arguments->skiped_num_results > MAX_ALLOWED_NUMBER_OF_RESULTS ){
         fprintf(stderr, "Number of skiped values (%u) to high! Search aborted\n",
                 p_arguments->skiped_num_results);
@@ -363,6 +367,7 @@ void fprint_args(FILE *stream, arguments_t *args){
                 args->skiped_num_results,
                 (args->reversed_results?"backward":"forward")
                );
+        fprintf(stream, "Sorting: %s\n", args->sort_by?args->sort_by:"None forced");
     }
 
     if( args->mode == PAYLOAD_MODE ){
@@ -431,6 +436,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                       p_arguments->reversed_results = 1;
                       break;
                   }
+        case 'S': p_arguments->sort_by = arg; break;
         case 'x': {
                       p_arguments->diff_update = 1;
                       break;

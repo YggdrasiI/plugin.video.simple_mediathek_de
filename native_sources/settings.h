@@ -82,7 +82,7 @@
  * The splitted strings should not contain this character.
  */
 //#define SPLIT_CHAR '|'
-#define SPLIT_CHAR 0x0B  // VT
+#define SPLIT_CHAR (0x0B)  // VT
 
 /* Highest byte value used to mark that prefetecd length information
  * of a short_string_t is invalid. Use len(...), etc to get length info.

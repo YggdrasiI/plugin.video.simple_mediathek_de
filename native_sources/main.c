@@ -309,11 +309,20 @@ int searching(
 
     // Argument handling
     if( p_arguments->max_num_results == 0 ){
-        dprintf(fdout, "{ \"found\": []}\n");
-        return 0;
+      if( p_arguments->output_file ){
+        fdout = open(p_arguments->output_file, O_CREAT|O_WRONLY|O_TRUNC,
+            S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
+        if( fdout < 0 ){
+          fprintf(stderr, "Can not open file '%s'\n", p_arguments->output_file);
+          return -1;
+        }
+      }
+      dprintf(fdout, "{ \"found\": []}\n");
+      return 0;
     }
 
     search_workspace_t s_ws = search_ws_create(p_arguments);
+    output_qsort_set_workspace(&s_ws);
     if( open_index_file(&s_ws, s_ws.p_arguments) ){
         fprintf(stderr, "Opening of index file failed.\n");
         return -1;
@@ -366,17 +375,20 @@ int searching(
                 if( s_ws.output.found >= s_ws.output.M &&
                         !s_ws.output.search_whole_index_flag
                   ){
-                    output_flush(&s_ws, &s_ws.output);
+                    output_flush(&s_ws, &s_ws.output, 1);
                     goto break_both; // Enough data. break pattern, chunk and file loop.
                 }
             }
 
-            output_flush(&s_ws, &s_ws.output);
 
             if( status > 0 ){
-                // Latest chunk already read
-                break;
+              // Latest chunk already read
+              output_flush(&s_ws, &s_ws.output, 1);
+              break;
+            }else{
+              output_flush(&s_ws, &s_ws.output, 0);
             }
+
             // Load next chunk
             status = search_read_title_file_partial(&s_ws);
         };
@@ -403,7 +415,7 @@ int searching(
 
 break_both:
 
-    print_search_results(&s_ws);
+    print_search_results(fdout, &s_ws);
     dprintf(fdout, "\n]}\n");
 
     if( 0 < len_patterns ){
@@ -433,7 +445,7 @@ break_both:
       }
     } // End of "normal|diff" loop
 
-    print_search_results(&s_ws);
+    print_search_results(fdout, &s_ws);
     dprintf(fdout, "\n]}\n");
 #endif
 

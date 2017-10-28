@@ -119,28 +119,44 @@ typedef struct {
 typedef char_buffer_t output_str_t;
 #endif
 
+/* Bundle values for sorting by qsort */
+typedef struct {
+    uint32_t id;
+    searchable_strings_prelude_t *p_entry;  // for output_fill()-call
+    size_t iChunk;  // just for get_topic()-call
+    // Copy of *p_entry => Title string does not follow this struct anymore
+    // Required for qsort compare functions.
+    searchable_strings_prelude_t entry;
+    output_str_t to_print;
+} output_candidate_t;
+
+typedef int sort_cmp_handler_t(const void * p_left, const void * p_right);
+
 // Following struct holds output. (Size depends on number of requested return results...)
 typedef struct {
   uint32_t N;
   uint32_t Nskip;
-  uint32_t M; // Sum of N+Nskip
+  uint32_t Nsearch;
+  uint32_t M; // N+Nskip
+  uint32_t M2; // Sum of N+Nskip+Nsearch
+  output_candidate_t *p_candidates; // length M2
+
+  // To identify unhandled objects in array after sorting.
+  uint32_t first_unhandled_id;
+
   uint32_t found; // Incr. for each added element.
-  uint32_t pos_i; // 0 <= pos_i < M (== found % M)
-  uint32_t pos_p; // 0 <= pos_p < M; Latest index where pp_top_print contain data.
+  uint32_t pos_i; // 0 <= pos_i < M2 (== (found-1) % M2)
+  uint32_t pos_p; // 0 <= pos_p < M <= M2; Latest index where pp_top_print contain data.
   /* if pos_p = pos_i  Nothing is unhandled.
    * if pos_p < pos_i. [pos_p+1, pos_i] is unhandled.
    * if pos_p > pos_i  [pos_p+1, M-1] and [0, pos_i] is unhandled.
    *
    */
-
-  uint32_t *p_ids; // length M
-  output_str_t *p_to_print; // Candidates to print, length M
-
   int first_comma_offset; // Shift for first entry to omit leading comma (+space)
   int reversed_flag;
   int search_whole_index_flag; // If 0, programm stops after N+Nskip matches.
   int overlap_flag;
-  void (*sort_handler);
+  sort_cmp_handler_t *sort_handler;
 } output_t;
 
 typedef struct search_workspace_s {
@@ -234,6 +250,7 @@ void search_read_title_file(
 /* Print Json data (without content of payload files)
  * for list of current search */
 void print_search_results(
+        int fd,
         search_workspace_t *p_s_ws)
 ;
 
