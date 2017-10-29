@@ -209,8 +209,10 @@ class SimpleMediathek:
 
     def update_mvw(self):
         if 0 == len(self.get_channel_list()) and b_mvweb:
-            from channel_list import channels
+            # from channel_list import channels
+            (exit_code, channels) = MVWeb.fetch_channel_list()
             self.update_state(channels, True)
+            write_state_file(self.state)
             # xbmcgui.Dialog().notification(
             #    addon_name, u"Init channel list",
             #    xbmcgui.NOTIFICATION_INFO, 5000)
