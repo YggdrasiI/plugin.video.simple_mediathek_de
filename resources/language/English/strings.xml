@@ -25,6 +25,10 @@
   <string id="32216">None</string>
   <string id="32217">List</string>
   <string id="32218">Big List</string>
+  <string id="32225">Sorting of search results</string>
+  <string id="32226">None</string>
+	<string id="32227">By date, Youngest to Oldest</string>
+	<string id="32228">By date, Oldest to Youngest</string>
 
   <!-- In addon.py referenced-->
   <string id="32300"></string> <!-- Empty -->

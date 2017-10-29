@@ -4,6 +4,8 @@
 		<setting label="32212" id="use_mediathekviewweb" type="bool" default="false"/>
 		<setting label="32240" id="video_quality" type="enum"
 			lvalues="32202|32204|32203|32205|32206|32207" default="0"/>
+		<setting label="32225" id="sorting" type="enum"
+			lvalues="32226|32227|32228" default="0"/>
 		<!--<setting label="32215" id="force_wide_list" type="bool" default="false"/>-->
 		<setting label="32215" id="force_view" type="enum"
 			lvalues="32216|32217|32218" default="0"/>

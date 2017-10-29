@@ -1429,6 +1429,17 @@ with SimpleMediathek() as mediathek:
             search_args.append(u"--num")
             search_args.append(page)
 
+            # Add sorting flag
+            sorting = int(addon.getSetting(u"sorting"))
+            if sorting:
+                search_args.append(u"--sort")
+                if sorting == 1:
+                    search_args.append(u"date")
+                elif sorting == 2:
+                    search_args.append(u"dateAsc")
+                else:
+                    search_args.pop(-1)
+
             (exit_code, data) = call_binary(search_args)
             if exit_code == 0:
                 js = json.loads(data)

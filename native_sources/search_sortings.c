@@ -50,7 +50,8 @@ int compByDateAsc(const void *base, const void *p_nmemb) // sort_cmp_handler_t
     const output_candidate_t *left, *right;
     time_t left_day, right_day;
 
-    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_DATE_ASC, PREPARE_BY_DATE)
+    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_DATE_ASC, PREPARE_BY_DATE);
+    return 0;
 }
 int compByDateDesc(const void *base, const void *p_nmemb) // sort_cmp_handler_t
 {
@@ -60,7 +61,8 @@ int compByDateDesc(const void *base, const void *p_nmemb) // sort_cmp_handler_t
     const output_candidate_t *left, *right;
     time_t left_day, right_day;
 
-    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_DATE_DESC, PREPARE_BY_DATE)
+    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_DATE_DESC, PREPARE_BY_DATE);
+    return 0;
 }
 #else
 int compByDateAsc (const void * p_left, const void * p_right)
@@ -114,7 +116,8 @@ int compByTimeAsc(const void *base, const void *p_nmemb) // sort_cmp_handler_t
     time_t left_day, right_day;
     int left_begin, right_begin;
 
-    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_TIME_ASC, PREPARE_BY_TIME)
+    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_TIME_ASC, PREPARE_BY_TIME);
+    return 0;
 }
 int compByTimeDesc(const void *base, const void *p_nmemb) // sort_cmp_handler_t
 {
@@ -125,7 +128,8 @@ int compByTimeDesc(const void *base, const void *p_nmemb) // sort_cmp_handler_t
     time_t left_day, right_day;
     int left_begin, right_begin;
 
-    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_TIME_DESC, PREPARE_BY_TIME)
+    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_TIME_DESC, PREPARE_BY_TIME);
+    return 0;
 }
 
 #else
@@ -183,7 +187,8 @@ int compByChannelAsc(const void *base, const void *p_nmemb) // sort_cmp_handler_
     // Temp variables
     const output_candidate_t *left, *right;
 
-    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_CHANNEL_ASC, PREPARE_BY_CHANNEL)
+    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_CHANNEL_ASC, PREPARE_BY_CHANNEL);
+    return 0;
 }
 int compByChannelDesc(const void *base, const void *p_nmemb) // sort_cmp_handler_t
 {
@@ -192,7 +197,8 @@ int compByChannelDesc(const void *base, const void *p_nmemb) // sort_cmp_handler
     // Temp variables
     const output_candidate_t *left, *right;
 
-    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_CHANNEL_DESC, PREPARE_BY_CHANNEL)
+    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_CHANNEL_DESC, PREPARE_BY_CHANNEL);
+    return 0;
 }
 #else
 // Note that input list is already sorted by channels...
