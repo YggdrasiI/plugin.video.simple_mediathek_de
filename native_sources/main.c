@@ -1,4 +1,5 @@
-#define _XOPEN_SOURCE // For strptime
+#include "settings.h"
+
 #include <stdlib.h>
 #include <time.h>
 
@@ -375,7 +376,7 @@ int searching(
                 if( s_ws.output.found >= s_ws.output.M &&
                         !s_ws.output.search_whole_index_flag
                   ){
-                    output_flush(&s_ws, &s_ws.output, 1);
+                    output_flush(&s_ws, &s_ws.output);
                     goto break_both; // Enough data. break pattern, chunk and file loop.
                 }
             }
@@ -383,10 +384,10 @@ int searching(
 
             if( status > 0 ){
               // Latest chunk already read
-              output_flush(&s_ws, &s_ws.output, 1);
+              output_flush(&s_ws, &s_ws.output);
               break;
             }else{
-              output_flush(&s_ws, &s_ws.output, 0);
+              output_flush(&s_ws, &s_ws.output);
             }
 
             // Load next chunk

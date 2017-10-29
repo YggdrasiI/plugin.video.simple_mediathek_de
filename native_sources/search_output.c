@@ -1,19 +1,4 @@
 
-/* This omit cmp-function calls during the sorting 
- * and gives a marginal speed improvement. 
- * It' would be more efficient to omit the sorting at
- * each flush, but this require more memory.
- */
-#define USE_INLINE_QSORT
-#ifdef USE_INLINE_QSORT
-// Inline qsort
-#include "qsort.h"
-#else
-// For gcc's qsort_r
-#define _GNU_SOURCE
-#include <stdlib.h>
-#endif
-
 #include "helper.h"
 #include "parser.h"
 #include "filmliste.h"
@@ -30,160 +15,7 @@
  */
 #define NSEARCH_SIZE(NSKIP, N) (10000)
 
-static search_workspace_t *_p_s_ws = NULL; // For sortings.
-
-void output_qsort_set_workspace(
-        search_workspace_t *p_s_ws)
-{
-    _p_s_ws = p_s_ws; // Static pointer for qsort...
-}
-
-#ifdef USE_INLINE_QSORT 
-#define PREPARE_BY_DATE(p_left, p_right) \
-        left = (const output_candidate_t*)p_left; \
-        right = (const output_candidate_t*)p_right; \
-        left_day = (time_t)(_p_s_ws->ttoday + left->entry.relative_start_time); \
-        right_day = (time_t)(_p_s_ws->ttoday + right->entry.relative_start_time); \
-        
-#define COMP_BY_DATE(p_left, p_right) (left_day < right_day)
-#define COMP_BY_DATE_REV(p_left, p_right) (right_day < left_day)
-
-int compByDate(const void *base, const void *p_nmemb) // sort_cmp_handler_t
-{
-    output_candidate_t * const p_candidates = (output_candidate_t *)base;
-    size_t nmemb = *((size_t*)p_nmemb);
-    // Temp variables
-    const output_candidate_t *left, *right;
-    time_t left_day, right_day;
-
-    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_DATE, PREPARE_BY_DATE)
-}
-int compByDateRev(const void *base, const void *p_nmemb) // sort_cmp_handler_t
-{
-    output_candidate_t * const p_candidates = (output_candidate_t *)base;
-    size_t nmemb = *((size_t*)p_nmemb);
-    // Temp variables
-    const output_candidate_t *left, *right;
-    time_t left_day, right_day;
-
-    QSORT_WITH_PREPARE(output_candidate_t, p_candidates, nmemb, COMP_BY_DATE_REV, PREPARE_BY_DATE)
-}
-#else
-int compByDate (const void * p_left, const void * p_right) 
-{
-    assert( _p_s_ws != NULL );
-    //linked_list_t *p_list = &_p_s_ws->index;
-    const output_candidate_t *left = (const output_candidate_t*)p_left;
-    const output_candidate_t *right = (const output_candidate_t*)p_right;
-    const time_t left_day = (time_t)(_p_s_ws->ttoday + left->entry.relative_start_time);
-    const time_t right_day = (time_t)(_p_s_ws->ttoday + right->entry.relative_start_time);
-
-    return (left_day-right_day);
-}
-int compByDateRev (const void * p_left, const void * p_right) 
-{
-    assert( _p_s_ws != NULL );
-    //linked_list_t *p_list = &_p_s_ws->index;
-    const output_candidate_t *left = (const output_candidate_t*)p_left;
-    const output_candidate_t *right = (const output_candidate_t*)p_right;
-    const time_t left_day = (time_t)(_p_s_ws->ttoday + left->entry.relative_start_time);
-    const time_t right_day = (time_t)(_p_s_ws->ttoday + right->entry.relative_start_time);
-
-    return (right_day-left_day);
-}
-#endif
-
-int compByTime (const void * p_left, const void * p_right) 
-{
-    assert( _p_s_ws != NULL );
-    //linked_list_t *p_list = &_p_s_ws->index;
-    const output_candidate_t *left = (const output_candidate_t*)p_left;
-    const output_candidate_t *right = (const output_candidate_t*)p_right;
-    const time_t left_day = (time_t)(_p_s_ws->ttoday + left->entry.relative_start_time);
-    const time_t right_day = (time_t)(_p_s_ws->ttoday + right->entry.relative_start_time);
-
-    // Local times. 
-    const int left_begin = (left_day - _p_s_ws->search_ttoday - left_day) % 86400;
-    const int right_begin = (right_day - _p_s_ws->search_ttoday - right_day) % 86400;
-    // TODO: Respect daylight saving hour.
-
-    return (left_begin-right_begin);
-}
-
-// Note that input list is already sorted by channels...
-int compByChannel (const void * p_left, const void * p_right) 
-{
-    assert( _p_s_ws != NULL );
-    const output_candidate_t *left = (const output_candidate_t*)p_left;
-    const output_candidate_t *right = (const output_candidate_t*)p_right;
-
-#if 0
-    return (left->id - right->id);
-#else
-    linked_list_t * const p_list = &_p_s_ws->index;
-    const index_node_t *p_left_el = linked_list_get_node(p_list, left->id);
-    const index_node_t *p_right_el = linked_list_get_node(p_list, right->id);
-    const uint32_t left_channel = LINKED_LIST_SUBGROUP(p_left_el->nexts.channel);
-    const uint32_t right_channel = LINKED_LIST_SUBGROUP(p_right_el->nexts.channel);
-
-    return (left_channel-right_channel);
-#endif
-}
-
-void output_select_sorting_function(
-        const char* keyword,
-        int *p_reversed_in_out,
-        sort_cmp_handler_t **p_sort_handler_out)
-{
-    const char* asc_desc = NULL;
-    int reversed2 = 0; // Implict reversed by keyword
-
-    if( keyword == NULL || *keyword == '\0' ){
-        *p_sort_handler_out = NULL;
-        return;
-    }
-
-    if( (strncmp("date", keyword, sizeof("date")-1) == 0
-                && (asc_desc = keyword + sizeof("date")-1)) 
-            || (strncmp("day", keyword, sizeof("day")-1) == 0
-                && (asc_desc = keyword + sizeof("day")-1))
-      )
-    {
-        *p_reversed_in_out = (*p_reversed_in_out != 0) ^ (strcmp("Desc", asc_desc) == 0);
-        if( *p_reversed_in_out ){
-            *p_sort_handler_out = compByDateRev;
-            DEBUG( fprintf( stderr, "Rev\n"); )
-        }else{
-            *p_sort_handler_out = compByDate;
-        }
-    }
-
-    else if( (strncmp("time", keyword, sizeof("time")) == 0
-                && (asc_desc = keyword + sizeof("time")))
-            || (strncmp("begin", keyword, sizeof("begin")) == 0
-                && (asc_desc = keyword + sizeof("begin")))
-      )
-    {
-        *p_reversed_in_out ^= (strcmp("Desc", asc_desc) == 0);
-        if( *p_reversed_in_out ){
-            *p_sort_handler_out = compByTime;
-        }else{
-            *p_sort_handler_out = compByTime;
-        }
-    }
-
-    else if( (strncmp("channel", keyword, sizeof("channel")) == 0
-                && (asc_desc = keyword + sizeof("channel")))
-      )
-    {
-        *p_reversed_in_out ^= (strcmp("Desc", asc_desc) == 0);
-        if( *p_reversed_in_out ){
-            *p_sort_handler_out = compByChannel;
-        }else{
-            *p_sort_handler_out = compByChannel;
-        }
-    }
-}
+//#include "search_sortings.c"
 
 
 output_t output_init(
@@ -258,7 +90,7 @@ void output_add_id(
 
   if( p_output->sort_handler && i == 0 ){
       // Buffer full -> toggle sorting to free Nsearch slots.
-      output_flush(p_s_ws, p_output, 0);
+      output_flush(p_s_ws, p_output);
       i = p_output->pos_i;
       INC_MODULO(i, p_output->M2);
   }
@@ -276,8 +108,7 @@ void output_add_id(
 
 void output_flush(
         search_workspace_t *p_s_ws,
-        output_t *p_output,
-        int b_last_flush)
+        output_t *p_output)
 {
     uint32_t i = p_output->pos_i;
     uint32_t p = p_output->pos_p;
@@ -306,7 +137,7 @@ void output_flush(
 
     if( p_output->sort_handler ){
         assert( p <= i ); // Buffer not used 'cyclic' if sorting is enabled
-        if( i >= M || b_last_flush){
+        if( i >= M ){
             int p2 = p;
             while( p2 <= i ){
                 assert( p_candidates[p2].id >= prev_first_unhandled_id );
@@ -315,21 +146,11 @@ void output_flush(
             }
 
             // Store highest id for next call.
-            p_output->first_unhandled_id = p_candidates[i].id + 1;
+            p_output->first_unhandled_id = p_s_ws->chunks.start_ids[
+                //p_s_ws->chunks->partial_i + 1];
+                p_candidates[i].iChunk + 1];
 
-            //DEBUG( fprintf(stderr, "Sorting %u elements\n", i); )
-
-            // This mixed the unprocessed ids into the processed.
-            // Every Element behind position M-1 will never be processed.
-#ifdef USE_INLINE_QSORT
-            // Ugly, but handler maps to sort function but not to compare function.
-            p_output->sort_handler(p_candidates, &i);
-#else
-            qsort(p_candidates,
-                    i,
-                    sizeof(*p_candidates),
-                    p_output->sort_handler);
-#endif
+            output_sort(p_output);
 
             p = 0;  // To force output_fill-call for all M entries.
             p_output->pos_p = p;
@@ -343,7 +164,9 @@ void output_flush(
                 output_prepare_for_sort(p_s_ws, &p_candidates[p2]);
                 ++p2;
             } 
-            p_output->first_unhandled_id = p_candidates[i].id + 1;
+            p_output->first_unhandled_id = p_s_ws->chunks.start_ids[
+                //p_s_ws->chunks->partial_i + 1];
+                p_candidates[i].iChunk + 1];
         }
 
         while( p < i ){
@@ -589,3 +412,4 @@ size_t output_print(
 
     return written;
 }
+

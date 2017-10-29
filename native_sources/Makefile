@@ -52,7 +52,7 @@ CFLAGS+= -DVERSION=\"$(VERSION)\"
 FILES=main.c helper.c hashmap.c utf8.c \
 			parser.c filmliste.c channels.c linked_list.c \
 			params.c search.c payload.c info.c \
-			search_output.c
+			search_output.c search_sortings.c
 
 DEPS=settings.h
 #DEPS=$$(ls *.h)
@@ -181,7 +181,7 @@ info:
 payload:
 	./$(SCRIPT_NAME) --payload 0
 
-tests: test_indexing test1 test2 test3 test4 test5
+tests: test_indexing test1 test2 test3 test4 test5 test6 test7 test8 test9
 	@echo "Tests finished. Delete $(TEST_PREFIX).test* to re-enable skipped tests."
 
 test_indexing:
@@ -225,9 +225,32 @@ test_reversed:
 		diff "$(TEST_PREFIX).test_reversedA" "$(TEST_PREFIX).test_reversedB" \
 		$(TEST_AFTER_CMD)
 
+test6:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) -s -t "e" --durationMin 30m --sort=date -n 10 -o /dev/null \
+		$(TEST_AFTER_CMD)
+
+test7:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) -s -t "e" --durationMin 30m --sort=dateDesc -n 10 -o /dev/null \
+		$(TEST_AFTER_CMD)
+
+test8:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) -s -t "e" --durationMin 0m --sort=date -r -n 10,100000 -o /dev/null \
+		$(TEST_AFTER_CMD)
+
+test9:
+	@$(TEST_BEFORE_CMD)\
+		./$(SCRIPT_NAME) -s -t "e" --beginMin 20h --dayMax 10 --sort=date -n 100000 -o /dev/null \
+		$(TEST_AFTER_CMD)
+
+
 test_template:
 	$(TEST_BEFORE_CMD) echo "Template" $(TEST_AFTER_CMD)
 
+test_unskip_tests:
+		@(ls $(TEST_PREFIX).test* 2>/dev/null && rm $(TEST_PREFIX).test* ||  exit 0)
 
 ############################################################
 
@@ -258,6 +281,5 @@ $(FILMLISTE_AKT_JSON): $(DATA_DIR) $(FILMLISTE_AKT_XZ)
 
 .PHONY: clean
 
-clean:
+clean: test_unskip_tests
 		rm -f $(ODIR)*/*.o *~ $(PROG_NAME)
-		@test ! -f $(TEST_PREFIX)/.test* || rm $(TEST_PREFIX)/.test*

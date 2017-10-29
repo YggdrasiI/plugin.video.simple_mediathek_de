@@ -42,8 +42,7 @@ void output_add_id(
  * title buffer is flushed. */
 void output_flush(
         search_workspace_t *p_s_ws,
-        output_t *p_output,
-        int b_last_flush)
+        output_t *p_output)
 ;
 
 void output_prepare_for_sort(
@@ -65,5 +64,9 @@ void output_fill(
 
 size_t output_print(
         int fd,
+        output_t *p_output)
+;
+
+void output_sort(
         output_t *p_output)
 ;

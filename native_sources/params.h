@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #define WITH_TOPIC_OPTION
 
@@ -64,6 +65,11 @@ void normalize_args(
  * of the same file. */
 void sort_payload_anchors(
         arguments_t *p_arguments)
+;
+
+void fprint_args(
+        FILE *stream,
+        arguments_t *args)
 ;
 
 arguments_t handle_arguments(

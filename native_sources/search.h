@@ -289,6 +289,18 @@ const char * get_title_string(
         uint32_t id)
 ;
 
+/* List of derivered search pattern from
+ * the input
+ * Returned array length of pp_results is [days] x [durations] x ...
+ *
+ * Note that all pattern point on the same title_pattern. (=> Avoid double free'ing)
+ */
+int search_gen_patterns_for_partial(
+        search_workspace_t *p_s_ws,
+        arguments_t *p_arguments,
+        search_pattern_t **pp_results)
+;
+
 /* Search until currently loaded part of
  * title data ends.
  *

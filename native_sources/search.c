@@ -713,9 +713,7 @@ void print_search_results(
         int fd,
         search_workspace_t *p_s_ws)
 {
-    //int fd = 1; //p_s_ws->?;
-
-    //output_flush(p_s_ws, &p_s_ws->output, 1); // already done.
+    output_sort(&p_s_ws->output);
     output_print(fd, &p_s_ws->output);
 }
 
@@ -944,7 +942,7 @@ int search_do_search(
     }
 
     // Transfer data into output buffer
-    output_flush(p_s_ws, &p_s_ws->output, 1);
+    output_flush(p_s_ws, &p_s_ws->output);
     return 0;
 }
 
@@ -1459,17 +1457,10 @@ int _search_by_title_partial_(
     return ((*p_found > found_before)?1:0);
 }
 
-/* List of derivered search pattern from
- * the input
- * Returned array length of pp_results is [days] x [durations] x ...
- *
- * Note that all pattern point on the same title_pattern. (=> Avoid double free'ing)
- */
 int search_gen_patterns_for_partial(
         search_workspace_t *p_s_ws,
         arguments_t *p_arguments,
-        search_pattern_t **pp_results
-        )
+        search_pattern_t **pp_results)
 {
     if( *pp_results != NULL ){
         Free(*pp_results);

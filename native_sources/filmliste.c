@@ -2,10 +2,6 @@
 #include "open.h"
 #include "filmliste.h"
 
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200112L // for setenv on gcc
-#endif
-
 filmliste_workspace_t filmliste_ws_create(
         arguments_t *p_arguments)
 {

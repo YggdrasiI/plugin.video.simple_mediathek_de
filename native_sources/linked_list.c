@@ -560,7 +560,7 @@ void linked_list_read(
 
             break;
         }else{
-            DEBUG( fprintf(stderr, "Dummy nodes to read: %i\n", num); );
+            //DEBUG( fprintf(stderr, "Dummy nodes to read: %i\n", num); );
             //Read dummies
             bytes_read = read(fd, p_list->dummy_nodes,
                     num * sizeof(index_node_t));
