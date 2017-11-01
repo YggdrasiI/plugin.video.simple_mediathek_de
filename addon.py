@@ -151,6 +151,17 @@ class SimpleMediathek:
         return self.state.get(u"current_pattern", {})
 
     def get_livestream_pattern(self):
+        if b_mvweb:
+            return {u"topic": u"Livestream",
+                    u"web_args": {
+                        "not": [{  # Livestreams had 'timestamp': null property
+                                 "range":
+                                 {
+                                     "field": u"timestamp",
+                                     "gte": "now-47y",
+                                 }}]
+                    }}
+
         return {u"title": u"Livestream", u"args": [
             u"--durationMax", u"0",
             u"--beginMax", u"7260",  # 1. Jan 1970, 1 Uhr, Winterzeit.

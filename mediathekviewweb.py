@@ -4,6 +4,19 @@ from socketIO_client import SocketIO, BaseNamespace
 from datetime import datetime
 
 
+def get_string(d, key):
+    # Helper  to avoid str-cast of None
+    r = d.get(key)
+    return r.strip() if r else u""
+
+
+def get_int(d, key, default=0):
+    # Helper  to avoid int-cast of None
+    r = d.get(key)
+    if r is None: return default
+    return int(r)
+
+
 def convert_results(tResult):
     """
     Input data example
@@ -45,9 +58,9 @@ def convert_results(tResult):
         x = {
             u"topic": r.get(u"topic"),
             u"title": r.get(u"title"),
-            u"ibegin": int(r.get(u"timestamp")), # or?
+            u"ibegin": get_int(r, u"timestamp", 0), # or?
             # u"ibegin": int(r.get(u"filmlisteTimestamp")),
-            u"iduration": r.get(u"duration"),
+            u"iduration": get_int(r, u"duration", -1),
             u"channel": r.get(u"channel").lower(),
             u"ichannel": -1,  # Different enummeration
         }
@@ -81,26 +94,25 @@ def fetch(pattern, page=0, entries_per_page=10):
             self.response = args
 
     ## Build query
-    def get_string(d, key):
-        # Just to avoid str-cast of None
-        r = d.get(key)
-        return r.strip() if r else u""
-
-    queries = []
+    lQueries = []
     title = get_string(pattern, u"title")
     if len(title):
-           queries.append({u"fields": [u"title", u"topic"], u"query": title})
+           lQueries.append({u"fields": [u"title", u"topic"], u"query": title})
+    else:
+        topic = get_string(pattern, u"topic")
+        if len(topic):
+           lQueries.append({u"fields": [u"topic"], u"query": topic})
 
     description = get_string(pattern, u"description")
     if len(description):
-           queries.append({u"fields": [u"description"], u"query": description})
+           lQueries.append({u"fields": [u"description"], u"query": description})
 
     channel = get_string(pattern, u"channel")
     if len(channel):
-           queries.append({u"fields": [u"channel"], u"query": channel})
+           lQueries.append({u"fields": [u"channel"], u"query": channel})
 
     sortProps = pattern.get(u"sortBy", (u"timestamp", u"desc"))
-    queryObj = {u"queries": queries,
+    queryObj = {u"queries": lQueries,
                 u"sortBy": sortProps[0],
                 u"sortOrder": sortProps[1],
                 u"future": True,
@@ -164,8 +176,8 @@ def convert_results2(dResult):
             u"id": unicode(dItem.get("id", dDoc.get("id", ""))),
             u"topic": unicode(dDoc.get(u"topic")),
             u"title": unicode(dDoc.get(u"title")),
-            u"ibegin": int(dDoc.get(u"timestamp", 0)),
-            u"iduration": int(dDoc.get(u"duration", -1)),
+            u"ibegin": get_int(dDoc, u"timestamp", 0),
+            u"iduration": get_int(dDoc, u"duration", -1),
             u"channel": unicode(dDoc.get(u"channel")).lower(),
             u"ichannel": -1,  # Different enummeration
         }
@@ -207,59 +219,61 @@ def fetch2(pattern, page=0, entries_per_page=10):
     # Fill in subqueries of BoolQuery:
     # {"body": { "bool": { "must": [XXX]}}}
 
-    queries = []
+    lQueries = []
     title = get_string(pattern, u"title")
     if len(title):
         # TextQuery (type noted by 'text' key)
-        queries.append({u"text":
+        lQueries.append({u"text":
                         { u"fields": [u"title", u"topic"],
                          u"text": title,
+                         u"operator": "and"}})
+    else:
+        topic = get_string(pattern, u"topic")
+        lQueries.append({u"text":
+                        { u"fields": [u"topic"],
+                         u"text": topic,
                          u"operator": "and"}})
 
     description = get_string(pattern, u"description")
     if len(description):
-        queries.append({u"text":
+        lQueries.append({u"text":
                         { u"fields": [u"description"],
                          u"text": description,
                          u"operator": "and"}})
 
     channel = get_string(pattern, u"channel")
     if len(channel):
-        queries.append({u"text":
+        lQueries.append({u"text":
                         { u"fields": [u"channel"],
                          u"text": channel,
                          u"operator": "and"}})
 
-    qfilter = []
+    lFilter = []
     if pattern.get(u"iday_range"):
         days = pattern.get(u"iday_range")
         date0 = datetime.fromtimestamp(min(days))
         date1 = datetime.fromtimestamp(max(days))
         today = datetime.today()
-        qfilter = [{ "range":
-                    {
-                        "field": u"timestamp",
-                        "gte": u"now-%id/d" % ((today-date0).days,),
-                        "lt": u"now-%id/d" % ((today-date1).days-1,),
-                    }
-                    }]
+        lFilter.append({ "range": {
+            "field": u"timestamp",
+            "gte": u"now-%id/d" % ((today-date0).days,),
+            "lt": u"now-%id/d" % ((today-date1).days-1,),
+        }})
 
     elif pattern.get(u"iday", -1) > -1:
         # Transfer index into number of days
         from constants import search_ranges
         iday = search_ranges[u"day"][pattern[u"iday"]+1]
-        qfilter = [{ "range":
-                    {
-                        "field": u"timestamp",
-                        "gte": u"now-%id/d" % (iday),
-                    }
-                    }]
+        lFilter.append({ "range": {
+            "field": u"timestamp",
+            "gte": u"now-%id/d" % (iday),
+        }})
 
     # TODO: Filter for duration and begin
 
     # Sorts defined on same layer as body
-    queryObj = {"body": { "bool": { "must": queries,
-                                   "filter": qfilter,
+    queryObj = {"body": { "bool": { "must": lQueries,
+                                   "filter": lFilter,
                                    },
                          },
                 "skip": page*entries_per_page,
@@ -274,7 +288,13 @@ def fetch2(pattern, page=0, entries_per_page=10):
                     }],
                 }
 
+    if u"web_args" in pattern:
+        # TODO update overwrites subentries, not extends them!
+        queryObj["body"]["bool"].update(pattern["web_args"])
 
+
+    import xbmc
+    xbmc.log(str(queryObj))
     # Send query
     import requests
     import json
@@ -285,6 +305,7 @@ def fetch2(pattern, page=0, entries_per_page=10):
             raise requests.RequestException(response=r)
 
         sResult = r.text.encode(r.encoding)
+        xbmc.log(sResult)
         dResult = json.loads(sResult)
 
         return (0, dResult)

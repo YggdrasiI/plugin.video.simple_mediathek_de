@@ -9,7 +9,7 @@ BROTLI=1
 INSTALL_PREFIX=../root
 MACH=$(shell uname -m)
 GIT_COMMIT_VERSION=$(shell git log --oneline --max-count=1 | head --bytes=7)
-VERSION='MediathekView data parser 0.4 ($(GIT_COMMIT_VERSION))'
+VERSION='MediathekView data parser 0.7 ($(GIT_COMMIT_VERSION))'
 
 ############################################################
 
