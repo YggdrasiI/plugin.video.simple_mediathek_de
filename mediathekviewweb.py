@@ -125,6 +125,168 @@ def fetch(pattern, page=0, entries_per_page=10):
     # Request failed.
     return (-2, None)
 
+# For  MVW API 2.x
+def convert_results(tResult):
+    """
+    Input data example
+
+    Output data example
+    {"found":
+        [{"id": 154344, "topic": "...", "title": "...",
+        "ibegin": 1486244700, "begin": "04. Feb. 2017 22:45",
+        "iduration": 816, "ichannel": 19,
+        "channel": "zdf", "anchor": 51792695
+        }, ...
+        ] }
+    """
+    xbmc.log(str(tResult))
+    return {u"found": []}
+
+    found = []
+
+    if len(tResult) < 1:
+        print( u"Error: Input is no 1-tuple as expected.")
+        return {u"found": found}
+
+    dResult = tResult[0]
+    if dResult.get(u"err"):
+        print( u"Error: %s\n" % dResult.get(u"err"))
+        return {u"found": found}
+
+    for r in dResult.get(u"result",{}).get(u"results",[]):
+        # print(u"%s - %s" % (r.get(u"topic"), r.get(u"title")))
+        x = {
+            u"topic": r.get(u"topic"),
+            u"title": r.get(u"title"),
+            u"ibegin": int(r.get(u"timestamp")), # or?
+            # u"ibegin": int(r.get(u"filmlisteTimestamp")),
+            u"iduration": r.get(u"duration"),
+            u"channel": r.get(u"channel").lower(),
+            u"ichannel": -1,  # Different enummeration
+        }
+        # Parse ibegin
+        d = datetime.fromtimestamp(x.get(u"ibegin", 0))
+        x[u"begin"] = d.strftime("%d. %b. %Y %R").decode('utf-8')
+
+        # Add urls in same order as simple_mediathek --payload returns.
+        x[u"payload"] = [r.get(u"url_video"), u"",
+                        r.get(u"url_video_low"), u"",
+                        r.get(u"url_video_hd"), u""]
+
+        found.append(x)
+
+    return {u"found": found}
+
+def fetch2(pattern, page=0, entries_per_page=10):
+
+    class FilmNamespace(BaseNamespace):
+        response = None
+
+        """
+        def on_connect(self): print("[Connected]")
+        def on_reconnect(self): print("[Reconnected]")
+        def on_disconnect(self): print("[Disconnected]")
+
+        """
+        def on_film_response(self, *args):
+            self.response = args
+
+    ## Build query
+    def get_string(d, key):
+        # Just to avoid str-cast of None
+        r = d.get(key)
+        return r.strip() if r else u""
+
+    # Fill in subqueries of BoolQuery:
+    # {"body": { "bool": { "must": [XXX]}}}
+
+    queries = []
+    title = get_string(pattern, u"title")
+    if len(title):
+        # TextQuery (type noted by 'text' key)
+        queries.append({u"text":
+                        { u"fields": [u"title", u"topic"],
+                         u"text": title,
+                         u"operator": "and"}})
+
+    description = get_string(pattern, u"description")
+    if len(description):
+        queries.append({u"text":
+                        { u"fields": [u"description"],
+                         u"text": description,
+                         u"operator": "and"}})
+
+    channel = get_string(pattern, u"channel")
+    if len(channel):
+        queries.append({u"text":
+                        { u"fields": [u"channel"],
+                         u"text": channel,
+                         u"operator": "and"}})
+
+    qfilter = []
+    if pattern.get(u"iday_range"):
+        days = pattern.get(u"iday_range")
+        date0 = datetime.date.fromtimestamp(min(days))
+        date1 = datetime.date.fromtimestamp(max(days))
+        today = datetime.date.today()
+        qfilter = [{ "range":
+                    {
+                        "field": u"timestamp",
+                        "lte": u"now-%id" % ((today-date0).days,),
+                        "gte": u"now-%id" % ((today-date1).days,),
+                    }
+                    }]
+
+    elif pattern.get(u"iday", -1) > -1:
+        # Transfer index into number of days
+        from constants import search_ranges
+        iday = search_ranges[u"day"][pattern[u"iday"]+1]
+        qfilter = [{ "range":
+                    {
+                        "field": u"timestamp",
+                        "lte": u"now-%id" % (iday),
+                    }
+                    }]
+
+    # TODO: Filter for duration and begin
+
+    # Sorts defined on same layer as body
+    queryObj = {"body": { "bool": { "must": queries,
+                                   "filter": qfilter,
+                                   },
+                "skip": page*entries_per_page,
+                "limit": entries_per_page,
+                "sorts": [
+                    {
+                        "field": "timestamp",
+                        "order": "descending"
+                    }, {
+                        "field": "duration",
+                        "order": "ascending"
+                    }],
+                }
+
+
+    # Send query
+    with SocketIO(u"https://mediathekviewweb.de", 443, verify=True) as socketIO:
+
+        film_namespace = socketIO.define(FilmNamespace)
+        socketIO.emit(u"queryEntries", queryObj, film_namespace.on_film_response)
+
+        try:
+            # Sync threads
+            socketIO.wait_for_callbacks(seconds=5.0)
+            if film_namespace.response:
+                return (0, film_namespace.response)
+            else:
+                return (-1, None)
+        except Exception as e:
+            print(e)
+
+
+    # Request failed.
+    return (-2, None)
+
 def fetch_channel_list():
     import requests
     import json
