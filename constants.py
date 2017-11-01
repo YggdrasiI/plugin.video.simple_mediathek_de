@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 # (Extra empty entries for list[-1]-access )
 search_ranges_str = {

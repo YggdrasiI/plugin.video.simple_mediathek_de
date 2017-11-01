@@ -3,6 +3,7 @@
 from socketIO_client import SocketIO, BaseNamespace
 from datetime import datetime
 
+
 def convert_results(tResult):
     """
     Input data example
@@ -55,6 +56,7 @@ def convert_results(tResult):
         x[u"begin"] = d.strftime("%d. %b. %Y %R").decode('utf-8')
 
         # Add urls in same order as simple_mediathek --payload returns.
+        # Currently, its fixed on 0-2 urls for thee quality levels.
         x[u"payload"] = [r.get(u"url_video"), u"",
                         r.get(u"url_video_low"), u"",
                         r.get(u"url_video_hd"), u""]
@@ -62,6 +64,7 @@ def convert_results(tResult):
         found.append(x)
 
     return {u"found": found}
+
 
 def fetch(pattern, page=0, entries_per_page=10):
 
@@ -125,10 +128,15 @@ def fetch(pattern, page=0, entries_per_page=10):
     # Request failed.
     return (-2, None)
 
+
 # For  MVW API 2.x
-def convert_results(tResult):
+def convert_results2(dResult):
     """
-    Input data example
+    Input data example (subset, which shows path to urls)
+    {"result": { "items": [{"document": { "media" : {...} } }]}}
+
+    See mediathekviewweb/server/src/elasticsearch-definitions/mapping.ts
+    for full doc.
 
     Output data example
     {"found":
@@ -139,29 +147,26 @@ def convert_results(tResult):
         }, ...
         ] }
     """
-    xbmc.log(str(tResult))
-    return {u"found": []}
-
     found = []
 
-    if len(tResult) < 1:
+    if len(dResult) < 1:
         print( u"Error: Input is no 1-tuple as expected.")
         return {u"found": found}
 
-    dResult = tResult[0]
-    if dResult.get(u"err"):
-        print( u"Error: %s\n" % dResult.get(u"err"))
-        return {u"found": found}
+    #if dResult.get(u"err"):
+    #    print( u"Error: %s\n" % dResult.get(u"err"))
+    #    return {u"found": found}
 
-    for r in dResult.get(u"result",{}).get(u"results",[]):
-        # print(u"%s - %s" % (r.get(u"topic"), r.get(u"title")))
+    lItems = dResult.get("result", {}).get("items",[])
+    for dItem in lItems:
+        dDoc = dItem.get("document", {})
         x = {
-            u"topic": r.get(u"topic"),
-            u"title": r.get(u"title"),
-            u"ibegin": int(r.get(u"timestamp")), # or?
-            # u"ibegin": int(r.get(u"filmlisteTimestamp")),
-            u"iduration": r.get(u"duration"),
-            u"channel": r.get(u"channel").lower(),
+            u"id": unicode(dItem.get("id", dDoc.get("id", ""))),
+            u"topic": unicode(dDoc.get(u"topic")),
+            u"title": unicode(dDoc.get(u"title")),
+            u"ibegin": int(dDoc.get(u"timestamp", 0)),
+            u"iduration": int(dDoc.get(u"duration", -1)),
+            u"channel": unicode(dDoc.get(u"channel")).lower(),
             u"ichannel": -1,  # Different enummeration
         }
         # Parse ibegin
@@ -169,27 +174,29 @@ def convert_results(tResult):
         x[u"begin"] = d.strftime("%d. %b. %Y %R").decode('utf-8')
 
         # Add urls in same order as simple_mediathek --payload returns.
-        x[u"payload"] = [r.get(u"url_video"), u"",
-                        r.get(u"url_video_low"), u"",
-                        r.get(u"url_video_hd"), u""]
+        # Currently, its fixed on 0-2 urls for thee quality levels.
+        urls = [u""] * 6
+        # The input media dict had the keys type(?), url, size, quality
+        # Quality range low=2, mid=3, high=4 (interpretation of 0,1?!)
+        lMedia = dDoc.get("media", [])
+        # Restore required ordering of video quality, 2xmid, 2xlow, 2xhigh
+        _lmap = [0, 1, 1, 0, 2, 2]
+        for dM in lMedia:
+            if dM.get("type", -1) != 0:  # Video types: [0]
+                continue
+
+            q = _lmap[dM.get("quality", 0)]
+            pos = 2*q if len(urls[2*q]) == 0 else 2*q+1
+            urls[pos] = dM.get("url")
+
+        x[u"payload"] = urls
 
         found.append(x)
 
     return {u"found": found}
 
+
 def fetch2(pattern, page=0, entries_per_page=10):
-
-    class FilmNamespace(BaseNamespace):
-        response = None
-
-        """
-        def on_connect(self): print("[Connected]")
-        def on_reconnect(self): print("[Reconnected]")
-        def on_disconnect(self): print("[Disconnected]")
-
-        """
-        def on_film_response(self, *args):
-            self.response = args
 
     ## Build query
     def get_string(d, key):
@@ -226,14 +233,14 @@ def fetch2(pattern, page=0, entries_per_page=10):
     qfilter = []
     if pattern.get(u"iday_range"):
         days = pattern.get(u"iday_range")
-        date0 = datetime.date.fromtimestamp(min(days))
-        date1 = datetime.date.fromtimestamp(max(days))
-        today = datetime.date.today()
+        date0 = datetime.fromtimestamp(min(days))
+        date1 = datetime.fromtimestamp(max(days))
+        today = datetime.today()
         qfilter = [{ "range":
                     {
                         "field": u"timestamp",
-                        "lte": u"now-%id" % ((today-date0).days,),
-                        "gte": u"now-%id" % ((today-date1).days,),
+                        "gte": u"now-%id/d" % ((today-date0).days,),
+                        "lt": u"now-%id/d" % ((today-date1).days-1,),
                     }
                     }]
 
@@ -244,7 +251,7 @@ def fetch2(pattern, page=0, entries_per_page=10):
         qfilter = [{ "range":
                     {
                         "field": u"timestamp",
-                        "lte": u"now-%id" % (iday),
+                        "gte": u"now-%id/d" % (iday),
                     }
                     }]
 
@@ -254,6 +261,7 @@ def fetch2(pattern, page=0, entries_per_page=10):
     queryObj = {"body": { "bool": { "must": queries,
                                    "filter": qfilter,
                                    },
+                         },
                 "skip": page*entries_per_page,
                 "limit": entries_per_page,
                 "sorts": [
@@ -268,21 +276,24 @@ def fetch2(pattern, page=0, entries_per_page=10):
 
 
     # Send query
-    with SocketIO(u"https://mediathekviewweb.de", 443, verify=True) as socketIO:
+    import requests
+    import json
+    url = u"https://testing.mediathekviewweb.de/api/v2/query/json"
+    try:
+        r = requests.post(url, json=queryObj)
+        if r.status_code != 200:
+            raise requests.RequestException(response=r)
 
-        film_namespace = socketIO.define(FilmNamespace)
-        socketIO.emit(u"queryEntries", queryObj, film_namespace.on_film_response)
+        sResult = r.text.encode(r.encoding)
+        dResult = json.loads(sResult)
 
-        try:
-            # Sync threads
-            socketIO.wait_for_callbacks(seconds=5.0)
-            if film_namespace.response:
-                return (0, film_namespace.response)
-            else:
-                return (-1, None)
-        except Exception as e:
-            print(e)
-
+        return (0, dResult)
+    except requests.RequestException as e:
+        xbmc.log("MediathekViewWeb error:"+str(e.message))
+        return (-1, None)
+    except ValueError:
+        xbmc.log("MediathekViewWeb error:"+str(e.message))
+        return (-2, None)
 
     # Request failed.
     return (-2, None)

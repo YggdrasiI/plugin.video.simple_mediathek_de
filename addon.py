@@ -1307,6 +1307,7 @@ with SimpleMediathek() as mediathek:
             # Resort by video quality, 2xmid, 2xlow, 2xhigh
             qualities = [2, 3, 0, 1, 4, 5]
             urls = [urls[q] for q in qualities]
+            # Now, its ordered by quality, but with empty entries.
 
             non_empty_urls = [u for u in urls if len(u) > 0]
             if len(non_empty_urls) == 0:
@@ -1380,10 +1381,10 @@ with SimpleMediathek() as mediathek:
 
         results = {u"pattern": pattern, u"found": []}
         if b_mvweb:
-            (exit_code, data) = MVWeb.fetch(pattern, args.get(u"page", 0),
+            (exit_code, data) = MVWeb.fetch2(pattern, args.get(u"page", 0),
                                             max_num_entries_per_page + 1)
             if exit_code == 0:
-                js = MVWeb.convert_results(data)
+                js = MVWeb.convert_results2(data)
         else:
             search_args = mediathek.create_search_params(pattern)
 
