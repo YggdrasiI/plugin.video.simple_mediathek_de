@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from socketIO_client import SocketIO, BaseNamespace
+#from socketIO_client import SocketIO, BaseNamespace
 from datetime import datetime
 
 
@@ -15,130 +15,6 @@ def get_int(d, key, default=0):
     r = d.get(key)
     if r is None: return default
     return int(r)
-
-
-def convert_results(tResult):
-    """
-    Input data example
-    ({u'result':
-        {u'queryInfo':
-            {u'filmlisteTimestamp': u'1508505240', u'totalResults': 72,
-            u'searchEngineTime': u'8.86', u'resultCount': 1},
-         u'results':
-             [{u'url_video': u'', u'url_video_hd': u'', u'url_video_low': u'',
-             u'description': u'', u'title': u'', u'timestamp': 1508271300,
-             u'filmlisteTimestamp': u'1508317980',
-             u'id': u'jwnNEpXxbx7eoH0WCo49NoTBWh1jFI3eIham6IDuEbk=',
-             u'topic': u'', u'url_website': u'', u'url_subtitle': u'',
-             u'duration': 467, u'channel': u'ZDF', u'size': 140509184}]},
-      u'err': None},)
-
-    Output data example
-    {"found":
-        [{"id": 154344, "topic": "...", "title": "...",
-        "ibegin": 1486244700, "begin": "04. Feb. 2017 22:45",
-        "iduration": 816, "ichannel": 19,
-        "channel": "zdf", "anchor": 51792695
-        }, ...
-        ] }
-    """
-    found = []
-
-    if len(tResult) < 1:
-        print( u"Error: Input is no 1-tuple as expected.")
-        return {u"found": found}
-
-    dResult = tResult[0]
-    if dResult.get(u"err"):
-        print( u"Error: %s\n" % dResult.get(u"err"))
-        return {u"found": found}
-
-    for r in dResult.get(u"result",{}).get(u"results",[]):
-        # print(u"%s - %s" % (r.get(u"topic"), r.get(u"title")))
-        x = {
-            u"topic": r.get(u"topic"),
-            u"title": r.get(u"title"),
-            u"ibegin": get_int(r, u"timestamp", 0), # or?
-            # u"ibegin": int(r.get(u"filmlisteTimestamp")),
-            u"iduration": get_int(r, u"duration", -1),
-            u"channel": r.get(u"channel").lower(),
-            u"ichannel": -1,  # Different enummeration
-        }
-        # Parse ibegin
-        d = datetime.fromtimestamp(x.get(u"ibegin", 0))
-        x[u"begin"] = d.strftime("%d. %b. %Y %R").decode('utf-8')
-
-        # Add urls in same order as simple_mediathek --payload returns.
-        # Currently, its fixed on 0-2 urls for thee quality levels.
-        x[u"payload"] = [r.get(u"url_video"), u"",
-                        r.get(u"url_video_low"), u"",
-                        r.get(u"url_video_hd"), u""]
-
-        found.append(x)
-
-    return {u"found": found}
-
-
-def fetch(pattern, page=0, entries_per_page=10):
-
-    class FilmNamespace(BaseNamespace):
-        response = None
-
-        """
-        def on_connect(self): print("[Connected]")
-        def on_reconnect(self): print("[Reconnected]")
-        def on_disconnect(self): print("[Disconnected]")
-
-        """
-        def on_film_response(self, *args):
-            self.response = args
-
-    ## Build query
-    lQueries = []
-    title = get_string(pattern, u"title")
-    if len(title):
-           lQueries.append({u"fields": [u"title", u"topic"], u"query": title})
-    else:
-        topic = get_string(pattern, u"topic")
-        if len(topic):
-           lQueries.append({u"fields": [u"topic"], u"query": topic})
-
-    description = get_string(pattern, u"description")
-    if len(description):
-           lQueries.append({u"fields": [u"description"], u"query": description})
-
-    channel = get_string(pattern, u"channel")
-    if len(channel):
-           lQueries.append({u"fields": [u"channel"], u"query": channel})
-
-    sortProps = pattern.get(u"sortBy", (u"timestamp", u"desc"))
-    queryObj = {u"queries": lQueries,
-                u"sortBy": sortProps[0],
-                u"sortOrder": sortProps[1],
-                u"future": True,
-                u"offset": page*entries_per_page,
-                u"size": entries_per_page
-               }
-
-    # Send query
-    with SocketIO(u"https://mediathekviewweb.de", 443, verify=True) as socketIO:
-
-        film_namespace = socketIO.define(FilmNamespace)
-        socketIO.emit(u"queryEntries", queryObj, film_namespace.on_film_response)
-
-        try:
-            # Sync threads
-            socketIO.wait_for_callbacks(seconds=5.0)
-            if film_namespace.response:
-                return (0, film_namespace.response)
-            else:
-                return (-1, None)
-        except Exception as e:
-            print(e)
-
-
-    # Request failed.
-    return (-2, None)
 
 
 # For  MVW API 2.x

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
+# from __future__ import unicode_literals
 
 import sys
 import xbmc
@@ -16,7 +16,7 @@ import os.path
 import json
 import subprocess
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
+# sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 import mediathekviewweb as MVWeb
 
 import keyboard
