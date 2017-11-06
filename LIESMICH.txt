@@ -64,3 +64,17 @@ Getestet mit:
   Kodi 17.1 / LibreELEC 8.0.1
   Kodi 17.0 / LibreELEC 7.95
   Kodi 16.1 / LibreELEC 7.0.2
+
+
+Hinweise zur Nutzung auf dem RPi 1:  
+
+  Das periodische Neuzeichnen der Kodi-GUI verbraucht auf dem RPi1
+  erhebliche Ressourcen. Man kann keinen genauen Wert angeben, da
+  dies u.A. vom verwendeten Skin, Laufschriften, und Auflösung ab-
+  hängt, aber man kann in der Regel von 20%-40% ausgehen.
+
+  Um den Update-Prozess zu beschleunigen kann man die Option 
+  „(Experimentell/Für RPi 1) Addon pausiert Kodi-Prozess.“ aktivieren.
+  
+  (Spielt man während des Updates bereits eine andere Datei ab, wird deren
+  Wiedergabe allerdings auch unterbrochen.)

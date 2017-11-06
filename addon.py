@@ -538,6 +538,9 @@ def call_binary(largs):
     largs.append(u"--folder")
     largs.append(path)
 
+    if u"true" == addon.getSetting(u"pause_kodi_process"):
+        largs.append("--paused")
+
     path = addon.getAddonInfo(u"path").decode('utf-8')
     script = os.path.join(path, u"root", u"bin", u"simple_mediathek")
     largs.insert(0, script)

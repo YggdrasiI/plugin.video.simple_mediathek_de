@@ -16,6 +16,7 @@
   <category label="32102">
 		<setting label="32210" type="action" action="RunScript(plugin.video.simple_mediathek_de, update_db)"/>
 		<!--<setting label="32208" id="automatic_update" type="bool" default="false"/>-->
+		<setting label="32219" id="pause_kodi_process" type="bool" default="false"/>
 		<setting label="32214" id="debug_binary" type="bool" default="false"/>
   </category>
   <category label="32103">
