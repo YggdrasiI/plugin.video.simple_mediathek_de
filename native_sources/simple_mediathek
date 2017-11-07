@@ -5,7 +5,7 @@
 #
 # Note: Default working directory /dev/shm, but the Kodi addon uses
 # an subfolder in .kodi/userdata, i.e ( on LibreELEC)
-# /storage/.kodi/userdata/addon_data/plugin.video.simple_mediathek_de
+# $HOME/.kodi/userdata/addon_data/plugin.video.simple_mediathek_de
 #
 
 BIN_NAME="${0##*/}"
@@ -62,7 +62,7 @@ echoerr() { printf "%s\n" "$*" >&2; }
 # which targets this script.
 parse_arguments()
 {
-  FILTERED_ARGS=""
+  FILTERED_ARGS=()
   while [ "$#" -gt "0" ]
   do
     case "$1" in
@@ -79,15 +79,11 @@ parse_arguments()
         shift
         ;;
       *)
-        FILTERED_ARGS="${FILTERED_ARGS}$1 "
+        FILTERED_ARGS+=("$1")
         shift
         ;;
     esac
   done
-
-  # Overwrite positional args
-  ARGS=${FILTERED_ARGS}
-  #echo ${FILTERED_ARGS}
 }
 
 # PIPESTATUS array not available in busybox
@@ -271,8 +267,8 @@ if [ "$DEBUG" = "1" ] ; then
 fi
 
 #cd $BIN_PATH
-parse_arguments $@  # Creats ARGS variable
-set -- $ARGS  # This updates $@, $1, etc
+parse_arguments "$@"  # Create FILTERED_ARGS variable
+set -- "${FILTERED_ARGS[@]}"  # This updates $@, $1, etc
 
 if [ "$1" = "update" ] ; then
   update "$2"

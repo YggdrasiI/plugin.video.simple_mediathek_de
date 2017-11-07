@@ -21,9 +21,8 @@ Installation:
 
   Variant B)  
     Unzip the addon archive into '.kodi/addons/.' and refresh the add-on list (or restart Kodi)
-    The position of the .kodi folder depends on your system/setup.
-    Default position on OpenELEC/LibreELEC: /storage/.kodi
-    Default position on OSMC: /home/osmc/.kodi
+    The position of the .kodi folder, default is $HOME/.kodi, depends on your system/setup.
+    Note that $HOME is '/storage' on OpenELEC/LibreELEC and $HOME is '/home/osmc' on OSMC.
 
     I.e.
       cd $HOME/.kodi/addons

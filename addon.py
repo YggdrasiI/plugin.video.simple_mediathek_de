@@ -1063,9 +1063,9 @@ with SimpleMediathek() as mediathek:
         mode = u"not used"
     else:
         addon_handle = int(sys.argv[1])
-        xbmcplugin.setContent(addon_handle, u"movies")
+        xbmcplugin.setContent(addon_handle, u"files")  # Some skins require it
 
-        # Set default view
+        # Set default view. Useful for skin.confluence
         force_view = int(addon.getSetting(u"force_view"))
         if force_view:
             # 50 (List) or 51 (Wide List)

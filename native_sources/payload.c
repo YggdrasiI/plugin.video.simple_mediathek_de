@@ -82,11 +82,11 @@ int open_payload_file(
     DEBUG( fprintf(stderr, "Open '%s'\n", tmp) );
 
     int fd = open(tmp, O_RDONLY);
-    assert( fd > -1 );
-
     free(tmp);
 
+    //assert( fd > -1 );
     if( fd < 0 ){
+        DEBUG( fprintf(stderr, "Opening of payload file failed!\n") );
         return -1;
     }
 
@@ -143,17 +143,23 @@ int payload_do_search(
         uint32_t anchor_now = p_pay_ws->p_arguments->payload_anchors[i_num];
         if( (anchor_prev >> 24) != (anchor_now >> 24) ){
             // Open other payload file
-            open_payload_file(p_pay_ws, i_num);
+            if( open_payload_file(p_pay_ws, i_num) < 0){
+                return -1;
+            }
         }else{
             if( 0 < payload_anchor_compar(&anchor_prev, &anchor_now) ){
                 fprintf(stderr, "Bad order of payload anchors.\n");
                 //wrong order, re-opening required.
-                open_payload_file(p_pay_ws, i_num);
+                if( open_payload_file(p_pay_ws, i_num) < 0){
+                    return -1;
+                }
             }
         }
     }else{
         // No file open
-        open_payload_file(p_pay_ws, i_num);
+        if( open_payload_file(p_pay_ws, i_num) < 0){
+            return -1;
+        }
     }
    
     char_buffer_t *p_buf_in = &p_pay_ws->buf_in;

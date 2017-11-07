@@ -49,9 +49,10 @@ Installation:
   Variante B) Das Addon kann auch manuell ins Addon-Verzeichnis .kodi/addons entpackt
               werden. Danach muss die Addon-Liste aktualisiert, oder Kodi neu gestartet, werden.
 
-              Die Position des .kodi-Verzeichnisses variiert.
-              Standard-Pfad auf OpenELEC/LibreELEC: /storage/.kodi
-              Standard-Pfad auf OSMC: /home/osmc/.kodi
+              Die Position des .kodi-Verzeichnisses kann variieren.
+              Der Standard-Pfad lautet $HOME/.kodi, wobei 
+              $HOME=/storage auf OpenELEC/LibreELEC, und
+              $HOME=/home/osmc bei OSMC.
 
 					Beispielablauf:.
 						cd $HOME/.kodi/addons
