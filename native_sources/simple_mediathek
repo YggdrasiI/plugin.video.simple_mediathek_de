@@ -62,7 +62,8 @@ echoerr() { printf "%s\n" "$*" >&2; }
 # which targets this script.
 parse_arguments()
 {
-  FILTERED_ARGS=()
+  # FILTERED_ARGS=()
+  FILTERED_ARGS="" # Busybox/ash compatible approach
   while [ "$#" -gt "0" ]
   do
     case "$1" in
@@ -79,7 +80,8 @@ parse_arguments()
         shift
         ;;
       *)
-        FILTERED_ARGS+=("$1")
+        # FILTERED_ARGS+=("$1")
+        FILTERED_ARGS="${FILTERED_ARGS} \"$1\""
         shift
         ;;
     esac
@@ -266,9 +268,10 @@ if [ "$DEBUG" = "1" ] ; then
   echoerr "Binary name: $BIN_NAME"
 fi
 
-#cd $BIN_PATH
+# cd $BIN_PATH
 parse_arguments "$@"  # Create FILTERED_ARGS variable
-set -- "${FILTERED_ARGS[@]}"  # This updates $@, $1, etc
+# set -- "${FILTERED_ARGS[@]}"  # This updates $@, $1, etc
+eval set -- ${FILTERED_ARGS}  # Busybox/ash compatible variant
 
 if [ "$1" = "update" ] ; then
   update "$2"
