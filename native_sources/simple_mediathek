@@ -109,7 +109,7 @@ check_shell()
 send_signal_to_kodi()
 {
   if [ "$PAUSE_KODI_PROCESS" = "1" ] ; then
-    PID=$(ps | grep "[k]odi.bin" | awk 'BEGIN{FS=" "}{print $1}')
+    PID=$(ps x | grep "[k]odi.bin" | awk 'BEGIN{FS=" "}{print $1}')
 
     test -n "$PID" && \
       (test "$1" = "0" -o "$1" = "Continue"  \

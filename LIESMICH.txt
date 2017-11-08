@@ -50,7 +50,7 @@ Installation:
               werden. Danach muss die Addon-Liste aktualisiert, oder Kodi neu gestartet, werden.
 
               Die Position des .kodi-Verzeichnisses kann variieren.
-              Der Standard-Pfad lautet $HOME/.kodi, wobei 
+              Der Standard-Pfad lautet $HOME/.kodi, wobei
               $HOME=/storage auf OpenELEC/LibreELEC, und
               $HOME=/home/osmc bei OSMC.
 
@@ -62,20 +62,22 @@ Installation:
 
 
 Getestet mit:
+  Kodi 17.5 / OSMC Oct-2017
   Kodi 17.1 / LibreELEC 8.0.1
   Kodi 17.0 / LibreELEC 7.95
   Kodi 16.1 / LibreELEC 7.0.2
 
+Hinweise zur Nutzung mit OSMC:
+  Eventuell muss das Tool 'xz' nachinstalliert werden: sudo apt-get install xz-utils.
 
-Hinweise zur Nutzung auf dem RPi 1:  
-
+Hinweise zur Nutzung auf dem RPi 1:
   Das periodische Neuzeichnen der Kodi-GUI verbraucht auf dem RPi1
   erhebliche Ressourcen. Man kann keinen genauen Wert angeben, da
-  dies u.A. vom verwendeten Skin, Laufschriften, und Auflösung ab-
-  hängt, aber man kann in der Regel von 20%-40% ausgehen.
+  dies vom verwendeten Skin abhängt. Im Leerlauf kann man von 20%-40% ausgehen
+  und Laufschriften können es auf 100% erhöhen.
 
-  Um den Update-Prozess zu beschleunigen kann man die Option 
-  „(Experimentell/Für RPi 1) Addon pausiert Kodi-Prozess.“ aktivieren.
-  
-  (Spielt man während des Updates bereits eine andere Datei ab, wird deren
-  Wiedergabe allerdings auch unterbrochen.)
+  Um den Update-Prozess zu beschleunigen kann man die Option
+  „(Experimentell/Für RPi 1) Addon pausiert Kodi-Prozess“ aktivieren.
+
+  Aufgrund einiger Seiteneffekte (Unterbrechung der Wiedergabe) ist die Option
+  nicht standardmäßig aktiviert.
