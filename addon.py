@@ -556,7 +556,9 @@ def call_binary(largs):
                 largs_uni.append(l.decode('utf-8'))
             except UnicodeDecodeError:
                 largs_uni.append(l.decode(u"latin1"))
-    largs = largs_uni
+
+    # Encode unicode strings.
+    largs = [l.encode('utf-8') for l in largs_uni]
 
     try:
         ret = 0
