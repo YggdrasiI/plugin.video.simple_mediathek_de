@@ -25,10 +25,11 @@
   <string id="32216">Deaktiviert</string>
   <string id="32217">Liste</string>
   <string id="32218">Breite Liste</string>
+  <string id="32219">(Experimentell/Für RPi 1) Addon pausiert Kodi-Prozess.</string>
   <string id="32225">Sortierung der Suchergebnisse</string>
   <string id="32226">Nein</string>
-	<string id="32227">Nach Datum, Neueste -> Älteste</string>
-	<string id="32228">Nach Datum, Älteste -> Neueste</string>
+  <string id="32227">Nach Datum, Neueste -> Älteste</string>
+  <string id="32228">Nach Datum, Älteste -> Neueste</string>
 
   <!-- In addon.py referenced-->
   <string id="32300"></string> <!-- Empty -->

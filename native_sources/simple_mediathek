@@ -5,17 +5,21 @@
 #
 # Note: Default working directory /dev/shm, but the Kodi addon uses
 # an subfolder in .kodi/userdata, i.e ( on LibreELEC)
-# /storage/.kodi/userdata/addon_data/plugin.video.simple_mediathek_de
+# $HOME/.kodi/userdata/addon_data/plugin.video.simple_mediathek_de
 #
 
 BIN_NAME="${0##*/}"
 BIN_NAME="${BIN_NAME%.*}.bin"  # Strip .local and add .bin
 BIN_PATH="./${0%/*}"
 MACH=$(uname -m)
+PAUSE_KODI_PROCESS=0
 
 if [ ! -f "${BIN_PATH}/${BIN_NAME}" ] ; then
   # Try path with architecture prefix, like x86_64.
   BIN_PATH="${0%/*}/../${MACH}/bin"
+  if [ ! -f "${BIN_PATH}/${BIN_NAME}" -a "$MACH" = "armv6l" ] ; then
+    BIN_PATH="${0%/*}/../armv7l/bin"
+  fi
 fi
 
 # For broli libs. (Second added path for script call in 'native_sources')
@@ -54,8 +58,11 @@ echo_verbose()
 
 echoerr() { printf "%s\n" "$*" >&2; }
 
-check_if_folder_arg_given()
+# Check arguments and filter out args
+# which targets this script.
+parse_arguments()
 {
+  FILTERED_ARGS=()
   while [ "$#" -gt "0" ]
   do
     case "$1" in
@@ -67,7 +74,12 @@ check_if_folder_arg_given()
         INDEX_FILE_FOLDER="$2"
         shift; shift
         ;;
+      --paused)
+        PAUSE_KODI_PROCESS=1
+        shift
+        ;;
       *)
+        FILTERED_ARGS+=("$1")
         shift
         ;;
     esac
@@ -90,6 +102,20 @@ check_shell()
       echo "sh"
       ;;
   esac
+}
+
+# Sends SIGSTOP or SIGCONT
+# Input argument $1: 0 - continue, 1 - pause
+send_signal_to_kodi()
+{
+  if [ "$PAUSE_KODI_PROCESS" = "1" ] ; then
+    PID=$(ps x | grep "[k]odi.bin" | awk 'BEGIN{FS=" "}{print $1}')
+
+    test -n "$PID" && \
+      (test "$1" = "0" -o "$1" = "Continue"  \
+      && kill -s 18 $PID \
+      || kill -s 19 $PID )
+  fi
 }
 
 setup()
@@ -180,18 +206,20 @@ update()
 
   # Set EXE
   EXE=$(check_shell)
+  send_signal_to_kodi 1
   if [ "$EXE" = "busybox" ] ; then
     ${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}
 
     # No PIPESTATUS array available
-    exit $?
+    RET=$?
   else
     ${GET_XZ} | ${UNPACK_XZ} | ${INDEX_JSON}
 
     # Return status of piped commands stored in array
     eval "RET=\${PIPESTATUS[2]}\${PIPESTATUS[1]}\${PIPESTATUS[0]}"
-    exit $RET
   fi
+  send_signal_to_kodi 0
+  exit $RET
 }
 
 download()
@@ -215,18 +243,20 @@ download()
 
   # Set EXE
   EXE=$(check_shell)
+  send_signal_to_kodi 1
   if [ "$EXE" = "busybox" ] ; then
     ${GET_XZ} | ${UNPACK_XZ} | sed -e "${ADD_NEWLINES}" > "${FILENAME}"
 
     # No PIPESTATUS array available
-    exit $?
+    RET=$?
   else
     ${GET_XZ} | ${UNPACK_XZ} | sed -e "${ADD_NEWLINES}" > "${FILENAME}"
 
     # Return status of piped commands stored in array
     eval "RET=\${PIPESTATUS[2]}\${PIPESTATUS[1]}\${PIPESTATUS[0]}"
-    exit $RET
   fi
+  send_signal_to_kodi 0
+  exit $RET
 }
 
 # ====== Main ====================
@@ -237,17 +267,19 @@ if [ "$DEBUG" = "1" ] ; then
 fi
 
 #cd $BIN_PATH
+parse_arguments "$@"  # Create FILTERED_ARGS variable
+set -- "${FILTERED_ARGS[@]}"  # This updates $@, $1, etc
 
 if [ "$1" = "update" ] ; then
-  check_if_folder_arg_given $@
   update "$2"
 elif [ "$1" = "link" ] ; then
   just_print_link "$2"
 elif [ "$1" = "download" ] ; then
   download "$2" "$3"
 else
-  check_if_folder_arg_given $@
+  send_signal_to_kodi 1
   echo_verbose "${BIN_PATH}/${BIN_NAME} $@"
   ${BIN_PATH}/${BIN_NAME} "$@" --folder "$INDEX_FILE_FOLDER"
+  send_signal_to_kodi 0
   exit $?
 fi

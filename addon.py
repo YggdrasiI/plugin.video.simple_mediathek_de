@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
+# from __future__ import unicode_literals
 
 import sys
 import xbmc
@@ -16,11 +16,13 @@ import os.path
 import json
 import subprocess
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
+# sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 import mediathekviewweb as MVWeb
 
 import keyboard
 from chmod_binaries import binary_setup
+
+from constants import search_ranges_locale, search_ranges_str, search_ranges
 
 # Old translation variant
 addon = xbmcaddon.Addon()
@@ -63,41 +65,6 @@ max_num_entries_per_page = 15
 # SKINS_WIDE_LIST = [u"skin.confluence.480"]
 
 base_url = sys.argv[0]
-
-# (Extra empty entries for list[-1]-access )
-search_ranges_str = {
-    u"duration": [u"10 min", u"30 min", u"60 min", u"1,5 h",
-                  u"2 h", u""],
-    u"direction": [u"Höchstens", u"Mindestens"],
-    u"direction_b": [u"Suche auf Maximallänge umstellen...",
-                     u"Suche auf Mindestlänge umstellen..."],
-    u"time": [u"0-10 Uhr", u"10-16 Uhr", u"16-20 Uhr", u"20-24 Uhr", u""],
-    u"day": [u"Heute und gestern", u"2 Tage", u"5 Tage", u"7 Tage", u"14 Tage",
-             u""],  # u"Kalender", u""],
-    u"day_range": [u"Kalender"],
-    u"channel": [u"Kanal %s"],
-}
-
-# 323xx, 32300 is ""
-search_ranges_locale = {
-    u"duration": [32301, 32302, 32303, 32304, 32305, 32300],
-    u"direction": [32306, 32307],
-    u"direction_b": [32308, 32309],
-	u"time": [32310, 32311, 32312, 32313, 32300],
-    u"day": [32314, 32315, 32315, 32315, 32315, 32300],
-    u"day_range": [32316],
-	u"channel": [32317],
-}
-"""
-Matching arguments for the search program.
-search_ranges_str[u"duration"][i] corresponends with
-[search_range[u"duration"][i], search_range[u"duration"][i+1] - 1]
-"""
-search_ranges = {
-    u"duration": [0, 600, 1800, 3600, 5400, 7200, -1],
-    u"time": [0, 36000, 57600, 72000, 86400, -1],
-    u"day": [0, 1, 2, 5, 7, 14, -1, ],  # -1],
-}
 
 
 class Dict(dict):
@@ -184,6 +151,17 @@ class SimpleMediathek:
         return self.state.get(u"current_pattern", {})
 
     def get_livestream_pattern(self):
+        if b_mvweb:
+            return {u"topic": u"Livestream",
+                    u"web_args": {
+                        "not": [{  # Livestreams had 'timestamp': null property
+                                 "range":
+                                 {
+                                     "field": u"timestamp",
+                                     "gte": "now-47y",
+                                 }}]
+                    }}
+
         return {u"title": u"Livestream", u"args": [
             u"--durationMax", u"0",
             u"--beginMax", u"7260",  # 1. Jan 1970, 1 Uhr, Winterzeit.
@@ -355,23 +333,18 @@ class SimpleMediathek:
     def sprint_search_pattern(self, pattern):
         title = self.get_pattern_title(pattern)
         channel = self.get_pattern_channel(pattern).upper()
+        sday = self.get_pattern_date(pattern)
         if b_mvweb:
             desc = self.get_pattern_desc(pattern)
-            s = u"%s%s%s" % (
+            s = u"%s%s%s%s" % (
                 (title + u" | ") if len(title) else u"",
+                (sday + u" | ") if len(sday) else u"",
                 (desc + u" | ") if len(desc) else u"",
                 (u" (%s)" % (channel)) if len(channel) else u"",
             )
         else:
-            sday = self.get_pattern_date(pattern)
             sduration = self.get_pattern_duration(pattern)
             stime = self.get_pattern_time(pattern)
-            s = (u"" + str(type(title)) +
-                 str(type(sday)) +
-                 str(type(stime)) +
-                 str(type(sduration)) +
-                 str(type(channel))
-                 )
             s = u"%s%s%s%s%s" % (
                 (title + u" | ") if len(title) else u"",
                 (sday + u" | ") if len(sday) else u"",
@@ -565,6 +538,9 @@ def call_binary(largs):
     largs.append(u"--folder")
     largs.append(path)
 
+    if u"true" == addon.getSetting(u"pause_kodi_process"):
+        largs.append("--paused")
+
     path = addon.getAddonInfo(u"path").decode('utf-8')
     script = os.path.join(path, u"root", u"bin", u"simple_mediathek")
     largs.insert(0, script)
@@ -693,11 +669,11 @@ def gen_search_categories(mediathek):
                        u"mode": u"select_title",
                        u"id": expanded_state.get(u"input_request_id", 0) + 1
                        })
+    categories.append({u"name": getLocalizedString(32343),  # u"Datum",
+                        u"selection": mediathek.get_pattern_date(pattern),
+                        u"mode": u"select_day",
+                        })
     if not b_mvweb:
-        categories.append({u"name": getLocalizedString(32343),  # u"Datum",
-                           u"selection": mediathek.get_pattern_date(pattern),
-                           u"mode": u"select_day",
-                           })
         categories.append({u"name": getLocalizedString(32344),  # u"Uhrzeit",
                            u"selection": mediathek.get_pattern_time(pattern),
                            u"mode": u"select_time",
@@ -1019,7 +995,7 @@ def blankScreen():
 
 def handle_update_side_effects(args):
     """
-    Simple updates simply update a key-value pair.
+    Simple updates rewrite a key-value pair.
     More complex relations could be placed here.
     Return True if the normal update of the key should be avoided.
     """
@@ -1087,9 +1063,9 @@ with SimpleMediathek() as mediathek:
         mode = u"not used"
     else:
         addon_handle = int(sys.argv[1])
-        xbmcplugin.setContent(addon_handle, u"movies")
+        xbmcplugin.setContent(addon_handle, u"files")  # Some skins require it
 
-        # Set default view
+        # Set default view. Useful for skin.confluence
         force_view = int(addon.getSetting(u"force_view"))
         if force_view:
             # 50 (List) or 51 (Wide List)
@@ -1345,6 +1321,7 @@ with SimpleMediathek() as mediathek:
             # Resort by video quality, 2xmid, 2xlow, 2xhigh
             qualities = [2, 3, 0, 1, 4, 5]
             urls = [urls[q] for q in qualities]
+            # Now, its ordered by quality, but with empty entries.
 
             non_empty_urls = [u for u in urls if len(u) > 0]
             if len(non_empty_urls) == 0:
@@ -1418,10 +1395,10 @@ with SimpleMediathek() as mediathek:
 
         results = {u"pattern": pattern, u"found": []}
         if b_mvweb:
-            (exit_code, data) = MVWeb.fetch(pattern, args.get(u"page", 0),
+            (exit_code, data) = MVWeb.fetch2(pattern, args.get(u"page", 0),
                                             max_num_entries_per_page + 1)
             if exit_code == 0:
-                js = MVWeb.convert_results(data)
+                js = MVWeb.convert_results2(data)
         else:
             search_args = mediathek.create_search_params(pattern)
 

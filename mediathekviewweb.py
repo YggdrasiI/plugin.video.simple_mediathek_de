@@ -1,23 +1,30 @@
 # -*- coding: utf-8 -*-
 
-from socketIO_client import SocketIO, BaseNamespace
+#from socketIO_client import SocketIO, BaseNamespace
 from datetime import datetime
 
-def convert_results(tResult):
+
+def get_string(d, key):
+    # Helper  to avoid str-cast of None
+    r = d.get(key)
+    return r.strip() if r else u""
+
+
+def get_int(d, key, default=0):
+    # Helper  to avoid int-cast of None
+    r = d.get(key)
+    if r is None: return default
+    return int(r)
+
+
+# For  MVW API 2.x
+def convert_results2(dResult):
     """
-    Input data example
-    ({u'result':
-        {u'queryInfo':
-            {u'filmlisteTimestamp': u'1508505240', u'totalResults': 72,
-            u'searchEngineTime': u'8.86', u'resultCount': 1},
-         u'results':
-             [{u'url_video': u'', u'url_video_hd': u'', u'url_video_low': u'',
-             u'description': u'', u'title': u'', u'timestamp': 1508271300,
-             u'filmlisteTimestamp': u'1508317980',
-             u'id': u'jwnNEpXxbx7eoH0WCo49NoTBWh1jFI3eIham6IDuEbk=',
-             u'topic': u'', u'url_website': u'', u'url_subtitle': u'',
-             u'duration': 467, u'channel': u'ZDF', u'size': 140509184}]},
-      u'err': None},)
+    Input data example (subset, which shows path to urls)
+    {"result": { "items": [{"document": { "media" : {...} } }]}}
+
+    See mediathekviewweb/server/src/elasticsearch-definitions/mapping.ts
+    for full doc.
 
     Output data example
     {"found":
@@ -30,24 +37,24 @@ def convert_results(tResult):
     """
     found = []
 
-    if len(tResult) < 1:
+    if len(dResult) < 1:
         print( u"Error: Input is no 1-tuple as expected.")
         return {u"found": found}
 
-    dResult = tResult[0]
-    if dResult.get(u"err"):
-        print( u"Error: %s\n" % dResult.get(u"err"))
-        return {u"found": found}
+    #if dResult.get(u"err"):
+    #    print( u"Error: %s\n" % dResult.get(u"err"))
+    #    return {u"found": found}
 
-    for r in dResult.get(u"result",{}).get(u"results",[]):
-        # print(u"%s - %s" % (r.get(u"topic"), r.get(u"title")))
+    lItems = dResult.get("result", {}).get("items",[])
+    for dItem in lItems:
+        dDoc = dItem.get("document", {})
         x = {
-            u"topic": r.get(u"topic"),
-            u"title": r.get(u"title"),
-            u"ibegin": int(r.get(u"timestamp")), # or?
-            # u"ibegin": int(r.get(u"filmlisteTimestamp")),
-            u"iduration": r.get(u"duration"),
-            u"channel": r.get(u"channel").lower(),
+            u"id": unicode(dItem.get("id", dDoc.get("id", ""))),
+            u"topic": unicode(dDoc.get(u"topic")),
+            u"title": unicode(dDoc.get(u"title")),
+            u"ibegin": get_int(dDoc, u"timestamp", 0),
+            u"iduration": get_int(dDoc, u"duration", -1),
+            u"channel": unicode(dDoc.get(u"channel")).lower(),
             u"ichannel": -1,  # Different enummeration
         }
         # Parse ibegin
@@ -55,27 +62,29 @@ def convert_results(tResult):
         x[u"begin"] = d.strftime("%d. %b. %Y %R").decode('utf-8')
 
         # Add urls in same order as simple_mediathek --payload returns.
-        x[u"payload"] = [r.get(u"url_video"), u"",
-                        r.get(u"url_video_low"), u"",
-                        r.get(u"url_video_hd"), u""]
+        # Currently, its fixed on 0-2 urls for thee quality levels.
+        urls = [u""] * 6
+        # The input media dict had the keys type(?), url, size, quality
+        # Quality range low=2, mid=3, high=4 (interpretation of 0,1?!)
+        lMedia = dDoc.get("media", [])
+        # Restore required ordering of video quality, 2xmid, 2xlow, 2xhigh
+        _lmap = [0, 1, 1, 0, 2, 2]
+        for dM in lMedia:
+            if dM.get("type", -1) != 0:  # Video types: [0]
+                continue
+
+            q = _lmap[dM.get("quality", 0)]
+            pos = 2*q if len(urls[2*q]) == 0 else 2*q+1
+            urls[pos] = dM.get("url")
+
+        x[u"payload"] = urls
 
         found.append(x)
 
     return {u"found": found}
 
-def fetch(pattern, page=0, entries_per_page=10):
 
-    class FilmNamespace(BaseNamespace):
-        response = None
-
-        """
-        def on_connect(self): print("[Connected]")
-        def on_reconnect(self): print("[Reconnected]")
-        def on_disconnect(self): print("[Disconnected]")
-
-        """
-        def on_film_response(self, *args):
-            self.response = args
+def fetch2(pattern, page=0, entries_per_page=10):
 
     ## Build query
     def get_string(d, key):
@@ -83,44 +92,105 @@ def fetch(pattern, page=0, entries_per_page=10):
         r = d.get(key)
         return r.strip() if r else u""
 
-    queries = []
+    # Fill in subqueries of BoolQuery:
+    # {"body": { "bool": { "must": [XXX]}}}
+
+    lQueries = []
     title = get_string(pattern, u"title")
     if len(title):
-           queries.append({u"fields": [u"title", u"topic"], u"query": title})
+        # TextQuery (type noted by 'text' key)
+        lQueries.append({u"text":
+                        { u"fields": [u"title", u"topic"],
+                         u"text": title,
+                         u"operator": "and"}})
+    else:
+        topic = get_string(pattern, u"topic")
+        lQueries.append({u"text":
+                        { u"fields": [u"topic"],
+                         u"text": topic,
+                         u"operator": "and"}})
 
     description = get_string(pattern, u"description")
     if len(description):
-           queries.append({u"fields": [u"description"], u"query": description})
+        lQueries.append({u"text":
+                        { u"fields": [u"description"],
+                         u"text": description,
+                         u"operator": "and"}})
 
     channel = get_string(pattern, u"channel")
     if len(channel):
-           queries.append({u"fields": [u"channel"], u"query": channel})
+        lQueries.append({u"text":
+                        { u"fields": [u"channel"],
+                         u"text": channel,
+                         u"operator": "and"}})
 
-    sortProps = pattern.get(u"sortBy", (u"timestamp", u"desc"))
-    queryObj = {u"queries": queries,
-                u"sortBy": sortProps[0],
-                u"sortOrder": sortProps[1],
-                u"future": True,
-                u"offset": page*entries_per_page,
-                u"size": entries_per_page
-               }
+    lFilter = []
+    if pattern.get(u"iday_range"):
+        days = pattern.get(u"iday_range")
+        date0 = datetime.fromtimestamp(min(days))
+        date1 = datetime.fromtimestamp(max(days))
+        today = datetime.today()
+        lFilter.append({ "range": {
+            "field": u"timestamp",
+            "gte": u"now-%id/d" % ((today-date0).days,),
+            "lt": u"now-%id/d" % ((today-date1).days-1,),
+        }})
 
+    elif pattern.get(u"iday", -1) > -1:
+        # Transfer index into number of days
+        from constants import search_ranges
+        iday = search_ranges[u"day"][pattern[u"iday"]+1]
+        lFilter.append({ "range": {
+            "field": u"timestamp",
+            "gte": u"now-%id/d" % (iday),
+        }})
+
+    # TODO: Filter for duration and begin
+
+    # Sorts defined on same layer as body
+    queryObj = {"body": { "bool": { "must": lQueries,
+                                   "filter": lFilter,
+                                   },
+                         },
+                "skip": page*entries_per_page,
+                "limit": entries_per_page,
+                "sorts": [
+                    {
+                        "field": "timestamp",
+                        "order": "descending"
+                    }, {
+                        "field": "duration",
+                        "order": "ascending"
+                    }],
+                }
+
+    if u"web_args" in pattern:
+        # TODO update overwrites subentries, not extends them!
+        queryObj["body"]["bool"].update(pattern["web_args"])
+
+
+    import xbmc
+    xbmc.log(str(queryObj))
     # Send query
-    with SocketIO(u"https://mediathekviewweb.de", 443, verify=True) as socketIO:
+    import requests
+    import json
+    url = u"https://testing.mediathekviewweb.de/api/v2/query/json"
+    try:
+        r = requests.post(url, json=queryObj)
+        if r.status_code != 200:
+            raise requests.RequestException(response=r)
 
-        film_namespace = socketIO.define(FilmNamespace)
-        socketIO.emit(u"queryEntries", queryObj, film_namespace.on_film_response)
+        sResult = r.text.encode(r.encoding)
+        xbmc.log(sResult)
+        dResult = json.loads(sResult)
 
-        try:
-            # Sync threads
-            socketIO.wait_for_callbacks(seconds=5.0)
-            if film_namespace.response:
-                return (0, film_namespace.response)
-            else:
-                return (-1, None)
-        except Exception as e:
-            print(e)
-
+        return (0, dResult)
+    except requests.RequestException as e:
+        xbmc.log("MediathekViewWeb error:"+str(e.message))
+        return (-1, None)
+    except ValueError:
+        xbmc.log("MediathekViewWeb error:"+str(e.message))
+        return (-2, None)
 
     # Request failed.
     return (-2, None)

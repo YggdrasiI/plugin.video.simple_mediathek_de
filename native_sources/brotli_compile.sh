@@ -38,8 +38,10 @@ else
   if [ "${FORCE}" = "1" ] ; then
     make clean
   fi
-  make -j$J
-  make install
+  make -j$J && \
 
-  echo "Installed libs and header into $INSTALL_FOLDER. Now, the git projekt folder could be removed."
+  echo "Brotli compiled. Run 'make install' to copy"
+  echo "libs and headers into $INSTALL_FOLDER."
+
+  # make install
 fi

@@ -7,13 +7,13 @@ main:
 	@echo "'make addon': Create addon archive at .."
 
 native:
-	cd native_sources; make debug && make install
+	cd native_sources; make && make install
 
 rpi:
 	echo "Cross compiling currently not work. Call this on Raspian only"
 	#cd native_sources; make rpi && make install
 
-addon: clean brotli_strip
+addon: clean
 	@# 1. Create list of addon files. Filter out uncommited data
 	@# and native_sources folder, but add root folder.
 	git ls-files | grep -v "\(native_sources\/\|[.]gitignore\|Makefile\)" \
@@ -25,13 +25,6 @@ addon: clean brotli_strip
 	cd .. ; zip -r $(PROJECT).zip . \
 		-i@/dev/shm/$(PROJECT).include
 
-
-# The cmake script of brotli does not allow the seletion of non-static libs
-# Remove unrequired files by hand to reduce addon size
-# (Only the so.1.0.1 files will be left.)
-brotli_strip:
-	rm -f root/*/bin/brotli root/*/lib/libbrotli*.a \
-		root/*/lib/libbrotli*.so
 
 # Kodi do not like symlinks
 #brotli_resolve_symlinks:
@@ -47,4 +40,12 @@ update:
 update_more:
 	cp *.py *.xml $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/.
 	cp -r resources/* $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/resources/.
-	cp -r lib/* $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/lib/.
+# cp -r lib/* $(HOME)/.kodi/addons/plugin.video.simple_mediathek_de/lib/.
+
+test_complete_build:
+	cd /dev/shm \
+		&& git clone "https://github.com/YggdrasiI/plugin.video.simple_mediathek_de.git" \
+		&& cd plugin.video.simple_mediathek_de/native_sources \
+		&& make && make tests && make install \
+		&& cd .. && make addon
+		@echo -e "Complete build successful.\n\tRemove /dev/shm/plugin.video.simple_mediathek_de manually"

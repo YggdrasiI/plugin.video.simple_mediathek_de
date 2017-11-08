@@ -9,7 +9,8 @@ BROTLI=1
 INSTALL_PREFIX=../root
 MACH=$(shell uname -m)
 GIT_COMMIT_VERSION=$(shell git log --oneline --max-count=1 | head --bytes=7)
-VERSION='MediathekView data parser 0.4 ($(GIT_COMMIT_VERSION))'
+VERSION='MediathekView data parser 0.8 ($(GIT_COMMIT_VERSION))'
+BROTLI_STATIC=1
 
 ############################################################
 
@@ -32,7 +33,7 @@ endif
 ifeq ($(MAKECMDGOALS),debug)
 CFLAGS+= -g
 ODIR=obj_debug
-BROTLI=0
+#BROTLI=0
 else
 CFLAGS+= -O3 -DNDEBUG
 CFLAGS+= -Wall
@@ -58,13 +59,26 @@ DEPS=settings.h
 #DEPS=$$(ls *.h)
 
 ifneq ($(BROTLI),0)
-BROTLI_ROOT=${INSTALL_PREFIX}/${MACH}
-BROTLI_DEP=$(BROTLI_ROOT)/lib/libbrotlidec.so.1.0.1
 # With Brotli
-CFLAGS+=-DCOMPRESS_BROTLI -I$(BROTLI_ROOT)/include  -L$(BROTLI_ROOT)/lib -lbrotlidec -lbrotlienc -lbrotlicommon
+BROTLI_SRC=brotli/release_$(MACH)
+BROTLI_ROOT=${INSTALL_PREFIX}/${MACH}
+ifneq ($(BROTLI_STATIC),0)
+# With static Brotli
+BROTLI_DEP=libbrotli_static
+BROTLI_LIBS_STATIC=$(BROTLI_SRC)/libbrotlidec-static.a $(BROTLI_SRC)/libbrotlienc-static.a $(BROTLI_SRC)/libbrotlicommon-static.a -lm
+CFLAGS+=-DCOMPRESS_BROTLI -I$(BROTLI_SRC)/../c/include -lm
+else
+# dynamic linked Brotli
+BROTLI_DEP=libbrotli_dynamic
+BROTLI_LIBS=-lbrotlidec -lbrotlienc -lbrotlicommon
+BROTLI_LIBS_STATIC=
+CFLAGS+=-DCOMPRESS_BROTLI -I$(BROTLI_ROOT)/include  -L$(BROTLI_ROOT)/lib $(BROTLI_LIBS)
+endif
+
 #CFLAGS+=-DCOMPRESS_BROTLI $$(PKG_CONFIG_PATH=$(BROTLI_ROOT)/lib/pkgconfig/ pkg-config --libs --cflags brotli)
 FILES+=brotli.c
 else
+# Without Brotli, set dependency on existing file to omit brotli compiling
 BROTLI_DEP=Makefile
 endif
 
@@ -101,7 +115,7 @@ rpi: main
 	@echo "Compiled with $(CFLAGS)"
 
 $(PROG_NAME): $(OBJ)
-	$(CC) -o $(PROG_NAME) $^ ${CFLAGS}
+	$(CC) -o $(PROG_NAME) $^ ${CFLAGS} $(BROTLI_LIBS_STATIC)
 
 $(ODIR)/%.o: %.c $(DEPS)
 		$(CC) -c -o $@ $< $(CFLAGS)
@@ -116,9 +130,34 @@ $(ODIR):
 #	$(CC) ${CFLAGS_RPI} -o $(PROG_NAME) ${FILES} ${CFLAGS}
 
 
-$(BROTLI_DEP): brotli_install.sh
+libbrotli_static: brotli_compile.sh brotli/release_$(MACH)
+
+brotli/release_$(MACH):
 	@echo -e "Clone Git repository of broli library...\nWill be installed into $(BROTLI_ROOT)"
-	./brotli_install.sh "$(MACH)" "$(CFLAGS_RPI)"
+	./brotli_compile.sh "$(MACH)" "$(CFLAGS_RPI)"
+
+# Install and cleanup of required libs
+libbrotli_dynamic: libbrotli_static
+	cd brotli/release_$(MACH) && make install
+	@echo "Remove brotli binary and static libs."
+	@rm -f $(BROTLI_ROOT)/bin/brotli # $(BROTLI_ROOT)/lib/libbrotli*.a
+	@echo "Resolve symlinks manually to halve addon size."
+	@test -L "$(BROTLI_ROOT)/lib/libbrotlicommon.so" \
+		&& cd "$(BROTLI_ROOT)/lib" \
+		&& mv "$$(readlink "libbrotlicommon.so" )" "libbrotlicommon.so" \
+		|| exit 0
+	@test -L "$(BROTLI_ROOT)/lib/libbrotlidec.so" \
+		&& cd "$(BROTLI_ROOT)/lib" \
+		&& mv "$$(readlink "libbrotlidec.so" )" "libbrotlidec.so" \
+		|| exit 0
+	@test -L "$(BROTLI_ROOT)/lib/libbrotlienc.so" \
+		&& cd "$(BROTLI_ROOT)/lib" \
+		&& mv "$$(readlink "libbrotlienc.so" )" "libbrotlienc.so" \
+		|| exit 0
+
+#&& mv $(shell readlink $(libfile)) $(libfile)\
+
+#mv $(BROTLI_ROOT)
 
 # Note: depedency $(PROG_NAME) removed to avoid
 # recompilation with wrong flags. (i.e. after 'make rpi' )
