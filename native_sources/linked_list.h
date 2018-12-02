@@ -68,8 +68,8 @@ typedef struct {
 } dummy_info_t;
 
 /* Note about 'subgroup named types':
- * The set of elements partitioned between four different relations
- * (i.e. the channel).
+ * The set of elements is partitioned respecting four different relations
+ * (e.g. the channel).
  *
  * The relations split the set into subsets (called subgroups) and we want
  * iterate over the elements of this subgroups.
@@ -82,7 +82,7 @@ typedef struct {
  * the structs contain some unions. They allow us the iteration over
  * the group of relations with one variable name.
  *
- * Note: The 32 byte were used to packed an other variable into:
+ * Note: The 32 bits were used to pack an other variable into:
  *       The lowest byte encodes the subgroup id.
  *       Upper bytes encode the id.
  *       
@@ -93,7 +93,9 @@ typedef struct {
 #define LINKED_LIST_ID(ID_SUBGROUP) ( (ID_SUBGROUP) >> LINKED_LIST_SUBGROUP_BITS )
 
 /* Extract bits from subgroup */
-#define LINKED_LIST_SUBGROUP(ID_SUBGROUP) ( (ID_SUBGROUP) & 0xFF )
+//#define LINKED_LIST_SUBGROUP(ID_SUBGROUP) ( (ID_SUBGROUP) & 0xFF )
+#define LINKED_LIST_SUBGROUP(ID_SUBGROUP) ( (ID_SUBGROUP) \
+    & ((0x1 << LINKED_LIST_SUBGROUP_BITS) - 1) )
 
 typedef struct {
     union {
@@ -111,6 +113,7 @@ typedef struct {
  *
  * Note: i_ prefix indicate members as index variables, i.e
  * 0 <= i_timestamp < NUM_TIME
+ * -1: Unused entry of search pattern.
  * */
 typedef struct {
     union {

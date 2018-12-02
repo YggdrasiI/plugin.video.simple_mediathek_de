@@ -232,7 +232,7 @@ int open_title_file(
     return (p_s_ws->searchable_strings.fd > 0)?0:-1;
 }
 
-void read_index_header(
+int read_index_header(
         search_workspace_t *p_s_ws)
 {
     assert( p_s_ws && p_s_ws->index_fd > 0);
@@ -240,25 +240,31 @@ void read_index_header(
     uint32_t data[3];
     if( p_s_ws->index_fd > 0 ){
         ssize_t n = read(p_s_ws->index_fd, &data, sizeof(data));
+        if( (ssize_t)sizeof(data) != n){
+          return -1;
+        }
         assert( (ssize_t)sizeof(data) == n);
-        _unused(n);
         p_s_ws->tcreation = (time_t)data[0];
         p_s_ws->itoday = (size_t)data[1];
         // TODO: today_time_zone_offset could be differ from value during creation of list...
         p_s_ws->ttoday = 86400 * p_s_ws->itoday - p_s_ws->today_time_zone_offset;
         p_s_ws->list_creation_time = (time_t)data[2];
     }
+
+    return 0;
 }
 
-void read_index_footer(
+int read_index_footer(
         search_workspace_t *p_s_ws)
 {
     uint32_t seek;
     ssize_t w = read( p_s_ws->index_fd, &seek,
             sizeof(seek));
             //sizeof(p_s_ws->searchable_strings.seek));
+    if( (ssize_t)sizeof(seek) != w ){
+      return -1;
+    }
     assert( (ssize_t)sizeof(seek) == w );
-    _unused(w);
     p_s_ws->searchable_strings_len = seek;
 
     assert( p_s_ws && p_s_ws->index_fd > 0);
@@ -270,9 +276,15 @@ void read_index_footer(
      */
     int32_t bytes_was_read;
     ssize_t n = read(p_s_ws->index_fd, &bytes_was_read, sizeof(bytes_was_read));
+    if( n != sizeof(bytes_was_read)){
+      return -1;
+    }
     assert( n == sizeof(bytes_was_read));
+
     assert( len_channel_data == bytes_was_read);
     _unused(n); _unused(len_channel_data);
+
+    return 0;
 }
 
 /*
@@ -338,14 +350,32 @@ int next_search_tuple(
 
     m = p_arguments->dayMin;
     M = p_arguments->dayMax;
+    /*
+     *            m           M
+     *            0   1   2   3 ...
+     *            ^ Search today
+     *                    |
+     *  RELATIVE_NEWEST   1   2   3 ...        RELATIVE_OLDEST
+     *  (Multiple days)   ^ List creation day  (Multiple days)
+     */
     if( m < M ){
-        iNow = p_pattern->groups.i_relative_date;
-        iNow += (M - p_pattern_first->groups.i_relative_date);
+        iNow = p_pattern->groups.i_relative_date;        // Value in relation to 'list creation'
+        iNow += (M + 1 - p_pattern_first->groups.i_relative_date); // Value in relation to 'now'
         // Day order reversed -> Decrement
         if( iNow > 0 && iNow > m )
         {
             p_pattern->groups.i_relative_date--;
-            p_pattern->explicit_day_check = 0; // Younger days can not be the oldest
+            if( p_pattern->groups.i_relative_date == 0 ){ // Future entries
+                if(p_arguments->dayMin > 0)
+                {
+                    p_pattern->explicit_day_check = 0;
+                }else{
+                    p_pattern->explicit_day_check = 1;
+                }
+                // TODO: Define range of check
+            }else{
+                p_pattern->explicit_day_check = 0;
+            }
             return 0;
         }else{
             // Restore start value of 'third numeral'.
@@ -639,6 +669,13 @@ int _search_do_search_(
     int num_matched = 1;
     int i;
 
+    /* We search entries which fulfill all criterias, but we already
+     * start with a list of entries which fulfill one criteria.
+     * This ids are the first ones with this property.
+     *
+     * Thus, we can select the entry with the highest id among them.
+     * Other entries can not fulfill two criteria.
+     */
     // Find element with highest id. This will be the start point of the search.
     for( i=1; i<K; ++i){
         if( ids[k] < ids[i] ){
@@ -825,17 +862,19 @@ int search_do_search(
     //p_s_ws->search_result.match_found = 0;
 
     if( p_arguments->dayMin > -1 ){
-        int relative_day_to_now = p_arguments->dayMax + 1; // Begin with oldest.
+        int relative_day_to_now = p_arguments->dayMax; // Begin with oldest.
         int relative_day_to_creation = relative_day_to_now -
             (p_s_ws->search_itoday - p_s_ws->itoday);
         if( relative_day_to_creation < 0 ){
-            // This day is to young to be found in this index file.
-            // This holds for all days in the range [dayMin, dayMax],
-            // thus it exists no matching entry at all.
+            // This day is too young to be found in this index file.
+            // Moreover the property holds for all days in the range [dayMin, dayMax],
+            // Thus, it exists no matching entry at all.
+            //
+            // TODO: This assumption is wrong for list with future entries.
             return -1;
         }
 
-        int relative_day_to_creation2 = p_arguments->dayMin + 1
+        int relative_day_to_creation2 = p_arguments->dayMin
             - (p_s_ws->search_itoday - p_s_ws->itoday);
 
         // Cut ranges
@@ -847,8 +886,22 @@ int search_do_search(
         assert( relative_day_to_creation >= relative_day_to_creation2 );
 
         pattern.groups.i_relative_date = relative_day_to_creation;
-        if(relative_day_to_creation == NUM_REALTIVE_DATE-1){
+        if(relative_day_to_creation == RELATIVE_OLDEST){
             pattern.explicit_day_check = 1;
+            pattern.explicit_dayMin = max(0,
+                    p_s_ws->search_ttoday - p_arguments->dayMax * 86400);
+            pattern.explicit_dayMax = p_s_ws->search_ttoday + (1 - p_arguments->dayMin) * 86400;
+        }else if(relative_day_to_creation == RELATIVE_NEWEST){
+            /* Set day check only if user has not set --dayMin=0
+             * because this means 'show future entries'
+             */
+            //if(relative_day_to_creation2 == p_arguments->dayMin) // aka
+            if( p_arguments->dayMin > 0 )
+            {
+                pattern.explicit_day_check = 1;
+            }else{
+                pattern.explicit_day_check = 0;
+            }
             pattern.explicit_dayMin = max(0,
                     p_s_ws->search_ttoday - p_arguments->dayMax * 86400);
             pattern.explicit_dayMax = p_s_ws->search_ttoday + (1 - p_arguments->dayMin) * 86400;
@@ -1492,7 +1545,7 @@ int search_gen_patterns_for_partial(
         //len_results *= (p_arguments->dayMax - p_arguments->dayMin + 1);
 
         // ... better is
-        int relative_day_to_creation = p_arguments->dayMax + 1 // Begin with oldest.
+        int relative_day_to_creation = p_arguments->dayMax  // Begin with oldest.
             - (p_s_ws->search_itoday - p_s_ws->itoday);
         if( relative_day_to_creation < 0 ){
             // This day is to young to be found in this index file.
@@ -1501,7 +1554,7 @@ int search_gen_patterns_for_partial(
             return 0;
         }
 
-        int relative_day_to_creation2 = p_arguments->dayMin + 1
+        int relative_day_to_creation2 = p_arguments->dayMin
             - (p_s_ws->search_itoday - p_s_ws->itoday);
 
         // Cut ranges
@@ -1513,8 +1566,24 @@ int search_gen_patterns_for_partial(
         assert( relative_day_to_creation >= relative_day_to_creation2 );
 
         first_pattern.groups.i_relative_date = relative_day_to_creation;
-        if(relative_day_to_creation == NUM_REALTIVE_DATE-1){
+        if(relative_day_to_creation == RELATIVE_OLDEST){
             first_pattern.explicit_day_check = 1;
+            first_pattern.explicit_dayMin = max(0,
+                    p_s_ws->search_ttoday - p_arguments->dayMax * 86400);
+            first_pattern.explicit_dayMax = p_s_ws->search_ttoday + (1 - p_arguments->dayMin) * 86400;
+        }else if(relative_day_to_creation == RELATIVE_NEWEST){
+            /* Set day check only if user has not set --dayMin=0
+             * because this means 'show future entries'
+             */
+            assert( (relative_day_to_creation2 == p_arguments->dayMin)
+                    == (p_arguments->dayMin > 0) );
+            //if(relative_day_to_creation2 == p_arguments->dayMin) // aka
+            if( p_arguments->dayMin > 0 )
+            {
+                first_pattern.explicit_day_check = 1;
+            }else{
+                first_pattern.explicit_day_check = 0;
+            }
             first_pattern.explicit_dayMin = max(0,
                     p_s_ws->search_ttoday - p_arguments->dayMax * 86400);
             first_pattern.explicit_dayMax = p_s_ws->search_ttoday + (1 - p_arguments->dayMin) * 86400;
@@ -1694,6 +1763,13 @@ int search_do_search_partial(
     int num_matched = 1;
     int i;
 
+    /* We search entries which fulfill all criterias, but we already
+     * start with a list of entries which fulfill one criteria.
+     * This ids are the first ones with this property.
+     *
+     * Thus, we can select the entry with the highest id among them.
+     * Other entries can not fulfill two criteria.
+     */
     // Find element with highest id. This will be the start point of the search.
     for( i=1; i<K; ++i){
         if( ids[k] < ids[i] ){

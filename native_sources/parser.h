@@ -55,7 +55,7 @@ typedef struct {
 typedef struct {
     pattern_t pattern; 
 
-    /* Ignore next char if this one match, i.e. '\'.
+    /* Ignore next char if this one match, e.g. '\'.
      * Zero value disable mask.
      */
     char mask;  // pattern will be ignored after this char.

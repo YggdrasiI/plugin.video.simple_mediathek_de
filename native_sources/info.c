@@ -14,7 +14,10 @@ int info_read(
         search_workspace_t *p_i_ws)
 {
     // Read first bytes (creation date info, etc)
-    read_index_header(p_i_ws);
+    if( read_index_header(p_i_ws) ){
+      fprintf(stderr, "(info.c) Can not read header of index file. File empty?!\n");
+      return -1;
+    }
 
     // Skip the main part
     //linked_list_read(s_ws.index_fd, &s_ws.index);

@@ -67,7 +67,9 @@
 // Following constants should not exceed 256
 #define NUM_DURATIONS 6
 #define NUM_TIME 4
-#define NUM_REALTIVE_DATE 16
+#define NUM_REALTIVE_DATE (15+2)
+#define RELATIVE_OLDEST (NUM_REALTIVE_DATE-1)
+#define RELATIVE_NEWEST (0)
 #define NUM_CHANNELS 64 // TODO: Made number flexible?!
 // ==
 #define NUM_SUM (NUM_DURATIONS + NUM_TIME + NUM_REALTIVE_DATE + NUM_CHANNELS)

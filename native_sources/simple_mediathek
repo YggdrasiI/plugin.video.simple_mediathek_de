@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Wrapper for binary, i.e. to
+# Wrapper for binary, e.g. to
 # combine it with wget/curl
 #
 # Note: Default working directory /dev/shm, but the Kodi addon uses
@@ -45,7 +45,8 @@ FETCH_CURL="curl -L "
 FETCH="${FETCH_WGET}"
 
 # Local copies(used if DEBUG=1)
-LOCAL_URL="http://localhost:8000"
+LOCAL_PORT=9987
+LOCAL_URL="http://localhost:${LOCAL_PORT}"
 DEBUG_AKT_XML="${LOCAL_URL}/Filmliste-akt.xml"
 DEBUG_DIFF_XML="${LOCAL_URL}/Filmliste-diff.xml"
 DEBUG_AKT_XZ="${LOCAL_URL}/Filmliste-akt.xz"

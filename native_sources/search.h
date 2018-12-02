@@ -215,11 +215,11 @@ int open_title_file(
 ;
 
 // Meta data about creation time, etc
-void read_index_header(
+int read_index_header(
         search_workspace_t *p_s_ws)
 ;
 
-void read_index_footer(
+int read_index_footer(
         search_workspace_t *p_s_ws)
 ;
 

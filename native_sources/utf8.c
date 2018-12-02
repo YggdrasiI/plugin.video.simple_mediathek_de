@@ -46,14 +46,14 @@ int u8_seqlen(char *s)
 }
 
 /* conversions without error checking
-   only works for valid UTF-8, i.e. no 5- or 6-byte sequences
+   only works for valid UTF-8, e.g. no 5- or 6-byte sequences
    srcsz = source size in bytes, or -1 if 0-terminated
    sz = dest size in # of wide characters
 
    returns # characters converted
    dest will always be L'\0'-terminated, even if there isn't enough room
    for all the characters.
-   if sz = srcsz+1 (i.e. 4*srcsz+4 bytes), there will always be enough space.
+   if sz = srcsz+1 (e.g. 4*srcsz+4 bytes), there will always be enough space.
 */
 int u8_toucs(uint32_t *dest, int sz, char *src, int srcsz)
 {

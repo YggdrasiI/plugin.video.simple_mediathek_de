@@ -1,5 +1,6 @@
 ############################################################
 
+# SCRIPT_NAME=simple_mediathek
 SCRIPT_NAME=simple_mediathek
 PROG_NAME=$(SCRIPT_NAME).bin
 BROTLI=1
@@ -97,6 +98,7 @@ TEST_AFTER_CMD= >"$(TEST_OUTPUT)" 2>&1 \
 								|| (echo "Test '$@' failed\tSee $(TEST_OUTPUT) for output" && exit 1)
 
 ## Variables for local hosting of input files
+LOCAL_PORT=9987
 DATA_DIR=../data
 FILMLISTE_AKT_XZ=$(DATA_DIR)/Filmliste-akt.xz
 FILMLISTE_DIFF_XZ=$(DATA_DIR)/Filmliste-diff.xz
@@ -160,7 +162,7 @@ libbrotli_dynamic: libbrotli_static
 #mv $(BROTLI_ROOT)
 
 # Note: depedency $(PROG_NAME) removed to avoid
-# recompilation with wrong flags. (i.e. after 'make rpi' )
+# recompilation with wrong flags. (e.g. after 'make rpi' )
 install: $(SCRIPT_NAME) $(COPY_TO_ARMV6L)
 	mkdir -p "$(INSTALL_PREFIX)/bin"
 	mkdir -p "$(INSTALL_PREFIX)/$(MACH)/bin"
@@ -293,8 +295,17 @@ test_unskip_tests:
 
 ############################################################
 
+# • Commands to use local copy of move list:
+#     make server
+#     DEBUG=1 make [tests|search|etc]
+#   or
+#     DEBUG=1 ARGS="--info" make run
+#   or
+#     DEBUG=1 ./simple_mediathek --info
+#
+# • Clear ../data/ before 'make server' to trigger fetch of new files.
 server: $(DATA_DIR) $(FILMLISTE_AKT_XZ) $(FILMLISTE_DIFF_XZ)
-	cd ../data && python3 -m http.server
+	cd ../data && python3 -m http.server $(LOCAL_PORT)
 
 $(DATA_DIR):
 	@test -d "$(DATA_DIR)" || mkdir "$(DATA_DIR)"

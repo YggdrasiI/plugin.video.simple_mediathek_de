@@ -310,7 +310,7 @@ void output_select_sorting_function(
 void output_sort(
         output_t *p_output)
 {
-    uint32_t n = p_output->pos_i + 1;
+    uint32_t n = min(p_output->pos_i + 1, p_output->found);
 
     if( p_output->sort_handler == NULL ){
         DEBUG( fprintf(stderr, "Print %u elements\n", n) );

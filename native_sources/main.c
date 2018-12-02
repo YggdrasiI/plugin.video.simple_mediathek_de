@@ -32,6 +32,7 @@ int indexing(
             return -1;
         }
     }else{
+        fprintf(stderr, "Read movie list from standard input.\n");
         fdin = 0; // file descriptor of stdin
     }
 
@@ -211,7 +212,7 @@ int indexing(
 
         }else if( ret_search == SEARCH_FAILED_DUE_ABORT_CHAR ){
             // Pattern not found before search aborted. Here,
-            // some chars of the buffer, i.e. after an '\n' are still unprocessed.
+            // some chars of the buffer, e.g. after an '\n' are still unprocessed.
 
             // Go to next char to avoid re-check on abort char.
             ++buf_stop;
@@ -345,7 +346,10 @@ int searching(
     }
 
     //Read index file
-    read_index_header(&s_ws);
+    if( read_index_header(&s_ws) ){
+      fprintf(stderr, "Reading of index file failed.\n");
+      return -1;
+    }
     linked_list_read(s_ws.index_fd, &s_ws.index);
     read_index_footer(&s_ws);
 

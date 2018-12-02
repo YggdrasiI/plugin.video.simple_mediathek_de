@@ -31,8 +31,8 @@ filmliste_workspace_t filmliste_ws_create(
         {OUT_CACHESIZ, 0, NULL}, // payload_buf
         tm_now, // tmp_ts
         channels_ws_create(), // channels
-        0,
-        linked_list_create(tlocalday_begin),
+        0, // previous_channel
+        linked_list_create(tlocalday_begin), // index
         -1, // index_fd
         NULL, // index_folder
         {0, NULL, 0, NULL}, 0, // prev_topic and prev_topic_seek
@@ -183,7 +183,11 @@ int update_index2(
   //int day = (int) start_time / 86400;
   //int index_day = p_fl_ws->itoday - (day_ctime / 86400); //GTM Day border.
   int index_day = p_fl_ws->itoday - ( (day_ctime+3600) / 86400); //GTM+1 Day border.
-  index_day = clip(0, index_day, NUM_REALTIVE_DATE-1);
+  //index_day = clip(RELATIVE_NEWEST, index_day, RELATIVE_OLDEST);
+
+  // Shift by + 1 because index 0 is reserved for future entries.
+  // Use 0 for all entries with negative values.
+  index_day = clip(RELATIVE_NEWEST, index_day + 1, RELATIVE_OLDEST);
 
   linked_list_subgroup_indizes_t indizes = {{{
       index_day,

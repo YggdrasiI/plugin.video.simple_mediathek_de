@@ -44,7 +44,7 @@ linked_list_t linked_list_create(
 
 
     list.len_used_dummy_nodes = 0;
-    size_t ld =  (NUM_SUM);
+    const size_t ld = (NUM_SUM);
 
     // Allocation as 0/NULL required!
     list.dummy_nodes = (index_node_t *) calloc(1, sizeof(index_node_t) * ld);
@@ -91,7 +91,7 @@ void linked_list_push_item(
 {
     // Add internal id.
     //p_data->id = p_list->next_unused_id;
-    int32_t id = p_list->next_unused_id;
+    const int32_t id = p_list->next_unused_id;
     p_list->next_unused_id++;
 
     p_data->id = id;
@@ -103,7 +103,7 @@ void linked_list_push_item(
     index_node_t *tmp_prev;
 
     // Shift id on higher bits to left space for subgroup bits.
-    id <<= LINKED_LIST_SUBGROUP_BITS;
+    const int32_t id_with_shift = id << LINKED_LIST_SUBGROUP_BITS;
 #if 0
     const int N[NUM_RELATIONS + 1] = { 0,
         NUM_REALTIVE_DATE,
@@ -115,10 +115,9 @@ void linked_list_push_item(
     for( i=0; i<NUM_RELATIONS; ++i){
         tmp_prev = p_list->p_latests.nodes[N[i] + p_indizes->indizes[i]];
         if( tmp_prev ){
-            tmp_prev->nexts.subgroup_ids[i] = id | p_indizes->indizes[i];
+            tmp_prev->nexts.subgroup_ids[i] = id_with_shift | p_indizes->indizes[i];
         }else{
             p_list->first_ids.ids[N[i] + p_indizes->indizes[i]] =
-                //id | p_indizes->indizes[i];
                 p_data->id; // without shift
         }
         // Required for latest node of chain. Will be overwritten for all others.
@@ -127,28 +126,28 @@ void linked_list_push_item(
         p_list->p_latests.nodes[N[i] + p_indizes->indizes[i]] = p_data;
     }
 #else
-    /* Connect element with previous of  all four subsets.
+    /* Connect element with previous of all four subsets.
      * If subset had no elements, set anchor in p_list->first_ids.
      */
     tmp_prev = p_list->p_latests.relative_dates[p_indizes->i_relative_date];
     if( tmp_prev ){
-        tmp_prev->nexts.relative_date = id | p_indizes->i_relative_date;
+        tmp_prev->nexts.relative_date = id_with_shift | p_indizes->i_relative_date;
     }else{
         p_list->first_ids.relative_dates[p_indizes->i_relative_date] =
-            //id | p_indizes->i_relative_date;
             p_data->id; // without shift
     }
+
     // Required for latest node of chain. Will be overwritten for all others.
     p_data->nexts.relative_date = 0 | p_indizes->i_relative_date;
 
     p_list->p_latests.relative_dates[p_indizes->i_relative_date] = p_data;
 
+
     tmp_prev = p_list->p_latests.timestamps[p_indizes->i_timestamp];
     if( tmp_prev ){
-        tmp_prev->nexts.timestamp = id | p_indizes->i_timestamp;
+        tmp_prev->nexts.timestamp = id_with_shift | p_indizes->i_timestamp;
     }else{
         p_list->first_ids.timestamps[p_indizes->i_timestamp] =
-            //id | p_indizes->i_timestamp;
             p_data->id; // without shift
     }
     // Required for latest node of chain. Will be overwritten for all others.
@@ -156,12 +155,12 @@ void linked_list_push_item(
 
     p_list->p_latests.timestamps[p_indizes->i_timestamp] = p_data;
 
+
     tmp_prev = p_list->p_latests.durations[p_indizes->i_duration];
     if( tmp_prev ){
-        tmp_prev->nexts.duration = id | p_indizes->i_duration;
+        tmp_prev->nexts.duration = id_with_shift | p_indizes->i_duration;
     }else{
         p_list->first_ids.durations[p_indizes->i_duration] =
-            //id | p_indizes->i_duration;
             p_data->id; // without shift
     }
     // Required for latest node of chain. Will be overwritten for all others.
@@ -169,12 +168,12 @@ void linked_list_push_item(
 
     p_list->p_latests.durations[p_indizes->i_duration] = p_data;
 
+
     tmp_prev = p_list->p_latests.channels[p_indizes->i_channel];
     if( tmp_prev ){
-        tmp_prev->nexts.channel = id | p_indizes->i_channel;
+        tmp_prev->nexts.channel = id_with_shift | p_indizes->i_channel;
     }else{
         p_list->first_ids.channels[p_indizes->i_channel] =
-            //id | p_indizes->i_channel;
             p_data->id; // without shift
     }
     // Required for latest node of chain. Will be overwritten for all others.
@@ -275,8 +274,9 @@ void linked_list_write_partial(
                 if( tmp_node && tmp_node->id <= biggest_id_to_write )
                 {
                     // Latest node had no successor.
-                    assert( 0 == (LINKED_LIST_ID(
-                                    tmp_node->nexts.subgroup_ids[i_group])) );
+                    assert( (LINKED_LIST_ID(
+                            tmp_node->nexts.subgroup_ids[i_group])
+                          ) >> (LINKED_LIST_SUBGROUP_BITS) == 0 );
 
                     // Overwrite target of prev-pointer with dummy node
                     tmp_dummy = p_list->dummy_nodes + p_list->len_used_dummy_nodes;
@@ -319,7 +319,7 @@ void linked_list_write_partial(
             tmp_node = p_list->p_latests.timestamps[i]; // latest element of subset
             if( tmp_node && tmp_node->id <= biggest_id_to_write )
             {
-                assert( LINKED_LIST_ID(tmp_node->nexts.timestamp) == 0); // No successor.
+                assert( LINKED_LIST_ID(tmp_node->nexts.timestamp) >> (LINKED_LIST_SUBGROUP_BITS) == 0); // No successor.
 
                 // Overwrite target of prev-pointer on dummy node
                 tmp_dummy = p_list->dummy_nodes + p_list->len_used_dummy_nodes;
@@ -334,7 +334,7 @@ void linked_list_write_partial(
             tmp_node = p_list->p_latests.durations[i]; // latest element of subset
             if( tmp_node && tmp_node->id <= biggest_id_to_write )
             {
-                assert( LINKED_LIST_ID(tmp_node->nexts.duration) == 0); // No successor.
+                assert( LINKED_LIST_ID(tmp_node->nexts.duration) >> (LINKED_LIST_SUBGROUP_BITS) == 0); // No successor.
 
                 // Overwrite target of prev-pointer on dummy node
                 tmp_dummy = p_list->dummy_nodes + p_list->len_used_dummy_nodes;
@@ -349,7 +349,7 @@ void linked_list_write_partial(
             tmp_node = p_list->p_latests.channels[i]; // latest element of subset
             if( tmp_node && tmp_node->id <= biggest_id_to_write )
             {
-                assert( LINKED_LIST_ID(tmp_node->nexts.channel) == 0); // No successor.
+                assert( LINKED_LIST_ID(tmp_node->nexts.channel) >> (LINKED_LIST_SUBGROUP_BITS) == 0); // No successor.
 
                 // Overwrite target of prev-pointer on dummy node
                 tmp_dummy = p_list->dummy_nodes + p_list->len_used_dummy_nodes;
