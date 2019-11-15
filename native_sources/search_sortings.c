@@ -1,3 +1,4 @@
+/* vim: set tabstop=4:softtabstop=4:shiftwidth=4:expandtab */
 /* This omit cmp-function calls during the sorting
  * and gives a marginal speed improvement.
  * It' would be more efficient to omit the sorting at

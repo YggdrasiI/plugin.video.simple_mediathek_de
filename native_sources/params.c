@@ -1,3 +1,4 @@
+/* vim: set tabstop=4:softtabstop=4:shiftwidth=4:expandtab */
 #include <argp.h>
 #include <stdlib.h>
 #include <stdbool.h>

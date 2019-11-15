@@ -1,3 +1,4 @@
+/* vim: set tabstop=4:softtabstop=4:shiftwidth=4:expandtab */
 /*
   Basic UTF-8 manipulation routines
   by Jeff Bezanson

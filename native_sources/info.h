@@ -1,3 +1,4 @@
+/* vim: set tabstop=4:softtabstop=4:shiftwidth=4:expandtab */
 /* Read channel list from end of index file,
  * but ignores the rest.
  */

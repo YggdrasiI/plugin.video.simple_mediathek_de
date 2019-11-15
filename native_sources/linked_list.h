@@ -102,6 +102,7 @@ typedef struct {
         struct {
             uint32_t relative_date;
             uint32_t timestamp;
+/* vim: set tabstop=4:softtabstop=4:shiftwidth=4:expandtab */
             uint32_t duration;
             uint32_t channel;
         };
