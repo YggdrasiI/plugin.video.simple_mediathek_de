@@ -284,6 +284,7 @@ else
   send_signal_to_kodi 1
   echo_verbose "${BIN_PATH}/${BIN_NAME} $@"
   ${BIN_PATH}/${BIN_NAME} "$@" --folder "$INDEX_FILE_FOLDER"
+	RET=$?
   send_signal_to_kodi 0
-  exit $?
+  exit $RET
 fi
