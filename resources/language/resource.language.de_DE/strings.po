@@ -1,0 +1,325 @@
+# Kodi Media Center language file
+# Addon Name: Mediatheken
+# Addon id: plugin.video.simple_mediathek_de
+# Addon Provider: YggdrasiI
+msgid ""
+msgstr ""
+"Project-Id-Version: XBMC Addons\n"
+"Report-Msgid-Bugs-To: -\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: YggdrasiI\n"
+"Language-Team: -\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#32000"
+msgid "Deutsche Mediatheken"
+msgstr "Deutsche Mediatheken"
+
+msgctxt "#32101"
+msgid "General"
+msgstr "Allgemein"
+
+msgctxt "#32102"
+msgid "Local DB search"
+msgstr "Lokale DB-Suche"
+
+msgctxt "#32103"
+msgid "MediathekViewWeb.de"
+msgstr "MediathekViewWeb.de"
+
+msgctxt "#32240"
+msgid "Video quality"
+msgstr "Videoqualität"
+
+msgctxt "#32202"
+msgid "Ask"
+msgstr "Nachfragen"
+
+msgctxt "#32203"
+msgid "Highest available"
+msgstr "Beste verfügbare"
+
+msgctxt "#32204"
+msgid "Lowest available"
+msgstr "Geringste verfügbare"
+
+msgctxt "#32205"
+msgid "Low"
+msgstr "Niedrig"
+
+msgctxt "#32206"
+msgid "Middle"
+msgstr "Mittel"
+
+msgctxt "#32207"
+msgid "High"
+msgstr "Hoch"
+
+msgctxt "#32208"
+msgid "Automatic update"
+msgstr "Automatisches Update"
+
+msgctxt "#32209"
+msgid "Length of history"
+msgstr "Länge der History"
+
+msgctxt "#32210"
+msgid "Update list of files"
+msgstr "Filmliste jetzt im Hintergrund aktualisieren"
+
+msgctxt "#32211"
+msgid "Delete local user data of addon"
+msgstr "Alle lokalen Daten des Addons löschen"
+
+msgctxt "#32212"
+msgid "Search by MediathekviewWeb.de"
+msgstr "Suche per MediathekviewWeb.de"
+
+msgctxt "#32213"
+msgid "Expand History at each search"
+msgstr "History-Eintrag bei jeder Suche erstellen"
+
+msgctxt "#32214"
+msgid "(Debug) Store output of Binary in /dev/shm"
+msgstr "(Debug) Speichere Ausgabe des Binary in /dev/shm/"
+
+msgctxt "#32215"
+msgid "Force view"
+msgstr "Ansicht erzwingen"
+
+msgctxt "#32216"
+msgid "None"
+msgstr "Deaktiviert"
+
+msgctxt "#32217"
+msgid "List"
+msgstr "Liste"
+
+msgctxt "#32218"
+msgid "Big List"
+msgstr "Breite Liste"
+
+msgctxt "#32219"
+msgid "(Experimental/For RPi 1) Addon pauses Kodi process"
+msgstr "(Experimentell/Für RPi 1) Addon pausiert Kodi-Prozess."
+
+msgctxt "#32225"
+msgid "Sorting of search results"
+msgstr "Sortierung der Suchergebnisse"
+
+msgctxt "#32226"
+msgid "None"
+msgstr "Nein"
+
+msgctxt "#32227"
+msgid "By date, Youngest to Oldest"
+msgstr "Nach Datum, Neueste -> Älteste"
+
+msgctxt "#32228"
+msgid "By date, Oldest to Youngest"
+msgstr "Nach Datum, Älteste -> Neueste"
+
+msgctxt "#32301"
+msgid "10 min"
+msgstr "10 min"
+
+msgctxt "#32302"
+msgid "30 min"
+msgstr "30 min"
+
+msgctxt "#32303"
+msgid "60 min"
+msgstr "60 min"
+
+msgctxt "#32304"
+msgid "1,5 h"
+msgstr "1,5 h"
+
+msgctxt "#32305"
+msgid "2 h"
+msgstr "2 h"
+
+msgctxt "#32306"
+msgid "Maximal"
+msgstr "Höchstens"
+
+msgctxt "#32307"
+msgid "Minimal"
+msgstr "Mindestens"
+
+msgctxt "#32308"
+msgid "Switch to search with maximal duration..."
+msgstr "Suche auf Maximallänge umstellen..."
+
+msgctxt "#32309"
+msgid "Switch to search with minimal duration..."
+msgstr "Suche auf Mindestlänge umstellen..."
+
+msgctxt "#32310"
+msgid "0-10 o'clock"
+msgstr "0-10 Uhr"
+
+msgctxt "#32311"
+msgid "10-16 o'clock"
+msgstr "10-16 Uhr"
+
+msgctxt "#32312"
+msgid "16-20 o'clock"
+msgstr "16-20 Uhr"
+
+msgctxt "#32313"
+msgid "20-24 o'clock"
+msgstr "20-24 Uhr"
+
+msgctxt "#32314"
+msgid "Today and yesterday"
+msgstr "Heute und gestern"
+
+msgctxt "#32315"
+msgid "{days} days"
+msgstr "{days} Tage"
+
+msgctxt "#32316"
+msgid "Calender"
+msgstr "Kalender"
+
+msgctxt "#32317"
+msgid "Channel {channel}"
+msgstr "Kanal {channel}"
+
+msgctxt "#32318"
+msgid "Back"
+msgstr "Zurück"
+
+msgctxt "#32340"
+msgid "Can't create folder for addon data."
+msgstr "Verzeichnis für Addon-Dateien konnte nicht erstellt werden."
+
+msgctxt "#32341"
+msgid "Channel"
+msgstr "Sender"
+
+msgctxt "#32342"
+msgid "Title/Topic"
+msgstr "Titel/Thema"
+
+msgctxt "#32343"
+msgid "Date"
+msgstr "Datum"
+
+msgctxt "#32344"
+msgid "Time of day"
+msgstr "Uhrzeit"
+
+msgctxt "#32345"
+msgid "Duration"
+msgstr "Dauer"
+
+msgctxt "#32346"
+msgid "Description"
+msgstr "Beschreibung"
+
+msgctxt "#32347"
+msgid "Clear search pattern"
+msgstr "Suchmuster leeren"
+
+msgctxt "#32348"
+msgid "Save search pattern"
+msgstr "Suchmuster speichern"
+
+msgctxt "#32349"
+msgid "Update list of films"
+msgstr "Filmliste aktualisieren"
+
+msgctxt "#32350"
+msgid "Previous search pattern"
+msgstr "Vorherige Suchmuster"
+
+msgctxt "#32351"
+msgid "Remove criterion"
+msgstr "Suchkriterum entfernen"
+
+msgctxt "#32352"
+msgid "Start search"
+msgstr "Suche starten"
+
+msgctxt "#32353"
+msgid "Requires search criteria"
+msgstr "Nur mit Suchkriterium möglich"
+
+msgctxt "#32354"
+msgid "Previous page"
+msgstr "Vorherige Seite"
+
+msgctxt "#32355"
+msgid "Next page"
+msgstr "Nächste Seite"
+
+msgctxt "#32356"
+msgid "  (RTMP)"
+msgstr "  (RTMP)"
+
+msgctxt "#32357"
+msgid "Low resoltuion"
+msgstr "Geringe Auflösung"
+
+msgctxt "#32358"
+msgid "Medium resolution"
+msgstr "Mittlere Auflösung"
+
+msgctxt "#32359"
+msgid "High resolution"
+msgstr "Hohe Auflösung"
+
+msgctxt "#32360"
+msgid "Update successful (in {sec}s)"
+msgstr "Update erfolgreich. Dauer {sec}s"
+
+msgctxt "#32361"
+msgid "Update failed"
+msgstr "Update fehlgeschlagen"
+
+msgctxt "#32362"
+msgid "{num} files removed"
+msgstr "{num} Dateien entfernt"
+
+msgctxt "#32363"
+msgid "Enter first date"
+msgstr "Erstes Datum eingeben"
+
+msgctxt "#32364"
+msgid "Error during parsing of date strings."
+msgstr "Fehler beim Parsen eines Datums."
+
+msgctxt "#32365"
+msgid ""
+msgstr ""
+
+msgctxt "#32366"
+msgid "Title / Topic (No RegEx)"
+msgstr "Titel / Thema (No RegEx)"
+
+msgctxt "#32367"
+msgid "No URL found"
+msgstr "Keine URL gefunden"
+
+msgctxt "#32368"
+msgid "Search failed"
+msgstr "Suche fehlgeschlagen"
+
+msgctxt "#32369"
+msgid "Update started"
+msgstr "Update gestartet"
+
+msgctxt "#32370"
+msgid "Enter second date"
+msgstr "Zweites Datum eingeben"
+
+msgctxt "#32371"
+msgid "Status"
+msgstr "Status"

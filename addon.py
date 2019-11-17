@@ -30,8 +30,8 @@ from constants import search_ranges_locale, search_ranges_str, search_ranges
 addon = xbmcaddon.Addon()
 getLocalizedString = addon.getLocalizedString
 
-#def getLocalizedString(inum):
-#    return unicode(inum)
+# def getLocalizedString(inum):
+#     return unicode(inum)
 
 """
 Kodi uses Python 2.7.1. It follows an incomplete list of changes
@@ -664,8 +664,10 @@ class SimpleMediathek:
         if last_update[0] == -1:
             update_str = u""
         else:
-            update_str = u"%s %s %s" % (
-                u"| Stand", last_update[1], (u"" if allow_update else u""))
+            update_str = u"| %s %s %s" % (
+                getLocalizedString(32341),  # Stand
+                last_update[1],
+                (u"" if allow_update else u""))
 
         categories = []
         categories.append({u"name": getLocalizedString(32341), # u"Sender",

@@ -1,0 +1,325 @@
+# Kodi Media Center language file
+# Addon Name: Mediatheken
+# Addon id: plugin.video.simple_mediathek_de
+# Addon Provider: YggdrasiI
+msgid ""
+msgstr ""
+"Project-Id-Version: XBMC Addons\n"
+"Report-Msgid-Bugs-To: -\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: YggdrasiI\n"
+"Language-Team: -\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#32000"
+msgid "Deutsche Mediatheken"
+msgstr "Deutsche Mediatheken"
+
+msgctxt "#32101"
+msgid "General"
+msgstr "General"
+
+msgctxt "#32102"
+msgid "Local DB search"
+msgstr "Local DB search"
+
+msgctxt "#32103"
+msgid "MediathekViewWeb.de"
+msgstr "MediathekViewWeb.de"
+
+msgctxt "#32240"
+msgid "Video quality"
+msgstr "Video quality"
+
+msgctxt "#32202"
+msgid "Ask"
+msgstr "Ask"
+
+msgctxt "#32203"
+msgid "Highest available"
+msgstr "Highest available"
+
+msgctxt "#32204"
+msgid "Lowest available"
+msgstr "Lowest available"
+
+msgctxt "#32205"
+msgid "Low"
+msgstr "Low"
+
+msgctxt "#32206"
+msgid "Middle"
+msgstr "Middle"
+
+msgctxt "#32207"
+msgid "High"
+msgstr "High"
+
+msgctxt "#32208"
+msgid "Automatic update"
+msgstr "Automatic update"
+
+msgctxt "#32209"
+msgid "Length of history"
+msgstr "Length of history"
+
+msgctxt "#32210"
+msgid "Update list of files"
+msgstr "Update list of files"
+
+msgctxt "#32211"
+msgid "Delete local user data of addon"
+msgstr "Delete local user data of addon"
+
+msgctxt "#32212"
+msgid "Search by MediathekviewWeb.de"
+msgstr "Search by MediathekviewWeb.de"
+
+msgctxt "#32213"
+msgid "Expand History at each search"
+msgstr "Expand History at each search"
+
+msgctxt "#32214"
+msgid "(Debug) Store output of Binary in /dev/shm"
+msgstr "(Debug) Store output of Binary in /dev/shm"
+
+msgctxt "#32215"
+msgid "Force view"
+msgstr "Force view"
+
+msgctxt "#32216"
+msgid "None"
+msgstr "None"
+
+msgctxt "#32217"
+msgid "List"
+msgstr "List"
+
+msgctxt "#32218"
+msgid "Big List"
+msgstr "Big List"
+
+msgctxt "#32219"
+msgid "(Experimental/For RPi 1) Addon pauses Kodi process"
+msgstr "(Experimental/For RPi 1) Addon pauses Kodi process"
+
+msgctxt "#32225"
+msgid "Sorting of search results"
+msgstr "Sorting of search results"
+
+msgctxt "#32226"
+msgid "None"
+msgstr "None"
+
+msgctxt "#32227"
+msgid "By date, Youngest to Oldest"
+msgstr "By date, Youngest to Oldest"
+
+msgctxt "#32228"
+msgid "By date, Oldest to Youngest"
+msgstr "By date, Oldest to Youngest"
+
+msgctxt "#32301"
+msgid "10 min"
+msgstr "10 min"
+
+msgctxt "#32302"
+msgid "30 min"
+msgstr "30 min"
+
+msgctxt "#32303"
+msgid "60 min"
+msgstr "60 min"
+
+msgctxt "#32304"
+msgid "1,5 h"
+msgstr "1,5 h"
+
+msgctxt "#32305"
+msgid "2 h"
+msgstr "2 h"
+
+msgctxt "#32306"
+msgid "Maximal"
+msgstr "Maximal"
+
+msgctxt "#32307"
+msgid "Minimal"
+msgstr "Minimal"
+
+msgctxt "#32308"
+msgid "Switch to search with maximal duration..."
+msgstr "Switch to search with maximal duration..."
+
+msgctxt "#32309"
+msgid "Switch to search with minimal duration..."
+msgstr "Switch to search with minimal duration..."
+
+msgctxt "#32310"
+msgid "0-10 o'clock"
+msgstr "0-10 o'clock"
+
+msgctxt "#32311"
+msgid "10-16 o'clock"
+msgstr "10-16 o'clock"
+
+msgctxt "#32312"
+msgid "16-20 o'clock"
+msgstr "16-20 o'clock"
+
+msgctxt "#32313"
+msgid "20-24 o'clock"
+msgstr "20-24 o'clock"
+
+msgctxt "#32314"
+msgid "Today and yesterday"
+msgstr "Today and yesterday"
+
+msgctxt "#32315"
+msgid "{days} days"
+msgstr "{days} days"
+
+msgctxt "#32316"
+msgid "Calender"
+msgstr "Calender"
+
+msgctxt "#32317"
+msgid "Channel {channel}"
+msgstr "Channel {channel}"
+
+msgctxt "#32318"
+msgid "Back"
+msgstr "Back"
+
+msgctxt "#32340"
+msgid "Can't create folder for addon data."
+msgstr "Can't create folder for addon data."
+
+msgctxt "#32341"
+msgid "Channel"
+msgstr "Channel"
+
+msgctxt "#32342"
+msgid "Title/Topic"
+msgstr "Title/Topic"
+
+msgctxt "#32343"
+msgid "Date"
+msgstr "Date"
+
+msgctxt "#32344"
+msgid "Time of day"
+msgstr "Time of day"
+
+msgctxt "#32345"
+msgid "Duration"
+msgstr "Duration"
+
+msgctxt "#32346"
+msgid "Description"
+msgstr "Description"
+
+msgctxt "#32347"
+msgid "Clear search pattern"
+msgstr "Clear search pattern"
+
+msgctxt "#32348"
+msgid "Save search pattern"
+msgstr "Save search pattern"
+
+msgctxt "#32349"
+msgid "Update list of films"
+msgstr "Update list of films"
+
+msgctxt "#32350"
+msgid "Previous search pattern"
+msgstr "Previous search pattern"
+
+msgctxt "#32351"
+msgid "Remove criterion"
+msgstr "Remove criterion"
+
+msgctxt "#32352"
+msgid "Start search"
+msgstr "Start search"
+
+msgctxt "#32353"
+msgid "Requires search criteria"
+msgstr "Requires search criteria"
+
+msgctxt "#32354"
+msgid "Previous page"
+msgstr "Previous page"
+
+msgctxt "#32355"
+msgid "Next page"
+msgstr "Next page"
+
+msgctxt "#32356"
+msgid "  (RTMP)"
+msgstr "  (RTMP)"
+
+msgctxt "#32357"
+msgid "Low resoltuion"
+msgstr "Low resoltuion"
+
+msgctxt "#32358"
+msgid "Medium resolution"
+msgstr "Medium resolution"
+
+msgctxt "#32359"
+msgid "High resolution"
+msgstr "High resolution"
+
+msgctxt "#32360"
+msgid "Update successful (in {sec}s)"
+msgstr "Update successful (in {sec}s)"
+
+msgctxt "#32361"
+msgid "Update failed"
+msgstr "Update failed"
+
+msgctxt "#32362"
+msgid "{num} files removed"
+msgstr "{num} files removed"
+
+msgctxt "#32363"
+msgid "Enter first date"
+msgstr "Enter first date"
+
+msgctxt "#32364"
+msgid "Error during parsing of date strings."
+msgstr "Error during parsing of date strings."
+
+msgctxt "#32365"
+msgid ""
+msgstr ""
+
+msgctxt "#32366"
+msgid "Title / Topic (No RegEx)"
+msgstr "Title / Topic (No RegEx)"
+
+msgctxt "#32367"
+msgid "No URL found"
+msgstr "No URL found"
+
+msgctxt "#32368"
+msgid "Search failed"
+msgstr "Search failed"
+
+msgctxt "#32369"
+msgid "Update started"
+msgstr "Update started"
+
+msgctxt "#32370"
+msgid "Enter second date"
+msgstr "Enter second date"
+
+msgctxt "#32371"
+msgid "Status"
+msgstr "Status"
