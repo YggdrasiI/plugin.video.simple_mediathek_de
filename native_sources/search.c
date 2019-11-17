@@ -19,7 +19,7 @@ search_workspace_t search_ws_create(
     int clock_offset = 3600 + (1 == tm_now.tm_isdst?3600:0); // GTM+1 + daylight saving
     //tnow = (tnow / 86400) * 86400; // Rounding nearby begin of day
     //size_t nlocalday = (tnow + clock_offset) / 86400;
-    //DEBUG( fprintf(stderr, "DST: %i, Clock offset: %i\n", tm_now.tm_isdst, clock_offset); )
+    //DEBUG( fprintf(stderr, "DST: %i, Clock offset: %i\n", tm_now.tm_isdst, clock_offset) );
 
     size_t nlocalday = (tnow + clock_offset) / 86400;  // NDay relative to current time zone
     time_t tlocalday_begin = nlocalday * 86400 - clock_offset; // Begin of day in current time zone
@@ -190,9 +190,9 @@ int open_index_file(
 
     snprintf(tmp, ts, index_file_template,
             p_arguments->index_folder, (diff?diff_ext:""));
-    DEBUG( fprintf(stderr, "Open '%s'\n", tmp); )
+    DEBUG( fprintf(stderr, "Open '%s'\n", tmp) );
 
-        p_s_ws->index_fd = open(tmp, O_RDONLY);
+    p_s_ws->index_fd = open(tmp, O_RDONLY);
 
     free(tmp);
 
@@ -223,7 +223,7 @@ int open_title_file(
     snprintf(tmp, ts, strings_file_template,
             p_arguments->index_folder,
             p_s_ws->searchable_strings.id, (diff?diff_ext:""));
-    DEBUG( fprintf(stderr, "Open '%s'\n", tmp); )
+    DEBUG( fprintf(stderr, "Open '%s'\n", tmp) );
 
     p_s_ws->searchable_strings.fd = open(tmp, O_RDONLY);
 

@@ -116,7 +116,7 @@ int create_index_file(
 
     snprintf(tmp, ts, index_file_template,
             p_fl_ws->index_folder, (diff?diff_ext:""));
-    DEBUG( fprintf(stderr, "Open '%s'\n", tmp); )
+    DEBUG( fprintf(stderr, "Open '%s'\n", tmp) );
 
     p_fl_ws->index_fd = open(tmp, O_CREAT|O_WRONLY|O_TRUNC,
             S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
@@ -255,7 +255,7 @@ int init_next_payload_file(
 
     snprintf(tmp, ts, payload_file_template,
             p_fl_ws->index_folder, p_fl_ws->payload.id); //, (diff?diff_ext:""));
-    DEBUG( fprintf(stderr, "Open '%s'\n", tmp); )
+    DEBUG( fprintf(stderr, "Open '%s'\n", tmp) );
 
     fd = open(tmp, O_CREAT|O_WRONLY|O_TRUNC,
             S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
@@ -299,7 +299,7 @@ int init_next_searchable_file(
 
     snprintf(tmp, ts, strings_file_template,
             p_fl_ws->index_folder, p_fl_ws->searchable_strings.id, (diff?diff_ext:""));
-    DEBUG( fprintf(stderr, "Open '%s'\n", tmp); )
+    DEBUG( fprintf(stderr, "Open '%s'\n", tmp) );
 
     fd = open(tmp, O_CREAT|O_WRONLY|O_TRUNC,
             S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
@@ -331,12 +331,12 @@ void filmliste_handle(
     size_t len = search_pair_get_chars(p_buf_in, *(start+INDEX_KEY), &first_group, NULL, 1);
 
     if( len != 1 || *(first_group + 0) != 'X' ){
-        DEBUG( \
-                *((char*)first_group + len) = '\0'; \
-                fprintf(stderr, "Key skipped: len=%i s=%s\n", (int)len, first_group); \
-             )
+      DEBUG( \
+          *((char*)first_group + len) = '\0'; \
+          fprintf(stderr, "Key skipped: len=%i s=%s\n", (int)len, first_group); \
+          );
 
-        return;
+      return;
     }
 
     size_t channel_len, topic_len, title_len;
@@ -473,8 +473,8 @@ void filmliste_handle(
     int32_t topic_offset = p_fl_ws->prev_topic_seek
         - (p_fl_ws->searchable_strings.seek /*+ sizeof(start_dur_len)*/);
     if( topic_offset < INT16_MIN ){
-        //DEBUG( fprintf(stderr, "Topic offset to high: %i %s\n",
-        //            topic_offset, p_fl_ws->prev_topic.target); )
+        //DEBUG( fprintf(stderr, "Topic offset to high: %i %s\n", \
+        //            topic_offset, p_fl_ws->prev_topic.target) );
         // Distance to to previous to high. Write topic string again.
         topic_str = (char *)p_fl_ws->prev_topic.target;
         topic_len = p_fl_ws->prev_topic.target_len;
@@ -512,7 +512,7 @@ void filmliste_handle(
 #endif
                 sizeof(start_dur_len), (void *)&start_dur_len);
 #endif
-        //DEBUG( fprintf(stderr, "Topic '%s'\n", p_fl_ws->prev_topic.target); )
+        //DEBUG( fprintf(stderr, "Topic '%s'\n", p_fl_ws->prev_topic.target) );
 
         p_fl_ws->searchable_strings.seek += buf_snprintf(
                 p_fl_ws->searchable_strings.fd,
@@ -672,8 +672,8 @@ int remove_old_diff_files(
     snprintf(tmp, ts, index_file_template,
             folder, diff_ext);
 
-    DEBUG( fprintf(stderr, "Delete '%s'\n", tmp); )
     if( 0 == unlink(tmp) ){
+        DEBUG( fprintf(stderr, "Delete '%s'\n", tmp) );
         ++n_del;
     }
     Free(tmp);
@@ -686,14 +686,14 @@ int remove_old_diff_files(
     while(1){
         snprintf(tmp, ts, strings_file_template,
                 folder, di, diff_ext);
-        DEBUG( fprintf(stderr, "Delete '%s'\n", tmp); )
 
-            if( unlink(tmp) ){ // No further files...
-                break;
-            }else{
-                ++di;
-                ++n_del;
-            }
+        if( unlink(tmp) ){ // No further files...
+            break;
+        }else{
+            DEBUG( fprintf(stderr, "Delete '%s'\n", tmp) );
+            ++di;
+            ++n_del;
+        }
     }
     Free(tmp);
 
@@ -707,14 +707,14 @@ int remove_old_diff_files(
     while(1){
         snprintf(tmp, ts, payload_file_template,
                 folder, di);
-        DEBUG( fprintf(stderr, "Delete '%s'\n", tmp); )
 
-            if( unlink(tmp) ){ // No further files...
-                break;
-            }else{
-                ++di;
-                ++n_del;
-            }
+        if( unlink(tmp) ){ // No further files...
+            break;
+        }else{
+            DEBUG( fprintf(stderr, "Delete '%s'\n", tmp) );
+            ++di;
+            ++n_del;
+        }
     }
     Free(tmp);
     return n_del;
@@ -730,7 +730,7 @@ void filmliste_cache_data_before_buffer_clears(
     buf_string_copy_t * const p_topic = &p_fl_ws->prev_topic;
 
     if( p_topic->target != p_topic->_copy ){
-        //DEBUG( fprintf(stderr, "Cache topic: %s\n", p_fl_ws->prev_topic.target); )
+        //DEBUG( fprintf(stderr, "Cache topic: %s\n", p_fl_ws->prev_topic.target) );
         charcpy(&p_topic->_copy, &p_topic->_copy_size,
                 p_topic->target, p_topic->target_len);
         p_topic->target = p_topic->_copy;

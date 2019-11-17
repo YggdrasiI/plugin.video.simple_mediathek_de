@@ -1158,8 +1158,6 @@ class SimpleMediathek:
                         search_args.pop(-1)
 
                 (exit_code, data) = call_binary(search_args)
-                xbmc.log(msg=u"XXXXXXX|"+str(exit_code)+" "+str(data),
-                         level=xbmc.LOGERROR)
                 if exit_code == 0:
                     js = json.loads(data)
 
@@ -1226,7 +1224,7 @@ class SimpleMediathek:
 
         if self.mode is None or self.mode == u"main":
             xbmc.log(msg=u"Plugin|"+argv[0]+argv[2],
-                     level=xbmc.LOGERROR)
+                     level=xbmc.LOGINFO)
             check_addon_status(self.b_mvweb)
 
             #  Top level page of plugin

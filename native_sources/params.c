@@ -97,7 +97,7 @@ static struct argp_option options[] = {
         3},
     {"diff", 'x', 0, OPTION_NO_USAGE,
         "In combination with --index: The input will be processed as differential update. " \
-            "Differential updates (hourly) updates to the (bigger) daily files.\n" \
+            "Differential files (hourly) updates to the bigger (daily) files.\n" \
             "In combination with --search: Search only in differential index.",
         3},
     // group 4
