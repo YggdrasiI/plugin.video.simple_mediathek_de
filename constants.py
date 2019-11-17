@@ -19,10 +19,10 @@ search_ranges_locale = {
     u"duration": [32301, 32302, 32303, 32304, 32305, 32300],
     u"direction": [32306, 32307],
     u"direction_b": [32308, 32309],
-	u"time": [32310, 32311, 32312, 32313, 32300],
+    u"time": [32310, 32311, 32312, 32313, 32300],
     u"day": [32314, 32315, 32315, 32315, 32315, 32300],
     u"day_range": [32316],
-	u"channel": [32317],
+    u"channel": [32317],
 }
 """
 Matching arguments for the search program.
@@ -32,5 +32,6 @@ search_ranges_str[u"duration"][i] corresponends with
 search_ranges = {
     u"duration": [0, 600, 1800, 3600, 5400, 7200, -1],
     u"time": [0, 36000, 57600, 72000, 86400, -1],
-    u"day": [0, 1, 2, 5, 7, 14, -1, ],  # -1],
+    u"day": [0, 2, 3, 6, 8, 15, -1, ],  # -1],
+    # dayMin=0: future entries, dayMin=1: today
 }
