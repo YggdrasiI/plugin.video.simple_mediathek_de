@@ -665,7 +665,7 @@ class SimpleMediathek:
             update_str = u""
         else:
             update_str = u"| %s %s %s" % (
-                getLocalizedString(32341),  # Stand
+                getLocalizedString(32371),  # Stand
                 last_update[1],
                 (u"" if allow_update else u""))
 

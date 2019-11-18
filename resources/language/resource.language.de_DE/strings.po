@@ -322,4 +322,4 @@ msgstr "Zweites Datum eingeben"
 
 msgctxt "#32371"
 msgid "Status"
-msgstr "Status"
+msgstr "Stand"
