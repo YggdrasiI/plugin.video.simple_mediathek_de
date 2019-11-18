@@ -197,7 +197,7 @@ class SimpleMediathek:
     def update_mvw(self):
         if len(self.get_channel_list()) == 0 and self.b_mvweb:
             # from channel_list import channels
-            (exit_code, _channels) = MVWeb.fetch_channel_list()
+            (exit_code, _channels) = MVWeb.fetch_channel_list(addon_name)
             if exit_code == 0:
                 self.update_state(_channels, True)
                 write_state_file(self.state)
@@ -1132,11 +1132,11 @@ class SimpleMediathek:
 
             results = {u"pattern": pattern, u"found": []}
             if self.b_mvweb:
-                (exit_code, data) = MVWeb.fetch2(
+                (exit_code, data) = MVWeb.fetch(
                     pattern, url_args.get(u"page", 0),
                     max_num_entries_per_page + 1)
                 if exit_code == 0:
-                    js = MVWeb.convert_results2(data)
+                    js = MVWeb.convert_results(data)
             else:
                 search_args = self.create_search_params(pattern)
 

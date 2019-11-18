@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-#from socketIO_client import SocketIO, BaseNamespace
-from datetime import datetime
+from datetime import datetime, date
+from lib.socketIO_client import SocketIO, BaseNamespace
 
+import xbmc
+import xbmcgui
 
 def get_string(d, key):
     # Helper  to avoid str-cast of None
@@ -13,11 +15,136 @@ def get_string(d, key):
 def get_int(d, key, default=0):
     # Helper  to avoid int-cast of None
     r = d.get(key)
-    if r is None: return default
+    if r is None:
+        return default
     return int(r)
 
+#################################################################
+# For  MVW API 1.x
+#
 
+def convert_results1(tResult):
+    """
+    Input data example
+    ({u'result':
+        {u'queryInfo':
+            {u'filmlisteTimestamp': u'1508505240', u'totalResults': 72,
+            u'searchEngineTime': u'8.86', u'resultCount': 1},
+         u'results':
+             [{u'url_video': u'', u'url_video_hd': u'', u'url_video_low': u'',
+             u'description': u'', u'title': u'', u'timestamp': 1508271300,
+             u'filmlisteTimestamp': u'1508317980',
+             u'id': u'jwnNEpXxbx7eoH0WCo49NoTBWh1jFI3eIham6IDuEbk=',
+             u'topic': u'', u'url_website': u'', u'url_subtitle': u'',
+             u'duration': 467, u'channel': u'ZDF', u'size': 140509184}]},
+      u'err': None},)
+
+    Output data example
+    {"found":
+        [{"id": 154344, "topic": "...", "title": "...",
+        "ibegin": 1486244700, "begin": "04. Feb. 2017 22:45",
+        "iduration": 816, "ichannel": 19,
+        "channel": "zdf", "anchor": 51792695
+        }, ...
+        ] }
+    """
+    found = []
+
+    if len(tResult) < 1:
+        print("Error: Input is no 1-tuple as expected.")
+        return {"found": found}
+
+    dResult = tResult[0]
+    if dResult.get("err"):
+        print(u"Error: %s\n" % dResult.get("err"))
+        return {"found": found}
+
+    for r in dResult.get("result", {}).get("results", []):
+        # print(u"%s - %s" % (r.get("topic"), r.get("title")))
+        x = {
+            "topic": r.get("topic"),
+            "title": r.get("title"),
+            # "ibegin": int(r.get("timestamp")), # 0:00 Uhr
+            "ibegin": int(r.get("filmlisteTimestamp")),
+            "iduration": r.get("duration"),
+            "channel": r.get("channel").lower(),
+            "ichannel": -1,  # Different enummeration
+        }
+        # Parse ibegin
+        d = date.fromtimestamp(x.get("ibegin", 0))
+        x["begin"] = d.strftime("%d. %b. %Y %R")
+
+        # Add urls in same order as simple_mediathek --payload returns.
+        x["payload"] = [r.get("url_video"), "",
+                        r.get("url_video_low"), "",
+                        r.get("url_video_hd"), ""]
+
+        found.append(x)
+
+    return {"found": found}
+
+def fetch1(pattern, page=0, entries_per_page=10):
+
+    class FilmNamespace(BaseNamespace):
+        response = None
+
+        """
+        def on_connect(self): print('[Connected]')
+        def on_reconnect(self): print('[Reconnected]')
+        def on_disconnect(self): print('[Disconnected]')
+
+        """
+        def on_film_response(self, *args):
+            self.response = args
+
+    queries = []
+    title = get_string(pattern, "title")
+    if len(title):
+        queries.append({"fields": ["title", "topic"], "query": title})
+
+    description = get_string(pattern, "description")
+    if len(description):
+        queries.append({"fields": ["description"], "query": description})
+
+    channel = get_string(pattern, "channel")
+    if len(channel):
+        queries.append({"fields": ["channel"], "query": channel})
+
+    sortProps = pattern.get("sortBy", ("timestamp", "desc"))
+    queryObj = {"queries": queries,
+                "sortBy": sortProps[0],
+                "sortOrder": sortProps[1],
+                "future": True,
+                "offset": page*entries_per_page,
+                "size": entries_per_page
+               }
+
+    # Send query
+    with SocketIO("https://mediathekviewweb.de", 443, verify=False) as socketIO:
+
+        film_namespace = socketIO.define(FilmNamespace)
+        socketIO.emit('queryEntries', queryObj, film_namespace.on_film_response)
+
+        try:
+            #socketIO.wait(2.0)
+            # Sync threads
+            socketIO.wait_for_callbacks(seconds=5.0)
+            if film_namespace.response:
+                return (0, film_namespace.response)
+            else:
+                return (-1, None)
+        except Exception as e:
+            print(e)
+
+
+    # Request failed.
+    return (-2, None)
+
+
+#################################################################
 # For  MVW API 2.x
+# (not working anymore)
+
 def convert_results2(dResult):
     """
     Input data example (subset, which shows path to urls)
@@ -38,14 +165,14 @@ def convert_results2(dResult):
     found = []
 
     if len(dResult) < 1:
-        print( u"Error: Input is no 1-tuple as expected.")
+        print(u"Error: Input is no 1-tuple as expected.")
         return {u"found": found}
 
     #if dResult.get(u"err"):
     #    print( u"Error: %s\n" % dResult.get(u"err"))
     #    return {u"found": found}
 
-    lItems = dResult.get("result", {}).get("items",[])
+    lItems = dResult.get("result", {}).get("items", [])
     for dItem in lItems:
         dDoc = dItem.get("document", {})
         x = {
@@ -87,10 +214,6 @@ def convert_results2(dResult):
 def fetch2(pattern, page=0, entries_per_page=10):
 
     ## Build query
-    def get_string(d, key):
-        # Just to avoid str-cast of None
-        r = d.get(key)
-        return r.strip() if r else u""
 
     # Fill in subqueries of BoolQuery:
     # {"body": { "bool": { "must": [XXX]}}}
@@ -100,29 +223,29 @@ def fetch2(pattern, page=0, entries_per_page=10):
     if len(title):
         # TextQuery (type noted by 'text' key)
         lQueries.append({u"text":
-                        { u"fields": [u"title", u"topic"],
-                         u"text": title,
-                         u"operator": "and"}})
+                         {u"fields": [u"title", u"topic"],
+                          u"text": title,
+                          u"operator": "and"}})
     else:
         topic = get_string(pattern, u"topic")
         lQueries.append({u"text":
-                        { u"fields": [u"topic"],
-                         u"text": topic,
-                         u"operator": "and"}})
+                         {u"fields": [u"topic"],
+                          u"text": topic,
+                          u"operator": "and"}})
 
     description = get_string(pattern, u"description")
     if len(description):
         lQueries.append({u"text":
-                        { u"fields": [u"description"],
-                         u"text": description,
-                         u"operator": "and"}})
+                         {u"fields": [u"description"],
+                          u"text": description,
+                          u"operator": "and"}})
 
     channel = get_string(pattern, u"channel")
     if len(channel):
         lQueries.append({u"text":
-                        { u"fields": [u"channel"],
-                         u"text": channel,
-                         u"operator": "and"}})
+                         {u"fields": [u"channel"],
+                          u"text": channel,
+                          u"operator": "and"}})
 
     lFilter = []
     if pattern.get(u"iday_range"):
@@ -130,7 +253,7 @@ def fetch2(pattern, page=0, entries_per_page=10):
         date0 = datetime.fromtimestamp(min(days))
         date1 = datetime.fromtimestamp(max(days))
         today = datetime.today()
-        lFilter.append({ "range": {
+        lFilter.append({"range": {
             "field": u"timestamp",
             "gte": u"now-%id/d" % ((today-date0).days,),
             "lt": u"now-%id/d" % ((today-date1).days-1,),
@@ -140,7 +263,7 @@ def fetch2(pattern, page=0, entries_per_page=10):
         # Transfer index into number of days
         from constants import search_ranges
         iday = search_ranges[u"day"][pattern[u"iday"]+1]
-        lFilter.append({ "range": {
+        lFilter.append({"range": {
             "field": u"timestamp",
             "gte": u"now-%id/d" % (iday),
         }})
@@ -148,10 +271,10 @@ def fetch2(pattern, page=0, entries_per_page=10):
     # TODO: Filter for duration and begin
 
     # Sorts defined on same layer as body
-    queryObj = {"body": { "bool": { "must": lQueries,
-                                   "filter": lFilter,
-                                   },
-                         },
+    queryObj = {"body": {"bool": {"must": lQueries,
+                                  "filter": lFilter,
+                                 },
+                        },
                 "skip": page*entries_per_page,
                 "limit": entries_per_page,
                 "sorts": [
@@ -162,14 +285,13 @@ def fetch2(pattern, page=0, entries_per_page=10):
                         "field": "duration",
                         "order": "ascending"
                     }],
-                }
+               }
 
     if u"web_args" in pattern:
         # TODO update overwrites subentries, not extends them!
         queryObj["body"]["bool"].update(pattern["web_args"])
 
 
-    import xbmc
     xbmc.log(str(queryObj))
     # Send query
     import requests
@@ -195,7 +317,7 @@ def fetch2(pattern, page=0, entries_per_page=10):
     # Request failed.
     return (-2, None)
 
-def fetch_channel_list():
+def fetch_channel_list(addon_name):
     import requests
     import json
 
@@ -217,7 +339,7 @@ def fetch_channel_list():
         dChannels = {u"channels": dChannels}
         return (0, dChannels)
 
-    except requests.RequestException as e:
+    except requests.RequestException as _:
         err = u"Can't fetch channel list"
         xbmcgui.Dialog().notification(addon_name, err,
                                       xbmcgui.NOTIFICATION_ERROR, 5000)
@@ -229,3 +351,7 @@ def fetch_channel_list():
     # Fallback
     from channel_list import channels
     return (-1, channels)
+
+
+fetch = fetch1
+convert_results = convert_results1
